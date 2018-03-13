@@ -1,0 +1,619 @@
+#!/bin/bash
+
+usage()
+{
+	local tools_name=$(basename $0)
+	printf "
+	Usage : ./${tools_name} [Options]  Actions
+	Options:
+		-l  , --listp    : List the available
+		-h,  -help    : Print this message and exit.
+	example:
+		== autommi == 
+		-m dura 	:	听筒测试 
+		-m dyna		:	听筒扫频
+		-m ep2rc	:	耳麦到听筒
+		-m ep2sp	:	耳麦到扬声器
+		-m hs		:	耳机回路
+		-m al		: 	音频回路
+		-m am		:	副麦
+		== cpu freq ==
+		-c -g		:	查下CPU支持哪些governor的模式
+		-c -d		:	看CPU支持哪些频率
+		-c -freq	:	当前的频率有哪些
+						当前所选择的频率
+		-c -num		:	查看系统支持多少核数
+		-c -cpu		:	查看当前状态有多少个CPU
+		-s -cpuX	:	开启cpuX 
+
+		== pc info ==
+		-d dmidecode	:	查看主板 内存 信息
+		== ftrace log ==
+		-f ftrace       : 	ftrace
+		== html systemtrace ==
+		-html systrace  : 	systrace
+		== so ==
+		-so -addr2line 	:		分析定位so库pc错误
+		-so -addr2line so add str 
+		== io desk ==
+		-io 		:		修改优化io性能
+		== (Window) CRLF <-> LF (Linux) ===
+		-win file 		:  转换window回车符
+		-lin file		:　转换linux 回车符
+		== down code ==
+		-down project	:  下载项目源代码
+	Actions:
+"
+}
+
+error()
+{
+    local ret="$1";shift
+    local info="$@"
+    if [ "$ret" -ne 0 ];then
+        echo "Error $ret: $info" >&2
+        exit $ret
+    fi
+}
+
+down_mtk_code()
+{
+	#PROJECT=CSW1705
+
+	PROJECT=$2
+	#if [ ! -n "$PROJECT" ];then
+	#if [ ! $PROJECT ];then
+	if [ "$PROJECT" == "" ];then
+   		echo "usage: $0 <project> "
+   		echo " $0 CSW1705"
+   		exit 2
+	fi
+	
+	if [ "$PROJECT" == "CSW1707" ];then
+		code_origin=cy_o1.mp6
+	else
+		code_origin=cy_o1.mp1
+	fi
+
+	echo "down load $PROJECT android"
+	mkdir -p /home/billy/work/${PROJECT}/alps/${code_origin}
+	cd /home/billy/work/${PROJECT}/alps/${code_origin}
+
+	echo "down cy_o1.mp1"
+	repo init -u ssh://wangbb@18.8.3.13:29418/mtk/manifest -b ${code_origin} -m ${code_origin}.xml --no-repo-verify
+	repo sync --no-tags
+	#repo start master --all
+	repo start ${code_origin} --all
+
+	cd /home/billy/work/${PROJECT}/alps/${code_origin}
+	repo forall -c "scp -p -P 29418 wangbb@18.8.3.13:hooks/commit-msg .git/hooks/"
+
+	echo "down packages"
+	mkdir -p /home/billy/work/${PROJECT}/chenyee_rom_apk
+	cd /home/billy/work/${PROJECT}/chenyee_rom_apk
+
+
+	repo init -u ssh://wangbb@18.8.3.13:29418/151/manifest -b chenyee_rom_apk -m ${PROJECT}_oversea_master.xml --no-repo-verify
+	repo sync --no-tags
+	repo start master --all
+
+	#echo "build "
+	#cd /home/billy/work/${PROJECT}/alps/${code_origin}
+	#source ./TmakeChenyee ${PROJECT}_platform -n
+}
+
+dmidecode()
+{
+
+    while true 
+    do
+        case "$2" in
+            dmidecode)
+            echo "***** 查看主板信息 *****" 
+			sudo dmidecode -t 2
+            echo "***** 查看内存信息 *****"
+			sudo dmidecode -t 16
+            exit 0
+            ;;
+	    *)
+            usage
+            exit 1
+            ;;
+	esac
+    done
+}
+
+ftrace()
+{
+adb shell "ls -l /sys/kernel/debug/tracing/"
+#echo README               free_buffer         saved_tgids   trace_options
+#echo available_events     instances           set_event     trace_pipe          
+#echo available_tracers    options             set_event_pid tracing_cpumask     
+#echo buffer_size_kb       per_cpu             snapshot      tracing_max_latency 
+#echo buffer_total_size_kb printk_formats      trace         tracing_on          
+#echo current_tracer       saved_cmdlines      trace_clock   tracing_thresh      
+#echo events               saved_cmdlines_size trace_marker  
+echo 
+#adb shell cat /sys/kernel/debug/tracing/README > /home/billy/work/tracing_README
+
+adb shell "echo 16384 > /sys/kernel/debug/tracing/buffer_size_kb"
+echo "buffer_size_kb(per cpu): "
+adb shell "cat /sys/kernel/debug/tracing/buffer_size_kb"
+echo "buffer_total_size_kb(per cpu): "
+adb shell "cat /sys/kernel/debug/tracing/buffer_total_size_kb"
+
+#echo "设置或显示当前使用的跟踪器, 缺省值为 nop ，即不做任何跟踪操作"
+#adb shell "cat /sys/kernel/debug/tracing/current_tracer"
+#adb shell "echo function > /sys/kernel/debug/tracing/current_tracer"
+
+#adb shell "echo nop > /sys/kernel/debug/tracing/current_tracer" #>nul 2>&1
+#current_tracer用于设置或显示当前使用的跟踪器；使用 echo 将跟踪器名字写入该文件可以切换到不同的跟踪器。系统启动后，其缺省值为 nop ，即不做任何跟踪操作。在执行完一段跟踪任务后，可以通过向该文件写入 nop 来重置跟踪器。
+
+#echo "当前编译进内核的跟踪器的列表"
+#adb shell cat /sys/kernel/debug/tracing/available_tracers
+#available_tracers记录了当前编译进内核的跟踪器的列表，可以通过 cat 查看其内容；其包含的跟踪器与图 3 中所激活的选项是对应的。写 current_tracer 文件时用到的跟踪器名字必须在该文件列出的跟踪器名字列表中。
+
+#adb shell "echo 'norecord-cmd noprint-tgid' > /sys/kernel/debug/tracing/trace_options" #>nul 2>&1
+#rem adb shell "echo 'noirq-info' > /sys/kernel/debug/tracing/trace_options"
+
+#adb shell "echo 1 > /sys/kernel/debug/tracing/events/system"
+
+#adb shell "echo 'sched_switch sched_wakeup sched_wakeup_new sched_migrate_task softirq_raise softirq_entry softirq_exit cpu_frequency workqueue_execute_start workqueue_execute_end block_bio_frontmerge block_bio_backmerge block_rq_issue block_rq_insert block_rq_complete ipi sched_heavy_task mtk_events' > /sys/kernel/debug/tracing/set_event"
+
+adb shell "echo 'sched_switch sched_wakeup sched_wakeup_new sched_migrate_task softirq_raise softirq_entry softirq_exit cpu_frequency workqueue_execute_start workqueue_execute_end block_bio_frontmerge block_bio_backmerge block_rq_issue block_rq_insert block_rq_complete ipi sched_heavy_task mtk_events irq_handler_entry irq_handler_exit timer_expire_entry hrtimer_init hrtimer_start hrtimer_expire_entry hrtimer_expire_exit timer hrtimer' > /sys/kernel/debug/tracing/set_event"
+
+
+#rem just in case tracing_enabled is disabled by user or other debugging tool
+#adb shell "echo 1 > /sys/kernel/debug/tracing/tracing_enabled" #>nul 2>&1
+adb shell "echo 0 > /sys/kernel/debug/tracing/tracing_on"
+
+#rem erase previous recorded trace
+adb shell "echo > /sys/kernel/debug/tracing/trace"
+echo press any key to start capturing...
+read
+
+adb shell "echo 1 > /sys/kernel/debug/tracing/tracing_on"
+
+echo "Start recordng ftrace data"
+echo "Press any key to stop..."
+read
+
+adb shell "echo 0 > /sys/kernel/debug/tracing/tracing_on"
+echo "Recording stopped..."
+adb shell cat /sys/kernel/debug/tracing/trace > /home/billy/work/SYS_FTRACE
+#pause
+#read
+
+}
+
+new()
+{
+	cd /home/billy/work/SW17W16/alps/android_mtk_o_6737_p18
+	echo "build user "
+	#rm -rf out_user_a
+	./TmakeChenyee -v userdebug SW17W16A_1201 -n
+	#mv out out_user
+
+	echo "build 1705"
+	cd /home/billy/work/CSW1705/alps/cy_o1.mp1
+	./TmakeChenyee CSW1705_64B_platform -n
+}
+
+autommitest()
+{
+	argv="$@"
+	echo "$0 $1 $2"
+	#adb devices > usbtmp
+	#cat usbtmp | sed -n '2p'
+	#cat usbtmp | sed -n '2p'
+	#adb devices | sed -n '2p' | awk '{ print $1}'
+	#cat filename.txt | awk '{ print $2 $4 }'
+	#adb devices | awk '{ print $1 }'
+	local deviceinfo=`adb devices | sed -n '2p' | awk '{ print $1}'`
+	#echo $deviceinfo
+	
+	if [ -n "$deviceinfo" ];then
+	echo "***** volume 100% ******"
+	adb shell am start -a com.gionee.autommi.rc -e dura 3 -e volume 100
+	sleep 1
+	
+    while true 
+    do
+        case "$2" in
+			dura)
+			echo "***** 听筒测试 *****" 
+			#adb shell -s $deviceinfo am start -a com.gionee.autommi.rc -e dura 3  
+			adb shell am start -a com.gionee.autommi.rc -e dura 3  
+			echo "input any key stop"
+			read 
+			adb shell am start -a com.gionee.autommi.dumb
+			exit 0
+			;;
+			dyna)
+			echo "***** 听筒扫频 *****"
+			adb shell am start -a com.gionee.autommi.rc.dyna --ei level 5
+			exit 0
+			;;
+			ep2rc)
+			echo "***** 耳麦到听筒 *****"
+			adb shell am start -a com.gionee.autommi.ep2rc --ei level 5 
+			exit 0
+			;;
+			ep2sp)
+			echo "***** 耳麦到扬声器 *****"
+			adb shell am start -a com.gionee.autommi.ep2sp --ei level 5
+			exit 0
+			;;
+			hs)
+			echo "***** 耳机回路 *****"
+			adb shell am start -a com.gionee.autommi.hs --ei level 5 
+			exit 0
+			;;
+			al)
+			echo "***** 音频回路 *****"
+			adb shell am start -a com.gionee.autommi.al --ei level 5 
+			exit 0
+			;;
+			am)
+			echo "***** 副麦 *****"
+			adb shell am start -a com.gionee.autommi.am --ei level 10 
+			exit 0
+			;;
+            *)
+                usage
+                exit 1
+                ;;
+        esac
+    done
+	else
+		echo "not inster usb!!"
+	fi
+}
+
+cpu_freq()
+{
+ 	argv="$@"
+    echo "$0 $1 $2"
+ 	
+	local deviceinfo=`adb devices | sed -n '2p' | awk '{ print $1}'`
+	if [ -n "$deviceinfo" ];then
+	while true 
+    do
+        case "$2" in
+            -g)
+            echo "***** 查下CPU支持哪些governor的模式 *****" 
+			echo "***	performance	:	最高频率,不降频 ***"
+			echo "***	ondemand	:	动态调节频率,不会因为降频造成性能降低 ***"
+			echo "***	interactive	:	交互模式，直接上最高频率，然后看CPU负荷慢慢降低，比较耗电 ***"
+			echo "***	powersave	:	省电模式，通常以最低频率运行 ***"
+			echo "***	userspace	:	自定义模式,允许其他用户程序调节CPU频率 ***"
+			#adb shell -s $deviceinfo cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
+			adb shell cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
+            exit 0
+            ;;
+			-d)
+			echo "***** 看CPU支持哪些频率 *****"
+			adb shell cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+			exit 0
+			;;
+			-freq)
+			echo "	***** 当前的频率有哪些 *****"
+			adb shell cat /proc/cpufreq/cpufreq_ptpod_freq_volt
+			echo "	***** 当前所选择的频率 *****"
+			adb shell cat /proc/cpufreq/cpufreq_oppidx 
+			exit 0
+			;;
+			-num)
+			echo "***** 查看系统支持多少核数 *****"
+			adb shell cat /sys/devices/system/cpu/present
+			exit 0
+			;;
+			-cpu)
+			echo "***** 查看当前状态有多少个CPU *****"
+			adb shell cat sys/devices/system/cpu/online
+			exit 0
+			;;
+            *)
+                usage
+                exit 1
+                ;;
+        esac
+    done
+ 	else
+        echo "not inster usb!!"
+    fi
+}
+
+set_cpu_freq()
+{
+ 	argv="$@"
+    echo "$0 $1 $2"
+ 	
+	local deviceinfo=`adb devices | sed -n '2p' | awk '{ print $1}'`
+	if [ -n "$deviceinfo" ];then
+	while true 
+    do
+        case "$2" in
+            -performance)
+            echo "***** 查下CPU支持哪些governor的模式 *****" 
+			echo "***	performance	:	最高频率,不降频 ***"
+			echo "***	ondemand	:	动态调节频率,不会因为降频造成性能降低 ***"
+			echo "***	interactive	:	交互模式，直接上最高频率，然后看CPU负荷慢慢降低，比较耗电 ***"
+			echo "***	powersave	:	省电模式，通常以最低频率运行 ***"
+			echo "***	userspace	:	自定义模式,允许其他用户程序调节CPU频率 ***"
+			#adb shell -s $deviceinfo cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
+			#adb shell cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
+			adb shell "echo performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"
+            exit 0
+            ;;
+			-cpu0)
+			echo "***** 开启CPU0 *****"
+			adb shell "echo 0 > /proc/hps/enabled"
+			adb shell "echo 1 > /sys/devices/system/cpu/cpu0/online"
+			exit 0
+			;;
+			-cpu1)
+			echo "***** 开启CPU1 *****"
+			adb shell "echo 0 > /proc/hps/enabled"
+			adb shell "echo 1 > /sys/devices/system/cpu/cpu1/online"
+			exit 0
+			;;
+			-cpu2)
+			echo "***** 开启CPU2 *****"
+			adb shell "echo 1 > /sys/devices/system/cpu/cpu2/online"
+			exit 0
+			;;
+			-cpu3)
+			echo "***** 开启CPU3 *****"
+			adb shell "echo 1 > /sys/devices/system/cpu/cpu3/online"
+			exit 0
+			;;
+            *)
+                usage
+                exit 1
+                ;;
+        esac
+    done
+ 	else
+        echo "not inster usb!!"
+    fi
+}
+
+systrace()
+{
+ 	argv="$@"
+    echo "$0 $1 $2"
+ 	
+	local deviceinfo=`adb devices | sed -n '2p' | awk '{ print $1}'`
+	if [ -n "$deviceinfo" ];then
+	while true 
+    do
+        case "$2" in
+            -systrace)
+			echo "	***** 当前的频率有哪些 *****"
+			adb shell cat /proc/cpufreq/cpufreq_ptpod_freq_volt
+			echo "	***** 当前所选择的频率 *****"
+			adb shell cat /proc/cpufreq/cpufreq_oppidx 
+			echo "***** 查看当前状态有多少个CPU *****"
+			adb shell cat sys/devices/system/cpu/online
+            echo "***** 抓取 systrace到　*****" 
+	    cd /home/billy/work/sdk/android-sdk-linux/platform-tools/systrace
+	    #cd /home/billy/work/SW17W16/alps/android_mtk_o_6737_p18/external/chromium-trace
+	    #./systrace.py –b 20480 –t 10 -o /home/billy/work/systrace_out_put.html audio sched gfx view wm
+	    ./systrace.py –b 20480 –t 10 -o /home/billy/work/systrace_out_put.html audio sched
+            exit 0
+            ;;
+            *)
+                usage
+                exit 1
+                ;;
+        esac
+    done
+ 	else
+        echo "not inster usb!!"
+    fi
+
+}
+
+arm_linux_androideabi()
+{
+	argv="$@"
+    echo "$0 $1 $2"
+
+    while true 
+    do
+        case "$2" in
+            -addr2line)
+            echo "***** 分析定位　so库堆栈 　*****" 
+	    echo "arm-linux-androideabi-addr2line -f -e so add str"
+	    if [ -n "$3" ];then
+	    arm-linux-androideabi-addr2line -f -e $3 $4 $5
+	    else
+	    echo ""
+	    	cd /home/billy/work/SW17W16/alps/android_mtk_o_6737_p18/out/target/product/k37tv1_64/symbols/system/lib
+	    	arm-linux-androideabi-addr2line -f -e libaaudio.so 00010d13
+		arm-linux-androideabi-addr2line -f -e libaaudio.so 00011403
+		arm-linux-androideabi-addr2line -f -e libaaudio.so 0000fec5
+		arm-linux-androideabi-addr2line -f -e libaaudio.so 000102a7
+	    	#arm-linux-androideabi-addr2line -f -e libaaudio.so 00010d13 _ZN7android2spINS_11AudioRecordEEaSEPS1_ 
+	    	#arm-linux-androideabi-addr2line -f -e libaaudio.so 00011403 _ZN6aaudio16AudioStreamTrack4openERKNS_18AudioStreamBuilderE
+	    	#arm-linux-androideabi-addr2line -f -e libaaudio.so 0000fec5 _ZN6aaudio18AudioStreamBuilder5buildEPPNS_11AudioStreamE
+	    	#arm-linux-androideabi-addr2line -f -e libaaudio.so 000102a7 AAudioStreamBuilder_openStream
+ 	    echo "	
+		F DEBUG   : backtrace:
+		F DEBUG   :     #00 pc 000000000000d688  /system/lib64/libutils.so (_ZNK7android7RefBase9incStrongEPKv+8)
+		F DEBUG   :     #01 pc 000000000006f97c  /system/lib64/libaudioclient.so (_ZN7android15TrackPlayerBase4initEPNS_10AudioTrackENS_13player_type_tE13audio_usage_t+52)
+		F DEBUG   :     #02 pc 0000000000019b58  /system/lib64/libaaudio.so (_ZN6aaudio16AudioStreamTrack4openERKNS_18AudioStreamBuilderE+576)
+		F DEBUG   :     #03 pc 0000000000017f08  /system/lib64/libaaudio.so (_ZN6aaudio18AudioStreamBuilder5buildEPPNS_11AudioStreamE+412)
+		F DEBUG   :     #04 pc 0000000000018218  /system/lib64/libaaudio.so (AAudioStreamBuilder_openStream+76)
+		F DEBUG   :     #05 pc 00000000000287a0  /data/local/tmp/CtsNativeMediaAAudioTestCases
+		F DEBUG   :     #06 pc 000000000002a094  /data/local/tmp/CtsNativeMediaAAudioTestCases
+		F DEBUG   :     #07 pc 0000000000016ac4  /data/local/tmp/CtsNativeMediaAAudioTestCases
+		F DEBUG   :     #08 pc 000000000002fed8  /data/local/tmp/CtsNativeMediaAAudioTestCases
+		F DEBUG   :     #09 pc 0000000000030f24  /data/local/tmp/CtsNativeMediaAAudioTestCases
+		F DEBUG   :     #10 pc 00000000000313ac  /data/local/tmp/CtsNativeMediaAAudioTestCases
+		F DEBUG   :     #11 pc 0000000000038a84  /data/local/tmp/CtsNativeMediaAAudioTestCases
+		F DEBUG   :     #12 pc 000000000003864c  /data/local/tmp/CtsNativeMediaAAudioTestCases
+		F DEBUG   :     #13 pc 00000000000183b4  /data/local/tmp/CtsNativeMediaAAudioTestCases
+		F DEBUG   :     #14 pc 000000000001b668  /system/lib64/libc.so (__libc_init+88)
+		F DEBUG   :     #15 pc 0000000000013fac  /data/local/tmp/CtsNativeMediaAAudioTestCases"
+	    	cd /home/billy/work/SW17W16/alps/android_mtk_o_6737_p18/out/target/product/k37tv1_64/symbols/system/lib64
+	    	aarch64-linux-android-addr2line -a -C -i -f -e libutils.so 000000000000d688 
+	    	aarch64-linux-android-addr2line -a -C -i -f -e libaudioclient.so 000000000006f97c 
+	    	aarch64-linux-android-addr2line -a -C -i -f -e libaaudio.so 0000000000019b58 
+	    	aarch64-linux-android-addr2line -a -C -i -f -e libaaudio.so 0000000000017f08 
+	    	aarch64-linux-android-addr2line -a -C -i -f -e libaaudio.so 0000000000018218 
+	    	aarch64-linux-android-addr2line -a -C -i -f -e libc.so 000000000001b668 
+		echo "
+		Cmd line: /vendor/bin/hw/android.hardware.audio@2.0-service-mediatek
+		ABI: 'arm'
+
+		'audio@2.0-servi' sysTid=304
+		#00 pc 00049748  /system/lib/libc.so (__ioctl+8)
+  		#01 pc 0001ddaf  /system/lib/libc.so (ioctl+38)
+  		#02 pc 000100f3  /system/lib/vndk-sp/libhwbinder.so (_ZN7android8hardware14IPCThreadState14talkWithDriverEb+202)
+  		#03 pc 00010201  /system/lib/vndk-sp/libhwbinder.so (_ZN7android8hardware14IPCThreadState20getAndExecuteCommandEv+8)
+  		#04 pc 0001081b  /system/lib/vndk-sp/libhwbinder.so (_ZN7android8hardware14IPCThreadState14joinThreadPoolEb+38)
+  		#05 pc 000012e1  /vendor/bin/hw/android.hardware.audio@2.0-service-mediatek (main+396)
+  		#06 pc 00017d35  /system/lib/libc.so (__libc_init+48)
+  		#07 pc 0000107c  /vendor/bin/hw/android.hardware.audio@2.0-service-mediatek (_start+96)"
+
+		cd /home/billy/work/SW17W16/alps/android_mtk_o_6737_p18/out/target/product/k37tv1_64/symbols/system/lib
+		arm-linux-androideabi-addr2line -a -C -i -f -e libc.so 00049748 
+		arm-linux-androideabi-addr2line -a -C -i -f -e libc.so 0001ddaf 
+
+		cd /home/billy/work/SW17W16/alps/android_mtk_o_6737_p18/out/target/product/k37tv1_64/symbols/system/lib/vndk-sp
+		arm-linux-androideabi-addr2line -a -C -i -f -e libhwbinder.so 000100f3 
+		arm-linux-androideabi-addr2line -a -C -i -f -e libhwbinder.so 00010201 
+		arm-linux-androideabi-addr2line -a -C -i -f -e libhwbinder.so 0001081b 
+	
+		cd /home/billy/work/SW17W16/alps/android_mtk_o_6737_p18/out/target/product/k37tv1_64/symbols/vendor/bin/hw
+		arm-linux-androideabi-addr2line -a -C -i -f -e android.hardware.audio@2.0-service-mediatek 000012e1 main
+
+		cd /home/billy/work/SW17W16/alps/android_mtk_o_6737_p18/out/target/product/k37tv1_64/symbols/system/lib
+		arm-linux-androideabi-addr2line -a -C -i -f -e libc.so 00017d35 
+
+	    fi            
+	    exit 0
+            ;;
+            *)
+                usage
+                exit 1
+                ;;
+        esac
+    done
+
+}
+
+change_io_desk_block()
+{
+	sdparm -s WCE=1, RCD=0 -S /dev/sda
+	sudo blockdev --setra 256 /dev/mapper/ubuntu--vg-root
+	sudo blockdev --setra 256 /dev/sda
+}
+
+change_CRLF2LF()
+{
+	echo "linux 回车符 LF"
+	echo $@
+	sed -i 's/\r//g' $2
+}
+
+change_LF2CRLF()
+{
+	echo "window 回车符 CRLF"
+	echo $@
+	sed -i 's/$/\r/g' $2
+}
+
+get_opts()
+{
+    argv="$@"
+
+	#echo $argv $? $1
+	
+	#opts=$(getopt ,  -- "$@")
+	
+	#if [ $? -ne 0 ];then
+    #    usage
+    #    exit 1
+    #fi
+
+	#eval set -- "$opts"
+    while true 
+    do
+        case "$1" in
+			-h|--help)
+                usage
+                exit 0
+                ;;
+            -l|--listp)
+				echo "perl listP.pl"
+                perl listP.pl
+                shift
+                exit 0
+                ;;
+			-n)
+				new "$@"
+				exit 0
+				;;
+			-m)
+				autommitest "$@"
+				exit 0
+				;;
+			-c)
+				cpu_freq "$@"
+				exit 0
+				;;
+			-s)
+				set_cpu_freq "$@"
+				exit 0
+				;;
+			-d)
+				dmidecode "$@"
+				exit 0
+				;;
+			-f)
+				ftrace "$@"
+				exit 0
+				;;
+			-html)
+				systrace "$@"
+				exit 0
+				;;
+			-so)
+				arm_linux_androideabi "$@"
+				exit 0
+				;;
+			-io)
+				change_io_desk_block "$@"
+				exit 0
+				;;
+			-win)
+				change_CRLF2LF "$@"
+				exit 0
+				;;
+			-lin)
+				change_LF2CRLF "$@"
+				exit 0
+				;;
+			-down)
+				down_mtk_code "$@"
+				exit 0
+				;;
+            *)
+                usage
+                exit 1
+                ;;
+        esac
+    done
+
+
+}
+
+main()
+{
+	get_opts "$@"
+}
+
+main $@
