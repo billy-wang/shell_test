@@ -42,6 +42,9 @@ usage()
 		-lin file		:　转换linux 回车符
 		== down code ==
 		-down project	:  下载项目源代码
+		== grep audio log ==
+		-grep file		: 	过滤 audio log
+
 	Actions:
 "
 }
@@ -54,6 +57,15 @@ error()
         echo "Error $ret: $info" >&2
         exit $ret
     fi
+}
+
+grep_audio_log()
+{
+	if [ -n "$2" ]; then
+		grep -E "audio|Audio|SpeechDriver|onScreenTurned|music_app|MediaPlayer|PhoneWindow|WindowManager|FmService|FMLIB|FMText|AudioHeadSetMessager|MMITest|Media|Bluetooth|bt_|BtGatt|MtkOmx|OMX|GainTableParamParser|NVRAM|SRS_|audiofocus|aurisys|InCall|setForceUse|Dialer|Ringtone|Extractor|NuPlayer|GenericSource" $2 > audio.log
+	else
+		echo "$0 logfile"
+	fi
 }
 
 down_mtk_code()
@@ -71,10 +83,13 @@ down_mtk_code()
 	
 	if [ "$PROJECT" == "CSW1707" ];then
 		code_origin=cy_o1.mp6
+	elif [ "$PROJECT" == "SW17W16" ];then
+		code_origin=cy_o0.mp1
 	else
 		code_origin=cy_o1.mp1
 	fi
 
+	echo $code_origin
 	echo "down load $PROJECT android"
 	mkdir -p /home/billy/work/${PROJECT}/alps/${code_origin}
 	cd /home/billy/work/${PROJECT}/alps/${code_origin}
@@ -100,6 +115,7 @@ down_mtk_code()
 	#echo "build "
 	#cd /home/billy/work/${PROJECT}/alps/${code_origin}
 	#source ./TmakeChenyee ${PROJECT}_platform -n
+	#./TmakeChenyee -v userdebug SW17W16RV_1301 -n
 }
 
 dmidecode()
@@ -599,6 +615,10 @@ get_opts()
 				;;
 			-down)
 				down_mtk_code "$@"
+				exit 0
+				;;
+			-grep)
+				grep_audio_log "$@"
 				exit 0
 				;;
             *)
