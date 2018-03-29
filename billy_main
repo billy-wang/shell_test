@@ -44,7 +44,8 @@ usage()
 		-down project	:  下载项目源代码
 		== grep audio log ==
 		-grep file		: 	过滤 audio log
-
+		== reset code ==
+		-reset code_version : 复位代码流
 	Actions:
 "
 }
@@ -59,12 +60,25 @@ error()
     fi
 }
 
+reset_code()
+{
+	if [ -n "$2" ];then
+		echo "repo forall -c 'git clean -df' && repo forall -c 'git reset --hard origin/$2' && repo forall -c 'git remote update' && repo sync #&& rm -rf out/"
+		repo forall -c 'git clean -df' && repo forall -c 'git reset --hard origin/$2' && repo forall -c 'git remote update' && repo sync --no-tags #&& rm -rf out/
+	else
+		echo "not select code origin patch example cy_o1.mp1"
+		echo "usage: $0 $1 cy_01.mp1 "
+		exit 2
+	fi
+
+}
+
 grep_audio_log()
 {
 	if [ -n "$2" ]; then
-		grep -E "audio|Audio|SpeechDriver|onScreenTurned|music_app|MediaPlayer|PhoneWindow|WindowManager|FmService|FMLIB|FMText|AudioHeadSetMessager|MMITest|Media|Bluetooth|bt_|BtGatt|MtkOmx|OMX|GainTableParamParser|NVRAM|SRS_|audiofocus|aurisys|InCall|setForceUse|Dialer|Ringtone|Extractor|NuPlayer|GenericSource" $2 > audio.log
+		grep -E "audio|Audio|SpeechDriver|onScreenTurned|music_app|MediaPlayer|PhoneWindow|WindowManager|FmService|FMLIB|FMText|AudioHeadSetMessager|MMITest|Media|Bluetooth|bt_|BtGatt|MtkOmx|OMX|GainTableParamParser|NVRAM|SRS_|audiofocus|aurisys|InCall|setForceUse|Dialer|Ringtone|Extractor|NuPlayer|GenericSource|Event|pause" $2 > audio.log
 	else
-		echo "$0 logfile"
+    	echo "$0 logfile"
 	fi
 }
 
@@ -94,7 +108,6 @@ down_mtk_code()
 	mkdir -p /home/billy/work/${PROJECT}/alps/${code_origin}
 	cd /home/billy/work/${PROJECT}/alps/${code_origin}
 
-	echo "down cy_o1.mp1"
 	repo init -u ssh://wangbb@18.8.3.13:29418/mtk/manifest -b ${code_origin} -m ${code_origin}.xml --no-repo-verify
 	repo sync --no-tags
 	#repo start master --all
@@ -112,10 +125,10 @@ down_mtk_code()
 	repo sync --no-tags
 	repo start master --all
 
-	#echo "build "
-	#cd /home/billy/work/${PROJECT}/alps/${code_origin}
-	#source ./TmakeChenyee ${PROJECT}_platform -n
-	#./TmakeChenyee -v userdebug SW17W16RV_1301 -n
+	echo "build "
+	cd /home/billy/work/${PROJECT}/alps/${code_origin}
+	#./TmakeChenyee -v userdebug CSW1705TL_1301 -n
+	./TmakeChenyee -v userdebug CSW1707A_1201_TEST -n
 }
 
 dmidecode()
@@ -619,6 +632,10 @@ get_opts()
 				;;
 			-grep)
 				grep_audio_log "$@"
+				exit 0
+				;;
+			-reset)
+				reset_code "$@"
 				exit 0
 				;;
             *)

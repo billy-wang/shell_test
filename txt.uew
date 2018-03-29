@@ -12,7 +12,15 @@
 # 橘黄色
 /C1
 
-overflow
+audio_format
+format
+fmt
+
++createPlaybackHandler
+-createPlaybackHandler
+
+overflow output
+0xd6b41b80
 
 setStreamVolume setFmVolume
 setVoiceBufferGain
@@ -42,6 +50,8 @@ play playSound playFrequency
 
 SetNBSpeechParameters
 
+transferAudioFormatToPcmFormat
+
 /C2
 setMasterVolume
 keyPressed keyCode keycode scanCode
@@ -61,6 +71,9 @@ mOutputDevices
 # 天蓝色
 /C3
 
+AudioALSAPlaybackHandlerNormal
+AudioALSACaptureHandlerNormal
+
 checkDeviceMuteStrategies
 
 AudioSink
@@ -77,8 +90,12 @@ ADB_SERVICES
 EarphoneLoopbackTest
 GnMMITest
 
+AudioALSASpeechPhoneCallController
 AudioTrack 
 audioTrack
+AudioRecord
+
+AudioALSAStreamManager
 
 HeadsetStateMachine
 
@@ -152,6 +169,8 @@ ToneTest2
 # 绿色
 /C5
 
+input
+
 CONNECT_AUDIO
 
 setAudioRoute
@@ -171,6 +190,7 @@ getNewOutputDevice
 
 pid piid
 uid
+AudioFocus_For_Phone_Ring_And_Calls
 
 routing
 
@@ -194,7 +214,11 @@ INCALL
 
 # 粉红色
 /C6
- 
+
+-open
+
+pause 
+
 NO_CALLS
 Err
 error
@@ -208,6 +232,9 @@ trumedia_enable
 setPhoneState
 getGainDevice
 setStreamMute
+
++syncSharedOutDevice
+-syncSharedOutDevice
 
 BLUETOOTH
 WIRED_HEADSET
@@ -289,6 +316,7 @@ btif_dm_cancel_discovery
 
 /C9
 streamType stream
+close
 +close
 -close
 +stopOutputDevice
