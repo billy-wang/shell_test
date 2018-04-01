@@ -177,14 +177,14 @@ adb shell "cat /sys/kernel/debug/tracing/buffer_total_size_kb"
 #adb shell "cat /sys/kernel/debug/tracing/current_tracer"
 #adb shell "echo function > /sys/kernel/debug/tracing/current_tracer"
 
-#adb shell "echo nop > /sys/kernel/debug/tracing/current_tracer" #>nul 2>&1
+adb shell "echo nop > /sys/kernel/debug/tracing/current_tracer" >/dev/null 2>&1
 #current_tracer用于设置或显示当前使用的跟踪器；使用 echo 将跟踪器名字写入该文件可以切换到不同的跟踪器。系统启动后，其缺省值为 nop ，即不做任何跟踪操作。在执行完一段跟踪任务后，可以通过向该文件写入 nop 来重置跟踪器。
 
 #echo "当前编译进内核的跟踪器的列表"
 #adb shell cat /sys/kernel/debug/tracing/available_tracers
 #available_tracers记录了当前编译进内核的跟踪器的列表，可以通过 cat 查看其内容；其包含的跟踪器与图 3 中所激活的选项是对应的。写 current_tracer 文件时用到的跟踪器名字必须在该文件列出的跟踪器名字列表中。
 
-#adb shell "echo 'norecord-cmd noprint-tgid' > /sys/kernel/debug/tracing/trace_options" #>nul 2>&1
+adb shell "echo 'norecord-cmd noprint-tgid' > /sys/kernel/debug/tracing/trace_options" >/dev/null 2>&1
 #rem adb shell "echo 'noirq-info' > /sys/kernel/debug/tracing/trace_options"
 
 #adb shell "echo 1 > /sys/kernel/debug/tracing/events/system"
@@ -195,11 +195,16 @@ adb shell "echo 'sched_switch sched_wakeup sched_wakeup_new sched_migrate_task s
 
 
 #rem just in case tracing_enabled is disabled by user or other debugging tool
-#adb shell "echo 1 > /sys/kernel/debug/tracing/tracing_enabled" #>nul 2>&1
+adb shell "echo 1 > /sys/kernel/debug/tracing/tracing_enabled" >/dev/null 2>&1
 adb shell "echo 0 > /sys/kernel/debug/tracing/tracing_on"
 
 #rem erase previous recorded trace
 adb shell "echo > /sys/kernel/debug/tracing/trace"
+
+echo "start mtklog and del /sdcard/mtklog folder"
+adb shell "rm -rf /sdcard/mtklog"
+adb shell "am broadcast -a com.mediatek.mtklogger.ADB_CMD -e cmd_name start --ei cmd_target 1" >/dev/null 2>&1
+
 echo press any key to start capturing...
 read
 
@@ -211,7 +216,27 @@ read
 
 adb shell "echo 0 > /sys/kernel/debug/tracing/tracing_on"
 echo "Recording stopped..."
+
+sleep 5
+echo "stop mtklog"
+adb shell "am broadcast -a com.mediatek.mtklogger.ADB_CMD -e cmd_name stop --ei cmd_target 1" >/dev/null 2>&1
+
 adb shell cat /sys/kernel/debug/tracing/trace > /home/billy/work/ftrace/SYS_FTRACE
+#adb pull /sys/kernel/debug/tracing/trace > /home/billy/work/ftrace/SYS_FTRACE
+
+adb shell "echo norecord-cmd > /sys/kernel/debug/tracing/trace_options" >/dev/null 2>&1
+adb shell "echo noprint-tgid > /sys/kernel/debug/tracing/trace_options" >/dev/null 2>&1
+adb shell "echo 1 > /sys/kernel/debug/tracing/tracing_on"
+adb shell "echo > /sys/kernel/debug/tracing/set_event"
+
+echo "default size"
+#rem default size
+adb shell "echo 4096 > /sys/kernel/debug/tracing/buffer_size_kb"
+adb shell "cat /sys/kernel/debug/tracing/buffer_size_kb"
+
+adb pull /sdcard/mtklog /home/billy/work/ftrace/mtklog >/dev/null 2>&1
+
+echo "Please press 02-parse.bat to analyze it with gtkwave and csv file"
 #pause
 #read
 
@@ -223,9 +248,23 @@ FTRACE_PERL_PATH=/home/billy/bin/mtk/ftrace_perl
 SYS_FTRACE_PATH=/home/billy/work/ftrace
 
 #perl $FTRACE_PERL_PATH/fix_cmd.pl $SYS_FTRACE_PATH/SYS_FTRACE
-perl $FTRACE_PERL_PATH/convert2vcd.pl $SYS_FTRACE_PATH/SYS_FTRACE $SYS_FTRACE_PATH/trace.vcd
-perl $FTRACE_PERL_PATH/ftrace_cputime.pl $SYS_FTRACE_PATH/SYS_FTRACE $SYS_FTRACE_PATH/ftrace_cputime.csv
-perl $FTRACE_PERL_PATH/convert2systrace.4_3.pl <$SYS_FTRACE_PATH/SYS_FTRACE >$SYS_FTRACE_PATH/trace.html
+#perl $FTRACE_PERL_PATH/convert2vcd.pl $SYS_FTRACE_PATH/SYS_FTRACE $SYS_FTRACE_PATH/trace.vcd
+#perl $FTRACE_PERL_PATH/ftrace_cputime.pl $SYS_FTRACE_PATH/SYS_FTRACE $SYS_FTRACE_PATH/ftrace_cputime.csv
+#perl $FTRACE_PERL_PATH/convert2systrace.4_3.pl <$SYS_FTRACE_PATH/SYS_FTRACE >$SYS_FTRACE_PATH/trace.html
+
+perl $FTRACE_PERL_PATH/fix_cmd.pl $SYS_FTRACE_PATH/SYS_FTRACE
+perl -I$FTRACE_PERL_PATH/lib/mediatek $FTRACE_PERL_PATH/trim_events.pl < $SYS_FTRACE_PATH/SYS_FTRACE > $SYS_FTRACE_PATH/SYS_FTRACE.trimmed.log
+perl -I$FTRACE_PERL_PATH/lib/mediatek $FTRACE_PERL_PATH/convert2vcd.pl $SYS_FTRACE_PATH/SYS_FTRACE.trimmed.log $SYS_FTRACE_PATH/trace.vcd
+perl -I$FTRACE_PERL_PATH/lib/mediatek $FTRACE_PERL_PATH/ftrace_cputime.pl $SYS_FTRACE_PATH/SYS_FTRACE.trimmed.log $SYS_FTRACE_PATH/ftrace_cputime.csv
+perl $FTRACE_PERL_PATH/trim_tgid.pl < $SYS_FTRACE_PATH/SYS_FTRACE.trimmed.log > $SYS_FTRACE_PATH/SYS_FTRACE.trimmed.trim_tgid.log 
+perl -I$FTRACE_PERL_PATH/lib/mediatek $FTRACE_PERL_PATH/convert2systrace.M.pl SYS_FTRACE.trimmed.trim_tgid.log $SYS_FTRACE_PATH/trace.html
+
+#perl -I$FTRACE_PERL_PATH/lib/mediatek $FTRACE_PERL_PATH/ftrace_loading.pl $SYS_FTRACE_PATH/SYS_FTRACE.trimmed.log $SYS_FTRACE_PATH/ftrace_
+
+perl $FTRACE_PERL_PATH/trim_irq.pl < $SYS_FTRACE_PATH/SYS_FTRACE > $SYS_FTRACE_PATH/SYS_FTRACE.trim_irq.log
+perl -I$FTRACE_PERL_PATH/lib/mediatek $FTRACE_PERL_PATH/convert2systrace.L.pl -s=$FTRACE_PERL_PATH/systrace.L $SYS_FTRACE_PATH/SYS_FTRACE.trim_irq.log $SYS_FTRACE_PATH/trace.L.html
+
+#rm $SYS_FTRACE_PATH/SYS_FTRACE.trimmed.log $SYS_FTRACE_PATH/SYS_FTRACE.trimmed.trim_tgid.log $SYS_FTRACE_PATH/SYS_FTRACE.trim_irq.log
 
 gtkwave $SYS_FTRACE_PATH/trace.vcd
 }

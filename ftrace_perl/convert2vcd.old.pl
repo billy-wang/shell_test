@@ -38,11 +38,6 @@
 # author: mtk04259
 #   convert trace file to vcd for gtkwave visualization
 #
-# 2015/04/21    support nested interrupts handling
-#               support ipi_raise event to track when ipi is sent
-#
-# 2014/11/18    find the first executing context at the beginning
-#
 # 2014/04/01    add irq_{entry,exit} events
 #
 # 2014/03/10    provide more info about ipi/irq events unpair problem
@@ -83,7 +78,7 @@
 # 2012/10/23    enhanced with I/O waiting visualization with '-' yellow color
 #               fine-tune the task migration between cores
 #
-# 2012/09/05    initial version   
+# 2012/09/05    first version   
 #
 # -- irq-info comment --
 #                              _-----=> irqs-off
@@ -93,7 +88,7 @@
 #                            ||| /     delay
 #         <idle>-0     [002] d..2 15696.184022: irq_handler_entry: irq=1 name=IPI_CPU_START
 # 
-# irqs-off: d for IRQS_OFF(I bit disabled), X for IRQS_NOSUPPORT, . otherwise
+# irqs-off: d for IRQS_OFF, X for IRQS_NOSUPPORT, . otherwise
 # need-resched: N for need_resched
 # hardirq/softirq: H for TRACE_FLAG_HARDIRQ & TRACE_FLAG_SOFTIRQ both on, h for hardirq, s for softirq
 # preempt-depth: preempt_count
@@ -103,7 +98,7 @@
 
 use strict;
 use warnings;
-use vars qw($h $c $d);
+use vars qw($h $c);
 
 BEGIN {
     my $is_linux = $^O =~ /linux/;
@@ -114,37 +109,8 @@ USE_LIB
     eval 'use ftrace_parsing_utils;';
 }
 
-# enum irq types to sort them in the order of irq, ipi, and softirq
-sub irq_type {
-    local $_ = $_[0];
-    if ($_ eq 'irq') {
-        return 0;
-    } elsif ($_ eq 'ipi') {
-        return 1;
-    } elsif ($_ eq 'softirq') {
-        return 2;
-    } else {
-        return 3;
-    }
-}
-
-my $version = "2015-04-22";
-
-my (%proc_table,            # process table to track cpu it running on, process state, tgid, process name, 
-    %irq_table,             # irq table to track irq number & irq name
-    %ipi_id_table,          # ipi table to track ipi: name -> id
-    %tag_table,             # the waves draw in vcd is described as tag. the hash key is 'proc-<pid>-<cpu>', irq-<irq#>-<cpu>, softirq-<irq#>-<cpu>
-    @exec_stack,
-    @irq_depth              # to track the irq depth. nested irq is not supported by arm
-                            # so track the depth in parsing process to identify the abnormal behavior
-);
-
-# irq_table keys: 
-# irq-<irq>-<cpu>, softirq-<softirq>-<cpu>, ipi-<ipi>-<cpu>
-
-my $beginning_timestamp = -1; # the first recognized event timestamp
-
-my @first_exec_context; # 1st executing context without starting event;
+my $version = "2014-04-01";
+my (%proc_table, %irq_table, %tag_table, $first_timestamp, %softirq_table, @exec_stack, @irq_count);
 my $script_name = &_basename($0);
 
 # fix process name of idle/init process
@@ -230,7 +196,7 @@ sub cpu_offline_str{
     my $output;
 
     # reset exec_stack
-    while(!&_exec_stack_empty($cpu)){
+    while(defined $exec_stack[$cpu] and scalar(@{$exec_stack[$cpu]})>0){
         pop @{$exec_stack[$cpu]};
     }
 
@@ -267,30 +233,9 @@ Usage: $script_name <input_file> <output_file>
         convert ftrace into vcd format
         -h: show usage
         -c: console mode, input from stdin and output to stdout
-        -d: debug mode, detect nested interrupt
 USAGE
     ;
     exit 0;
-}
-
-# convert hex bitmask into integer array
-sub cpumask_to_ids{
-    local $_ ;
-    my $cpumask = $_[0];
-    my $cpu = 0;
-    my @cpus;
-
-    $cpumask =~ s|\,||g;
-    $cpumask = hex("0x$cpumask");
-
-    while($cpumask > 0){
-        if($cpumask & 1){
-            push @cpus, $cpu;
-        }
-        $cpumask >>= 1;
-        ++$cpu;
-    }
-    return @cpus;
 }
 
 # ------------
@@ -300,7 +245,6 @@ sub collect_runtime_info{
     local $_;
     my $ref = $_[0];
     my $event_count;
-    my $next_ipi = 0; # next ipi id to be used
 
     for(@{$ref}){
         chomp;
@@ -313,10 +257,10 @@ sub collect_runtime_info{
                 (\d+\.\d+)\:/xso)
         {
             ($pid, $cpu) = (int($1), int($3));
-            if($beginning_timestamp == -1){
-                $beginning_timestamp = $4;
-                $beginning_timestamp =~ s/\.//;
-                $beginning_timestamp = int($beginning_timestamp) - 1000;
+            if(!defined($first_timestamp) and $cpu == 0){
+                $first_timestamp = $4;
+                $first_timestamp =~ s/\.//;
+                $first_timestamp = int($first_timestamp) - 1000;
             }
             if(defined $2){
                 $tgid = $2;
@@ -333,12 +277,12 @@ sub collect_runtime_info{
 
         if(m/\s
             sched_switch\:\s+
-            prev_comm=(.*)\s
+            prev_comm=(.+)\s
             prev_pid=(\d+)\s
             prev_prio=(\d+)\s
             prev_state=\S+\s
             ==>\s
-            next_comm=(.*)\s
+            next_comm=(.+)\s
             next_pid=(\d+)\s
             next_prio=(\d+)
             /xso)
@@ -378,205 +322,43 @@ sub collect_runtime_info{
             $proc_table{$2}{cpus} |= (1<<$4 | 1<<$5);
             $event_count++;
         }elsif(m/\s
-            (?:irq_handler_entry|irq_entry)\:\s+
-            irq=(\d+)\s
+            (?:irq_handler_entry|ipi_handler_entry|irq_entry)\:\s+
+            (?:irq|ipi)=(\d+)\s
             name=(.+)
             /xso)
         {
-            $irq_table{"irq-$1-$cpu"} = $2 if(!exists $irq_table{"$1-$cpu"});
+            $irq_table{"$1-$cpu"} = $2;
             $event_count++;
 
         }elsif(m/\s
-            (?:irq_handler_exit|irq_exit)\:\s+
+            (?:irq_handler_exit|ipi_handler_exit|irq_exit)\:\s+
             /xso)
         {
             $event_count++;
         }elsif(m/\s
-            (?:softirq_entry|softirq_exit|softirq_raise)\:\s+
+            softirq_raise\:\s+
+            /xso)
+        {
+            $event_count ++;
+        }elsif(m/\s
+            softirq_entry\:\s+
             vec=(\d+)\s
             \[action=(.+)\]/xso)
         {
-            $irq_table{"softirq-$1-$cpu"} = $2 if (!exists $irq_table{"softirq-$1-$cpu"});
+            $softirq_table{"$1-$cpu"} = $2;
             $event_count++;
         }elsif(m/\s
-            ipi_raise\:\s+
-            target_mask=[\d,]*\s
-            \([^)]*\)/xso)
-        {
-            $event_count++;
-        }elsif(m/\s
-            (?:ipi_entry|ipi_exit)\:\s+
-            \(([^)]*)\)/xso)
-        {
-            if(!exists $ipi_id_table{"$1"}{id}){
-                $ipi_id_table{"$1"}{id} = $next_ipi++;
-            }
-            $ipi_id_table{"$1"}{cpus} |= (1 << $cpu);
-
-            my $ipi = $ipi_id_table{"$1"}{id};
-            if (!exists $irq_table{"ipi-$ipi-$cpu"}) {
-                $irq_table{"ipi-$ipi-$cpu"} = $ipi;
-            }
+            softirq_exit\:\s+
+            /xso){
             $event_count++;
         }
     }
     return $event_count;
 }
 
-# check if any process(irq, softirq...etc) executing on specific cpu
-# true if no one executing
-sub _exec_stack_empty{
-    local $_ = $_[0];
-    return (!defined $exec_stack[$_] or
-        scalar(@{$exec_stack[$_]}) <= 0);
-}
-
-# convert proc-<pid>-<prio>, irq-<irq>, ipi-<ipi>, softirq-<softirq> into a list
-sub _exec_stack_info{
-    local $_ = $_[0];
-    return ($_ =~ m/^(\w+)\-(\d+)(?:\-(\d+))?$/o);
-}
-
-# find the executing irq/ipi/softirq/process at the beginning
-# check if these events match in pairs
-sub find_1st_exec_context {
-    local $_;
-    my $ref = $_[0];
-    my $first_ts = $_[1];
-
-    for(grep {
-            m/\s(?:sched_switch |
-            (?:soft)?irq_(?:entry|exit) |
-            (?:irq|ipi)_handler_(?:entry|exit) |
-            ipi_(?:entry|exit) |
-            cpu_hotplug)\:/xso
-        } reverse @{$ref})
-    {
-        chomp;
-        my ($cpu, $pid, $tgid, $timestamp);
-
-        if(m/^.{16}\-(\d+)\s+
-                (?:\([\s\d-]{5}\)\s+)?
-                \[(\d+)\]\s+
-                (?:\S{4}\s+)?
-                (\d+\.\d+)\:/xso)
-        {
-            ($pid, $cpu) = (int($1), int($2));
-            $timestamp = $3;
-            $timestamp =~ s/\.//go;
-            $timestamp = int($timestamp);
-        }else{
-            # skip un-recognized strings
-            next;
-        }
-
-        if(m/\s
-            sched_switch\:\s+
-            prev_comm=.*\s
-            prev_pid=(\d+)\s
-            prev_prio=(\d+)\s
-            prev_state=\S+\s
-            ==>\s
-            next_comm=.*\s
-            next_pid=(\d+)\s
-            next_prio=(\d+)
-            /xso)
-        {
-            my $pid = $1;
-            my $prio = $2;
-            my $next_pid = $3;
-            my $next_prio = $4;
-
-            if(!&_exec_stack_empty($cpu)){
-                my ($type, $id, $prio) = (${$exec_stack[$cpu]}[-1] =~ m/^(\w+)\-(\d+)(?:\-(\d+))?$/o);
-                if($type eq "proc" and $id eq $next_pid)
-                {
-                    ${$exec_stack[$cpu]}[-1] = "proc-$pid-$prio";
-                }else {
-                    die "scheduling event not matched, ts=$timestamp (${$exec_stack[$cpu]}[-1]) on cpu$cpu & (proc-$next_pid-$next_prio)";
-                }
-            } else {
-                push @{$exec_stack[$cpu]}, "proc-$pid-$prio";
-            }
-        }elsif(m/\s
-            (?:irq_handler_entry|irq_entry)\:\s+
-            irq=(\d+)\s
-            name=.+
-            /xso)
-        {
-            my $irq = $1;
-            if(!&_exec_stack_empty($cpu)){
-                if(${$exec_stack[$cpu]}[-1] eq "irq-$irq") {
-                    pop @{$exec_stack[$cpu]};
-                } else {
-                    warn "irq entry/exit event not matched (${$exec_stack[$cpu]}[-1]) & (irq-$irq)";
-                }
-            }
-        }elsif(m/\s
-            (?:irq_handler_exit|irq_exit)\:\s+
-            irq=(\d+)
-            (?:\sret=handled)?
-            /xso)
-        {
-            push @{$exec_stack[$cpu]}, "irq-$1";
-        }elsif(m/\s
-            ipi_entry\:\s+ \( ([^)]+) \)
-            /xso)
-        {
-            my $ipi_name = $1;
-            my $irq = $ipi_id_table{"$1"}{id};
-            if (!&_exec_stack_empty($cpu)) {
-                if (${$exec_stack[$cpu]}[-1] eq "ipi-$irq") {
-                    pop @{$exec_stack[$cpu]};
-                } else {
-                    my ($type, $id) = &_exec_stack_info(${$exec_stack[$cpu]}[-1]);
-                    my $name = &_find_id_name("ipi", $id, $cpu);
-                    warn "ipi entry/exit event not matched (ipi-$name) & (ipi-$ipi_name)";
-                }
-            }
-        }elsif(m/
-            ipi_exit\:\s+ \( ([^)]*) \)
-            /xso)
-        {
-            my $irq = $ipi_id_table{"$1"}{id};
-            push @{$exec_stack[$cpu]}, "ipi-$irq";
-        }elsif(m/\s
-            softirq_entry\:\s+
-            vec=(\d+)\s
-            \[action=.+\]/xso)
-        {
-            my $softirq = $1;
-            if(!&_exec_stack_empty($cpu)){
-                if(${$exec_stack[$cpu]}[-1] eq "softirq-$softirq"){
-                    pop @{$exec_stack[$cpu]};
-                } else {
-                    warn "irq entry/exit event not matched (${$exec_stack[$cpu]}[-1]) & (softirq-$softirq)";
-                }
-            }
-        }elsif(m/\s
-            softirq_exit\:\s+
-            vec=(\d+)\s
-            /xso)
-        {
-            push @{$exec_stack[$cpu]}, "softirq-$1";
-        }elsif(m/\s
-            cpu_hotplug\:\s
-            cpu=\d+\s
-            state=online\s
-            last_offline_ts=(\d+)
-            /xso)
-        {
-            my $last_offline_ts = $1;
-            if($last_offline_ts < $first_ts){
-                @{$exec_stack[$cpu]} = ();
-            }
-        }
-    }
-}
-
 sub print_vcd_header{
     local $_;
-    my ($fout, $first_ts) = ($_[0], $_[1]);
+    my $fout = $_[0];
     my $i=0;
 
     printf $fout <<'HEADER', $version;
@@ -587,32 +369,34 @@ $timescale 1us $end
 $scope module sched_switch $end
 HEADER
     for (sort {
-            my ($atype, $airq, $acpu) = split /\-/, $a;
-            my ($btype, $birq, $bcpu) = split /\-/, $b;
-            if ($atype eq $btype) {
-                return ($airq<=>$birq) || ($acpu<=>$bcpu);
-            } else {
-                return (&irq_type($atype) <=> &irq_type($btype))
-            }
+        my ($airq, $acpu) = split /\-/, $a;
+        my ($birq, $bcpu) = split /\-/, $b;
+        return ($airq<=>$birq) || ($acpu<=>$bcpu);
         } 
         keys %irq_table)
     {
-        my ($type, $irq, $cpu) = split /\-/, $_;
-        $tag_table{"$_"} = &gentag($i++);
+        my ($irq, $cpu) = split /\-/, $_;
+        $tag_table{"irq-$_"} = &gentag($i++);
+        printf $fout "\$var wire 1 %s 0-IRQ%s-%s[%03d]_nc=0 \$end\n", $tag_table{"irq-$_"}, $irq, &fix_cmd($irq_table{$_}), $cpu;
+    }
 
-        if ($type eq "irq") {
-            printf $fout "\$var wire 1 %s 0-IRQ%s-%s[%03d]_nc=0 \$end\n", $tag_table{"$_"}, $irq, &fix_cmd($irq_table{$_}), $cpu;
-        } elsif ($type eq "softirq") {
-            printf $fout "\$var wire 1 %s 0-SOFTIRQ%s-%s[%03d]_nc=0 \$end\n", $tag_table{"$_"}, $irq, &fix_cmd($irq_table{$_}), $cpu;
-        } elsif ($type eq "ipi") {
-            printf $fout "\$var wire 1 %s 0-IPI-%s[%03d]_nc=0 \$end\n", $tag_table{"$_"}, &fix_cmd(&_find_id_name($type, $irq, $cpu)), $cpu;
-        }
+    for (sort {
+        my ($airq, $acpu) = split /\-/, $a;
+        my ($birq, $bcpu) = split /\-/, $b;
+        return ($airq<=>$birq) || ($acpu<=>$bcpu);
+        } 
+        keys %softirq_table)
+    {
+        my ($softirq, $cpu) = split /\-/, $_;
+        $tag_table{"softirq-$_"} = &gentag($i++);
+        printf $fout "\$var wire 1 %s 0-SOFTIRQ%s-%s[%03d]_nc=0 \$end\n", $tag_table{"softirq-$_"}, $softirq, &fix_cmd($softirq_table{$_}), $cpu;
     }
 
     for(sort {$a <=> $b} keys %proc_table){
         my $j=0;
         while($proc_table{$_}{cpus}>>$j){
             if($proc_table{$_}{cpus} & (1<<$j)){
+                #$proc_table{$_}{"tag-$j"} = &gentag($i++);
                 $tag_table{"proc-$_-$j"} = &gentag($i++);
                 printf $fout "\$var wire 1 %s %s%d-%s[%03d]_%s=%d \$end\n",
                     $tag_table{"proc-$_-$j"},
@@ -625,88 +409,38 @@ HEADER
                     ($proc_table{$_}{prio}<100?
                         (99-$proc_table{$_}{prio}):
                         ($proc_table{$_}{prio}-120));
+
+                        #if($proc_table{$_}{prio} <100){
+                        #    printf $fout "\$var wire 1 %s %d-%s[%03d]_RT=%d \$end\n",
+                        #    $tag_table{"proc-$_-$j"},
+                        #    $_,
+                        #    &fix_cmd($proc_table{$_}{name}, $_),
+                        #    $j,
+                        #    99-$proc_table{$_}{prio};
+                        #}else{
+                        #    printf $fout "\$var wire 1 %s %d-%s[%03d]_nc=%d \$end\n",
+                        #    $tag_table{"proc-$_-$j"},
+                        #    $_,
+                        #    &fix_cmd($proc_table{$_}{name}, $_),
+                        #    $j,
+                        #    $proc_table{$_}{prio}-120;
+                        #}
+                #print "$_: $proc_table{$_}{name}, $proc_table{$_}{prio}, $proc_table{$_}{\"tag-$j\"}";
+                #printf ", [%d]\n", $j;
             }
             $j++;
         }
     }
 
-    printf $fout <<'HEADER_END', $first_ts;
+    printf $fout <<'HEADER_END', $first_timestamp;
 $upscope $end
 $enddefinitions $end
 #%d
 HEADER_END
-
 # initialize all processes
-
-    my @executing_tasks_at_beginning = map {
-            my ($type, $id) = &_exec_stack_info(${$exec_stack[$_]}[-1]);
-            "$type-$id-$_";
-        } grep {
-            !&_exec_stack_empty($_)
-        } 0 .. $#exec_stack;
-
-    my %is_task_executing_at_beginning = 
-        map { $_ => 1 } @executing_tasks_at_beginning;
-
-    warn "executing context at the beginning:\n" if($d);
-
-    for my $key (sort keys %tag_table){
-        if($is_task_executing_at_beginning{$key}){
-            my ($context, $id, $cpu) = split  /\-/, $key;
-
-            if($context eq 'proc' and $proc_table{$id}{prio} <100) {
-                # executing at the beginning with RT priority
-                printf $fout "H%s\n", $tag_table{"$key"}
-            }else {
-                # executing at the beginning with normal priority
-                printf $fout "1%s\n", $tag_table{"$key"}
-            }
-
-            if ($d){
-                warn "context: $context, id: $id, cpu: $cpu\n";
-            }
-        }else {
-            # initialized as sleep state
-            printf $fout "Z%s\n", $tag_table{"$key"}
-        }
+    for(my $j = 0; $j < $i; ++$j){
+        print $fout "Z@{[&gentag($j)]}\n";
     }
-}
-
-sub _draw_vcd_waves{
-    local $_;
-    my ($state, $tag_key, $state1, $tag_key1) = @_;
-    if(defined $state && defined $tag_key && exists $tag_table{"$tag_key"}){
-        $_ .= sprintf <<END_MARK, $state, $tag_table{"$tag_key"};
-%s%s
-END_MARK
-    }
-    if(defined $state1 && defined $tag_key1 && exists $tag_table{"$tag_key1"}){
-        $_ .= sprintf <<END_MARK, $state1, $tag_table{"$tag_key1"};
-%s%s
-END_MARK
-    }
-    return $_;
-}
-
-# find id name with key from exec_stack
-# _find_id_name(type, id, cpu)
-sub _find_id_name{
-    local $_;
-    my ($type, $id, $cpu) = @_;
-    my $name;
-
-    if($type eq 'ipi') {
-        for my $ipi_name (keys %ipi_id_table) {
-            if ($ipi_id_table{$ipi_name}{id} == $id) {
-                return $ipi_name;
-            }
-        }
-    }elsif($type eq 'irq' || $type eq 'softirq'){
-        $name = $irq_table{"$type-$id-$cpu"};
-    }elsif($type eq 'proc'){
-        $name = $proc_table{$id}{name};
-    }
-    return $name;
 }
 
 # ------------
@@ -716,13 +450,11 @@ sub parse {
     local $_;
     my $tracing_on = 1;
     my @cpu_online;
-        # table to track cpu online state
-        # 0: offline, 1: online, undef: no trace events
     my ($fout, $ref) = @_;
     my $nested_irq_warn_already = 0;
     my $output;
 
-    for (@{$ref}) {
+    for(@{$ref}){
         my ($curr_pid, $cpu, $timestamp);
         if((($curr_pid, $cpu, $timestamp) = m/^
                 .{16}\-(\d+)\s+
@@ -738,11 +470,8 @@ sub parse {
         $timestamp =~ s/\.//go;
         $timestamp = int($timestamp);
         $cpu = int($cpu);
+        $cpu_online[$cpu] = 1;
 
-        if (!defined $cpu_online[$cpu]) {
-            $cpu_online[$cpu] = 1;
-        }
-        
         # reset output string
         $output = undef;
 
@@ -754,15 +483,15 @@ sub parse {
 # m:            waiting for mutex
 # d:            waiting for I/O
 # s:            sleeping (including interruptible & uninterruptible state)
-# align with ftrace_cputime.pl to represent waking up as 'w'
+# (align with ftrace_cputime.pl to represent waking up as 'w'
         if(m/\s
             sched_switch\:\s+
-            prev_comm=.*\s
+            prev_comm=.+\s
             prev_pid=(\d+)\s
             prev_prio=(\d+)\s
             prev_state=(\S+)\s
             ==>\s
-            next_comm=.*\s
+            next_comm=.+\s
             next_pid=(\d+)\s
             next_prio=(\d+)
             (?:\sextra_prev_state=(\S+))?
@@ -770,12 +499,6 @@ sub parse {
         {
             my ($prev_pid, $prev_prio, $prev_state, $next_pid, $next_prio) =
             ($1, $2, ((defined $6)?"$3|$6":$3), $4, $5);
-
-            if ($cpu_online[$cpu] == 0) {
-                # since the target cpu is offline, skip it
-                # (maybe that cpu is running out of ring buffer or offline)
-                next;
-            }
 
             $output .= "#$timestamp\n";
 
@@ -787,7 +510,10 @@ sub parse {
             ){
                 # handle migration
                 # note: IDLE process DOESN'T migrate!!
-                $output .= &_draw_vcd_waves("Z", "proc-$next_pid-$proc_table{$next_pid}{cpu}");
+                $output .= sprintf "%s%s\n",
+                # $next_prio<100?"W":"Z",
+                "Z",
+                $tag_table{"proc-$next_pid-$proc_table{$next_pid}{cpu}"};
             }
 
             if(index($prev_state, 'R') != -1){
@@ -804,15 +530,22 @@ sub parse {
             $proc_table{$next_pid}{cpu} = $cpu;
 
             # check which context we are in
-            if(!&_exec_stack_empty($cpu)){
+            if(defined $exec_stack[$cpu] and scalar(@{$exec_stack[$cpu]}) > 0){
                 my ($type, $id, $prio) = (${$exec_stack[$cpu]}[-1] =~ m/^(\w+)\-(\d+)(?:\-(\d+))?$/o);
 
+                #if($type eq 'proc' and $id == $prev_pid){
+                #    # check pass
+                #    pop @{$exec_stack[$cpu]};
                 if($type eq 'proc' and $id != $prev_pid){
-                    # should not parse anymore because certain ftrace events seems to be lost
+                    # should not parse anymore because it seems certain ftrace events lost
                     die "$script_name: scheduling event not matched, ts=$timestamp, proc_to_schedule_out=[$prev_pid:$proc_table{$prev_pid}{name}], proc_in_exec=[$id:$proc_table{$id}{name}]\n";
-                }elsif($type ne 'proc'){
+                }elsif($type eq 'softirq'){
                     # since softirq priority > process, the softirq_exit event must be lost
-                    warn "$script_name: proc [$next_pid:$proc_table{$next_pid}] schedule-in in $type $id context or $type event lost\n";
+                    warn "$script_name: proc [$next_pid:$proc_table{$next_pid}] scheduling-in in softirq $id context or softirq event lost\n";
+                    pop @{$exec_stack[$cpu]};
+                }elsif($type eq 'irq'){
+                    # since irq priority > process, the irq_handler_exit must be lost
+                    warn "$script_name: proc [$next_pid:$proc_table{$next_pid}] scheduling-in in irq $id context or irq event lost\n";
                     pop @{$exec_stack[$cpu]};
                 }else{
                     # warn "un-recognized exec_stack: ${$exec_stack[$cpu]}[-1]\n";
@@ -822,9 +555,10 @@ sub parse {
             }
             push @{$exec_stack[$cpu]}, "proc-$next_pid-$next_prio";
 
-            $output .= &_draw_vcd_waves(
-                &from_proc_char($prev_prio, $prev_state),"proc-$prev_pid-$cpu",
-                &to_proc_char($next_prio), "proc-$next_pid-$cpu");
+            $output .= sprintf <<SCHED_SWITCH, &from_proc_char($prev_prio, $prev_state), $tag_table{"proc-$prev_pid-$cpu"}, to_proc_char($next_prio), $tag_table{"proc-$next_pid-$cpu"};
+%s%s
+%s%s
+SCHED_SWITCH
             print $fout $output if(defined $output);
         }elsif(m/\s
             sched_wakeup(?:_new)?\:\s+
@@ -845,14 +579,16 @@ sub parse {
                 next;
             }
 
-            $output .= "#$timestamp\n";
+            $output .= sprintf <<SCHED_WAKEUP;
+#$timestamp
+SCHED_WAKEUP
 
             # waked up on another cpu, we have to make it sleep on current cpu
             if(exists($proc_table{$pid}{cpu}) && ($proc_table{$pid}{cpu} ne $target_cpu) && 
                 exists($proc_table{$pid}{state}) && 
                 ($proc_table{$pid}{state} eq 'waking' || $proc_table{$pid}{state} eq 'runable' || $proc_table{$pid}{state} eq 'io' || $prio < 100)){
                 # for process suddenly migrated to another core
-                $output .= &_draw_vcd_waves("Z", "proc-$pid-$proc_table{$pid}{cpu}");
+                $output .= sprintf "Z%s\n", $tag_table{"proc-$pid-$proc_table{$pid}{cpu}"};
                 $do_print = 1;
             }
 
@@ -865,7 +601,7 @@ sub parse {
                 # only wake up tasks that are not running/runable/waking, otherwise this waking event is meaningless
                 $proc_table{$pid}{state} = 'waking'; # waked up
                 $proc_table{$pid}{cpu} = $target_cpu;
-                $output .= &_draw_vcd_waves("X", "proc-$pid-$target_cpu");
+                $output .= sprintf "X%s\n", $tag_table{"proc-$pid-$target_cpu"};
                 $do_print = 1;
             }
             print $fout $output if($do_print);
@@ -893,115 +629,101 @@ sub parse {
                 (defined($proc_table{$pid}{state}) || $prio < 100)){
 
                 # end the line on the original cpu
-                $output .= "#$timestamp\n" . &_draw_vcd_waves("Z", "proc-$pid-$orig_cpu");;
+                $output .= sprintf <<SCHED_MIGRATE_TASK, $tag_table{"proc-$pid-$orig_cpu"};
+#$timestamp
+Z%s
+SCHED_MIGRATE_TASK
                 if(defined $proc_table{$pid}{cpu} and ($proc_table{$pid}{cpu} ne $orig_cpu)){
-                    $output .= &_draw_vcd_waves("Z", "proc-$pid-$proc_table{$pid}{cpu}");
+                    $output .= sprintf "Z%s\n", $tag_table{"proc-$pid-$proc_table{$pid}{cpu}"};
                 }
 
                 if(defined($proc_table{$pid}{state})){
                     if($proc_table{$pid}{state} eq 'runable'){
-                        $output .= &_draw_vcd_waves($prio<100?"L":"0", "proc-$pid-$dest_cpu");
+                        if($prio < 100){
+                            $output .= sprintf "L%s\n", $tag_table{"proc-$pid-$dest_cpu"};
+                        }else{
+                            $output .= sprintf "0%s\n", $tag_table{"proc-$pid-$dest_cpu"};
+                        }
                     }elsif($proc_table{$pid}{state} eq 'waking'){
-                        $output .= &_draw_vcd_waves("X", "proc-$pid-$dest_cpu");
+                        $output .= sprintf "X%s\n", $tag_table{"proc-$pid-$dest_cpu"};
                     }elsif($proc_table{$pid}{state} eq 'io'){
-                        $output .= &_draw_vcd_waves("-", "proc-$pid-$dest_cpu");
+                        $output .= sprintf "-%s\n", $tag_table{"proc-$pid-$dest_cpu"};
                     }elsif($proc_table{$pid}{state} eq 'running'){
                         # migrate during running, which is weird
-                        $output .= &_draw_vcd_waves($prio<100?"H":"1", "proc-$pid-$dest_cpu");
+                        if($prio < 100){
+                            $output .= sprintf "H%s\n", $tag_table{"proc-$pid-$dest_cpu"};
+                        }else{
+                            $output .= sprintf "1%s\n", $tag_table{"proc-$pid-$dest_cpu"};
+                        }
                     }else{
-                        $output .= &_draw_vcd_waves($prio<100?"W":"Z", "proc-$pid-$dest_cpu");
+                        if($prio < 100){
+                            $output .= sprintf "W%s\n", $tag_table{"proc-$pid-$dest_cpu"};
+                        }else{
+                            $output .= sprintf "Z%s\n", $tag_table{"proc-$pid-$dest_cpu"};
+                        }
                     }
                 }
             }
             $proc_table{$pid}{cpu} = int($dest_cpu);
             print $fout $output if(defined $output);
 
-        }elsif(m/\s (?:
-            (?:irq_handler_entry|irq_entry)\:\s+ irq=(\d+)\s name=(.+) |
-            ipi_entry\:\s+ \( ([^)]+) \) |
-            softirq_entry\:\s vec=(\d+)\s \[action=.+\]
-            )/xso)
+        }elsif(m/\s
+            (?:irq_handler_entry|ipi_handler_entry|irq_entry)\:\s+
+            (?:irq|ipi)=(\d+)\s
+            name=(.+)
+            /xso)
         {
             no warnings 'uninitialized';
 
             my $irq = $1;
-            my $irq_name = $3;
-            my $event_type = "irq";
-            my $softirq = $4;
-
-            if (defined $irq) {
-                $irq_name = $2;
-            } elsif(defined $irq_name) {
-                $irq = $ipi_id_table{"$irq_name"}{id};
-                $event_type = "ipi";
-            } elsif(defined $softirq) {
-                $irq = $softirq;
-                $irq_name = $irq_table{"softirq-$softirq-$cpu"};
-                $event_type = "softirq";
-            }
- 
             my ($type, $id, $prio);
 
-            if ($d) {
-                if ($irq_depth[$cpu]>0 && $nested_irq_warn_already == 0) {
-                    my $last_irq = (&find_last_event($exec_stack[$cpu], qr!^(?:irq|ipi)\-!o) =~ m/^(?:irq|ipi)\-(\d+)/o);
-                    $nested_irq_warn_already++;
-                    warn "$script_name: nested irq handler detected, ts=$timestamp cpu=$cpu irq=[$irq:$irq_name] in_irq=@{[ $last_irq || 'unknown' ]}";
-                }
-                $irq_depth[$cpu]++;
+            if ($irq_count[$cpu]>0 && $nested_irq_warn_already == 0){
+                my $last_irq = (&find_last_event($exec_stack[$cpu], qr!^irq\-!o) =~ m/^irq\-(\d+)/o);
+                $nested_irq_warn_already++;
+                warn "$script_name: nested irq handler detected, ts=$timestamp cpu=$cpu irq=[$irq:$2] in_irq=@{[ $last_irq || 'unknown' ]}";
             }
+            $irq_count[$cpu]++;
 
-            $output .= "#$timestamp\n";
-            $output .= _draw_vcd_waves("1", "$event_type-$irq-$cpu");
+            $output .= sprintf <<IRQ_HANDLER_ENTRY, $tag_table{"irq-$irq-$cpu"};
+#$timestamp
+1%s
+IRQ_HANDLER_ENTRY
 
-            if(!&_exec_stack_empty($cpu)){
+            if(defined $exec_stack[$cpu] and scalar(@{$exec_stack[$cpu]}) > 0){
                 ($type, $id, $prio) = (${$exec_stack[$cpu]}[-1] =~ m/^(\w+)\-(\d+)(?:\-(\d+))?$/o);
             }
-            $output .= _draw_vcd_waves(&from_proc_char((defined($prio)?$prio:'120'), 'R'),
-                "@{[defined($type)?$type:'proc']}-@{[defined($id)?$id:$curr_pid]}-$cpu");
-            push @{$exec_stack[$cpu]}, "$event_type-$irq";
+            $output .= sprintf <<IRQ_HANDLER_ENTRY, &from_proc_char((defined($prio)?$prio:'120'), 'R'), $tag_table{"@{[defined($type)?$type:'proc']}-@{[defined($id)?$id:$curr_pid]}-$cpu"};
+%s%s
+IRQ_HANDLER_ENTRY
+            push @{$exec_stack[$cpu]}, "irq-$irq";
 
             print $fout $output if(defined $output);
 
-        }elsif(m/\s (?:
-            (?:irq_handler_exit|irq_exit)\:\s+ irq=(\d+) (?:\sret=handled)? |
-            ipi_exit\:\s+ \( ([^)]*) \) |
-            softirq_exit\:\s vec=(\d+)\s \[action=.+\]
-            )/xso)
+        }elsif(m/\s
+            (?:irq_handler_exit|ipi_handler_exit|irq_exit)\:\s+
+            (?:irq|ipi)=(\d+)
+            (?:\sret=handled)?
+            /xso)
         {
 
-            my ($irq, $irq_name, $softirq) = ($1, $2, $3);
-            my $event_type = "irq";
-            # to find ipi name faster
-
-            if(defined $irq){
-                $irq_name = $irq_table{"irq-$irq-$cpu"};
-            }elsif(defined $irq_name){
-                # ipi case
-                $irq = $ipi_id_table{"$irq_name"}{id};
-                $event_type = "ipi";
-            }elsif(defined $softirq){
-                $irq = $softirq;
-                $irq_name = $irq_table{"softirq-$softirq-$cpu"};
-                $event_type = "softirq";
-            }
-
-            if($d) {
-                $irq_depth[$cpu]-- if(defined($irq_depth[$cpu]) && $irq_depth[$cpu] > 0);
-            }
+            my $irq = $1;
+            $irq_count[$cpu]-- if(defined($irq_count[$cpu]) && $irq_count[$cpu] > 0);
 
             $output .= "#$timestamp\n";
-            if(!&_exec_stack_empty($cpu)){
+            if(defined $exec_stack[$cpu] and scalar(@{$exec_stack[$cpu]}) > 0){
                 my ($type, $id, $prio) = (${$exec_stack[$cpu]}[-1] =~ m/^(\w+)\-(\d+)(?:\-(\d+))?$/o);
-                my $name = &_find_id_name($type, $id, $cpu);
 
-                # if($type eq 'irq' and ($id != $irq or $event_type eq 'ipi'))
-                if($type ne $event_type or $id != $irq){
-                    warn qq($script_name: irq entry/exit event not matched, maybe irq event lost, ts=$timestamp, ${event_type}_to_exit=[$irq:$irq_name]", in_${type}=[$id:$name]\n);
+                if($type eq 'irq' and $id != $irq){
+                    warn "$script_name: irq entry/exit event not matched, maybe irq event lost, ts=$timestamp, irq_to_exit=[$irq:$irq_table{\"$irq-$cpu\"}], in_irq=[$id:$irq_table{\"$id-$cpu\"}]\n";
                     pop @{$exec_stack[$cpu]};
-                    $output .= &_draw_vcd_waves("0", "$type-$irq-$cpu");
+                    $output .= sprintf "0%s\n", $tag_table{"irq-$id-$cpu"};
+                }elsif($type eq 'softirq'){
+                    # should not parse anymore because it seems certain ftrace events lost
+                    warn "$script_name: irq entry event lost, ts=$timestamp, irq_to_exit=[$irq:$irq_table{\"$irq-$cpu\"}], softirq_in_exec=[$id:$softirq_table{\"$id-$cpu\"}]\n";
+                    next;
                 }elsif($type eq 'proc'){
-                    warn qq($script_name: irq entry event lost, ts=$timestamp, ${event_type}_to_exit=[$irq:$irq_name], ${type}_in_exec=[$id:$name]\n);
+                    warn "$script_name: irq entry event lost, ts=$timestamp, irq_to_exit=[$irq:$irq_table{\"$irq-$cpu\"}], proc_in_exec=[$id:$proc_table{$id}{name}]\n";
                     next;
                 }else{
                     # warn "un-recognized exec_stack: ${$exec_stack[$cpu]}[-1]\n";
@@ -1010,41 +732,90 @@ sub parse {
                 }
             }
 
-            #$output .= &_draw_vcd_waves(($event_type eq "softirq"?"Z":"0"), "$event_type-$irq-$cpu");
-            $output .= &_draw_vcd_waves("Z", "$event_type-$irq-$cpu");
+            $output .= sprintf "0%s\n", $tag_table{"irq-$irq-$cpu"};
 
-            if(!&_exec_stack_empty($cpu)){
+            if(defined $exec_stack[$cpu] and scalar(@{$exec_stack[$cpu]}) > 0){
                 my ($type, $id, $prio) = (${$exec_stack[$cpu]}[-1] =~ m/^(\w+)\-(\d+)(?:\-(\d+))?$/o);
-                if(!defined $id) {
-                    $id = $curr_pid;
-                }
-                if(!defined $prio && $type ne 'proc'){
+                if(!defined $prio && $type eq 'softirq'){
                     $prio = 120;
                 }
-                $output .= &_draw_vcd_waves(&to_proc_char($prio), "$type-$id-$cpu");
+                $output .= sprintf <<IRQ_HANDLER_EXIT, &to_proc_char($prio), $tag_table{"$type-$id-$cpu"};
+%s%s
+IRQ_HANDLER_EXIT
             }
             print $fout $output if(defined $output);
-        }elsif(m/\s (?:
-            softirq_raise\:\s vec=(\d+)\s \[action=.+\] |
-            ipi_raise\:\s+ target_mask=([\d,]+)\s+ \( ([^)]*) \)
-            )/xso)
+        }elsif(m/\s
+            softirq_raise\:\s
+            vec=(\d+)\s
+            \[action=.+\]
+            /xso)
         {
-            my $irq = $1;
-            my ($cpumask, $ipi_name) = ($2, $3);
-            my $event_type = "softirq";
-            
-            $output .= "#$timestamp\n";
-            if (defined $cpumask) {
-                $event_type = "ipi";
-                $irq = $ipi_id_table{"$ipi_name"}{id};
-                for my $id (&cpumask_to_ids($cpumask)) {
-                    $output .= &_draw_vcd_waves("X", "$event_type-$irq-$id");
-                }
-            } else {
-                $output .= &_draw_vcd_waves("X", "$event_type-$irq-$cpu");
+            $output .= sprintf <<SOFTIRQ_RAISE, $tag_table{"softirq-$1-$cpu"};
+#$timestamp
+X%s
+SOFTIRQ_RAISE
+            print $fout $output if(defined $output);
+        }elsif(m/\s
+            softirq_entry\:\s
+            vec=(\d+)\s
+            \[action=.+\]
+            /xso)
+        {
+
+            my $softirq = $1;
+            my ($type, $id, $prio);
+
+            $output .= sprintf <<SOFTIRQ_ENTRY, $tag_table{"softirq-$softirq-$cpu"};
+#$timestamp
+1%s
+SOFTIRQ_ENTRY
+
+            if(defined $exec_stack[$cpu] and scalar(@{$exec_stack[$cpu]}) > 0){
+                ($type, $id, $prio) = (${$exec_stack[$cpu]}[-1] =~ m/^(\w+)\-(\d+)(?:\-(\d+))?$/o);
             }
+            $output .= sprintf <<SOFTIRQ_ENTRY, &from_proc_char((defined($prio)?$prio:'120'), 'R'), $tag_table{"@{[defined($type)?$type:'proc']}-@{[defined($id)?$id:$curr_pid]}-$cpu"};
+%s%s
+SOFTIRQ_ENTRY
+            push @{$exec_stack[$cpu]}, "softirq-$softirq";
             print $fout $output if(defined $output);
 
+        }elsif(m/\s
+            softirq_exit\:\s
+            vec=(\d+)\s
+            \[action=.+\]
+            /xso)
+        {
+            my $softirq = $1;
+            $output .= "#$timestamp\n";
+            if(defined $exec_stack[$cpu] and scalar(@{$exec_stack[$cpu]}) > 0){
+                my ($type, $id, $prio) = (${$exec_stack[$cpu]}[-1] =~ m/^(\w+)\-(\d+)(?:\-(\d+))?$/o);
+                if($type eq 'irq'){
+                    warn "$script_name: irq exit event lost, ts=$timestamp, softirq_to_exit=[$softirq:$softirq_table{\"$softirq-$cpu\"}], irq_in_exec=[$id:$irq_table{\"$id-$cpu\"}]\n";
+                    pop @{$exec_stack[$cpu]} ;
+                    $output .= sprintf "Z%s\n", $tag_table{"irq-$id-$cpu"};
+                }elsif($type eq 'softirq' and $id != $softirq){
+                    # should not parse anymore because it seems certain ftrace events lost
+                    warn "$script_name: softirq entry/exit event not matched, ts=$timestamp, softirq_to_exit=[$softirq:$softirq_table{\"$softirq-$cpu\"}], softirq_in_exec=[$id:$softirq_table{\"$softirq-$cpu\"}]\n";
+                    $output .= sprintf "Z%s\n", $tag_table{"softirq-$id-$cpu"};
+                }elsif($type eq 'proc'){
+                    warn "$script_name: softirq entry event lost, ts=$timestamp, softirq_to_exit=[$softirq:$softirq_table{\"$softirq-$cpu\"}], proc_in_exec=[$id:$proc_table{$id}{name}]\n";
+                    next;
+                }else{
+                    pop @{$exec_stack[$cpu]} ;
+                }
+            }
+
+            $output .= sprintf <<SOFTIRQ_EXIT, $tag_table{"softirq-$softirq-$cpu"};
+Z%s
+SOFTIRQ_EXIT
+            if(defined $exec_stack[$cpu] and scalar(@{$exec_stack[$cpu]}) > 0){
+                my ($type, $id, $prio) = (${$exec_stack[$cpu]}[-1] =~ m/^(\w+)\-(\d+)(?:\-(\d+))?$/o);
+                #@print "timestamp = $timestamp, last exec=${$exec_stack[$cpu]}[-1]\n";
+                $output .= sprintf <<SOFTIRQ_EXIT, to_proc_char(($type eq 'softirq')?120:$prio), $tag_table{"$type-@{[defined($id)?$id:$curr_pid]}-$cpu"};
+%s%s
+SOFTIRQ_EXIT
+            }
+            print $fout $output if(defined $output);
         }elsif(m/\s
             tracing_on\:\s
             ftrace\s is\s ((?:dis|en)abled)
@@ -1054,13 +825,17 @@ sub parse {
 
             if($enabled eq 'disabled' && $tracing_on == 1){
                 $tracing_on = 0;
-                $output .= "#$timestamp\n";
+                $output .= sprintf <<FTRACE_DISABLED;
+#$timestamp
+FTRACE_DISABLED
                 for(my $j = 0; $j <= $#exec_stack ; ++$j){
                     $output .= &cpu_offline_str($j);
                 }
             }elsif($enabled eq 'enabled' && $tracing_on == 0){
                 $tracing_on = 1;
-                $output .= "#$timestamp\n";
+                $output = sprintf <<FTRACE_ENABLED;
+#$timestamp
+FTRACE_ENABLED
 
                 for(my $j = 0; $j <= $#exec_stack ; ++$j){
                     $output .= &cpu_online_str($j);
@@ -1077,7 +852,6 @@ sub parse {
             my $cpu_id = int($1);
 
             if($state eq 'online'){
-                $cpu_online[$cpu_id] = 1;
                 $output = sprintf <<"CPU_ONLINE", &cpu_online_str($cpu_id);
 #$timestamp
 %s
@@ -1089,6 +863,7 @@ CPU_ONLINE
 %s
 CPU_OFFLINE
             }
+
             print $fout $output if(defined $output);
         }elsif(m/\s
             unnamed_irq\:\s
@@ -1100,8 +875,8 @@ CPU_OFFLINE
     }
 }
 
-
 # tag_table index: proc-<pid>-<cpu>, irq-<id>-<cpu>, softirq-<id>-<cpu>
+# exec_stack value: proc-<pid>-<prio>, irq-<irq>, softirq-<irq>
 sub main{
     my ($input_file, $output_file) = ($_[0]||"SYS_FTRACE", $_[1]||"trace.vcd");
     my ($fout, @inputs);
@@ -1112,7 +887,7 @@ sub main{
     if(-e $input_file and !defined $c){
         warn "$script_name: input=$input_file, output=$output_file\n";
         open my $fin, '<', $input_file or die "$script_name: unable to open $input_file\n";
-        @inputs = grep {!m/^\s*\#/o} <$fin>;
+        @inputs = <$fin>;
         close $fin;
         open $fout, '>', $output_file or die "$script_name: unable to open $output_file\n";
     }else{
@@ -1125,12 +900,7 @@ sub main{
     if($event_count == 0){
         die "$script_name: no recognized events, exit\n";
     }
-    if($beginning_timestamp == -1) {
-        die "$script_name: unable to find first timestamp\n";
-    }
-
-    &find_1st_exec_context(\@inputs, $beginning_timestamp);
-    &print_vcd_header($fout, $beginning_timestamp);
+    &print_vcd_header($fout);
     &parse($fout, \@inputs);
     close $fout;
 }

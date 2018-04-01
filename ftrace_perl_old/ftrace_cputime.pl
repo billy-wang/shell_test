@@ -40,15 +40,6 @@
 #   and ISR, softirq information if these events available
 #   special processes appear on all cpus, ex: idle
 #
-# 2015/07/29    support nested interrupts handling
-#               support cpu0 offline case
-#
-# 2014/04/14    fix runable time not considering cpu offline problem
-#
-# 2014/04/01    add irq_{entry,exit} events
-#
-# 2014/03/10    workqueue events analysis
-#
 # 2013/07/26    adjust the ftrace trimming algorithm
 #               once cpu_hotplug events are available, trim to the latest timestamp of the following events
 #               1) CPU0's 1st event
@@ -98,31 +89,27 @@
 # 2012/09/05    first version   
 
 use strict;
+use warnings;
 use vars qw($v $h $f $c $w $m $l);
 
-BEGIN {
-    my $is_linux = $^O =~ /linux/;
-    eval <<'USE_LIB' if($is_linux);
-        use FindBin;
-        use lib "$FindBin::Bin/lib/mediatek/";
-USE_LIB
-    eval 'use ftrace_parsing_utils;';
-}
-
-my $version = "2015-07-29";
-my (%proc_table, %irq_table, $verbose_fout, @cpu_table, %softirq_table, @softirq_count, @irq_count, @exec_stack, $tgid_support, %workqueue_table, $workqueue_support);
+my $version = "2013-09-30";
+my (%proc_table, %irq_table, $verbose_fout, @cpu_table, %softirq_table, @softirq_count, @irq_count, @exec_stack);
 my %event_count ;                   # event_count collected events
-my $script_name = &_basename($0);
+my $tracing_on_regex = qr/\s
+            tracing_on\:\s
+            ftrace\sis\s
+            /xs;
 
 sub verbose_printf{
     printf $verbose_fout @_ if(defined $v);
 }
 
 sub usage{
-        print <<"USAGE" ;
-Usage: $script_name <input_file> <output_file>
-       -v=<filename>: verbose mode, dump the intervals of each events into file
-       -f           : convert input into vcd without trimming events.
+    if($h){
+        print <<"USAGE"
+Usage: $0 <input_file> <output_file>
+       -v=<filename>: verbose mode, dump the the intervals of each events into file
+       -f           : convert input into vcd without triming events.
                       By default, this script will only convert events since first CPU0 event
        -c           : console mode, input from stdin and output to stdout
        -w           : wakeup time tracking mode, track all wakeup-to-exec time
@@ -130,7 +117,8 @@ Usage: $script_name <input_file> <output_file>
                       and exec_count (count of task being scheduled to run)
        -l           : track process executing time on each cpu
 USAGE
-    exit 0;
+    }
+
 }
 
 my @proc_table_header = (
@@ -231,20 +219,15 @@ sub proc_state_str {
 sub kernel_priority_to_string {
     my ($numeric_prio_str) = @_;
     local $_;
-    #print "numeric_prio_str = $numeric_prio_str\n";
-    if($numeric_prio_str =~ m/\d+(?:\:\d+)*/o){
-        my @prios = map {
-            if($_ < 100){
-                sprintf "RT%d", 99-$_;
-            }else{
-                sprintf "nc=%d", $_-120
-            }
-        } sort {$a <=> $b} split(/\:/, $numeric_prio_str);
+    my @prios = map {
+        if($_ < 100){
+            sprintf "RT%d", 99-$_;
+        }else{
+            sprintf "nc=%d", $_-120
+        }
+    } sort {$a <=> $b} split(/\:/, $numeric_prio_str);
 
-        return join("\; ", @prios);
-    }else{
-        return '';
-    }
+    return join("\; ", @prios);
 }
 
 # update xx_time, xx_max, xx_max_timestamp, xx_count
@@ -258,18 +241,18 @@ sub update_stat_in_table{
 
         if(defined $local_cpu){
             # idle process
-            &verbose_printf("[%.3f]pid=$local_pid, cpu=$local_cpu, add duration=%.3fms to ${keyb}\n", 1e-3*$timestamp, 1e-3*$duration);
+            &verbose_printf("[%.3f]pid=$local_pid, cpu=$local_cpu, add duration=%.3fms to ${keyb}\n", $timestamp, $duration);
         }else{
-            &verbose_printf("[%.3f]pid=$keya, add duration=%.3fms to ${keyb}\n",1e-3* $timestamp, $duration*1e-3);
+            &verbose_printf("[%.3f]pid=$keya, add duration=%.3fms to ${keyb}\n", $timestamp, $duration);
         }
     }elsif($tab_name eq 'irq'){
         $ref = \%irq_table;
         my ($irq, $cpu) = split /\-/, $keya;
-        &verbose_printf("[%.3f]irq=$irq, cpu=$cpu, add duration=%.3fms to ${keyb}\n", $timestamp*1e-3, $duration*1e-3);
+        &verbose_printf("[%.3f]irq=$irq, cpu=$cpu, add duration=%.3fms to ${keyb}\n", $timestamp, $duration);
     }elsif($tab_name eq 'softirq'){
         $ref = \%softirq_table;
         my ($softirq, $cpu) = split /\-/, $keya;
-        &verbose_printf("[%.3f]softirq=$softirq, cpu=$cpu, add duration=%.3fms to ${keyb}\n", $timestamp*1e-3, $duration*1e-3);
+        &verbose_printf("[%.3f]softirq=$softirq, cpu=$cpu, add duration=%.3fms to ${keyb}\n", $timestamp, $duration);
     }
 
     # count process execution duration in each cpu
@@ -292,6 +275,23 @@ sub update_stat_in_table{
     ${$ref}{$keya}{$keyb.'_time'} += $duration;
 }
 
+sub find_last_event{
+    my ($ref, $regex) = @_;
+    local $_;
+
+    if(!defined($ref) || scalar(@{$ref}) == 0){
+        return '';
+    }
+
+    for(reverse @{$ref}){
+        if($_ =~ $regex){
+            return $_;
+        }
+    }
+
+    return '';
+}
+
 sub _merge{
     my ($ref, $idx1, $idx2) = @_;
 
@@ -312,32 +312,6 @@ sub _merge{
     }
 }
 
-# prepare workqueue statistics info
-sub per_worker_spirntf {
-    local $_;
-    my ($pid, $exec_time) = @_;
-
-    #no warnings 'uninitialized';
-
-    # 0: pid,cmdline
-    # 1: func(addr),
-    # 2: duration
-    # 3: percentage
-    my @results;
-    $results[0] = "pid=$pid,cmdline=$proc_table{$pid}{name}";
-    $results[1] = "work func(work addr),";
-    $results[2] = "exec time(ms),";
-
-    for my $addr (sort {
-                $workqueue_table{$pid}{$b}{duration} <=> $workqueue_table{$pid}{$a}{duration}
-            } keys %{$workqueue_table{$pid}})
-    {
-        $results[1] .= "$workqueue_table{$pid}{$addr}{name}($addr),";
-        $results[2] .= $workqueue_table{$pid}{$addr}{duration}*1e-3.",";
-    }
-    return map {"$_\n";} @results;
-}
-
 # format task output
 sub per_task_sprintf{
     my ($pid, $total_time) = @_;
@@ -351,28 +325,36 @@ sub per_task_sprintf{
                 !m/_max(?:_ts)?$/o
             } @keys if(!$m);
 
-            #no warnings 'uninitialized';
+    no warnings 'uninitialized';
 
-    my $result;
-    if($tgid_support){
-        $result = ((exists $proc_table{$pid}{tgid} and $proc_table{$pid}{tgid} !~ m/^\-+$/o)?$proc_table{$pid}{tgid}:"").",";
-    }
-
-    $result .= 
-        join(",", $pid, $proc_table{$pid}{name},
+    #print "pid=$pid exec-time=$proc_table{$pid}{exec_time}, total_time=$total_time, cpus=$cpus\n";
+    if($m){
+        return join(",", $pid, $proc_table{$pid}{name},
             sprintf("%2.3f%%", $proc_table{$pid}{exec_time}/$total_time*1e2),
             sprintf("%.3f", 1e-3*($proc_table{$pid}{isr_time} + $proc_table{$pid}{softirq_time})),
-            sprintf("%.3f", 1e-3*($proc_table{$pid}{exec_time} - $proc_table{$pid}{isr_time} - $proc_table{$pid}{softirq_time}))
-    );
-    $result .= ",". join(",", 
+            sprintf("%.3f", 1e-3*($proc_table{$pid}{exec_time} - $proc_table{$pid}{isr_time} - $proc_table{$pid}{softirq_time})),
             sprintf("%.3f", 1e-3*($proc_table{$pid}{exec_max})),
             sprintf("%.3f", 1e-3*($proc_table{$pid}{exec_max_ts}||0)),
             sprintf("%.3f", 1e-3*($proc_table{$pid}{exec_count})),
             sprintf("%.3f", 1e-3*($proc_table{$pid}{first_event})),
             sprintf("%.3f", 1e-3*($proc_table{$pid}{last_event})),
-            sprintf("%.3f", 1e-3*($proc_table{$pid}{last_event} - $proc_table{$pid}{first_event}))
-        ) if($m);
-    $result .= ",".join(",",
+            sprintf("%.3f", 1e-3*($proc_table{$pid}{last_event} - $proc_table{$pid}{first_event})),
+            ,
+            (map { sprintf "%.3f", $_;} 1e-3*&_merge(\%{$proc_table{$pid}}, 'runable', 'waking'), @{$proc_table{$pid}}{@keys}),
+            sprintf("%.3f", 1e-3*($proc_table{$pid}{waking_time} +
+                $proc_table{$pid}{runable_time} +
+                $proc_table{$pid}{sleep_time} +
+                $proc_table{$pid}{mutex_time} +
+                $proc_table{$pid}{io_time} +
+                $proc_table{$pid}{exec_time})),
+            "",
+            &kernel_priority_to_string($proc_table{$pid}{prio})
+        );
+    }else{
+        return join(",", $pid, $proc_table{$pid}{name},
+            sprintf("%2.3f%%", $proc_table{$pid}{exec_time}/$total_time*1e2),
+            sprintf("%.3f", 1e-3*($proc_table{$pid}{isr_time} + $proc_table{$pid}{softirq_time})),
+            sprintf("%.3f", 1e-3*($proc_table{$pid}{exec_time} - $proc_table{$pid}{isr_time} - $proc_table{$pid}{softirq_time})),
             (map { sprintf "%.3f", $_*1e-3;} (&_merge(\%{$proc_table{$pid}}, 'runable', 'waking'))[0], @{$proc_table{$pid}}{@keys}),
             sprintf("%.3f", 1e-3*($proc_table{$pid}{waking_time} +
                 $proc_table{$pid}{runable_time} +
@@ -381,16 +363,16 @@ sub per_task_sprintf{
                 $proc_table{$pid}{io_time} +
                 $proc_table{$pid}{exec_time})),
             "",
-            &kernel_priority_to_string($proc_table{$pid}{prio}));
-
-    return $result;
+            &kernel_priority_to_string($proc_table{$pid}{prio})
+        );
+    }
 }
 
 # format irq/softirq output
 sub per_irq_sprintf{
     my ($ref, $irq, $cpu, @keys) = @_;
 
-    #no warnings 'uninitialized';
+    no warnings 'uninitialized';
     my $result = join(",",
         $irq,
         $cpu,
@@ -427,13 +409,203 @@ sub sum_fields{
     return $sum;
 }
 
+sub _split_event{
+    use bigint;
+    local $_ = $_[0];
+    my ($pid, $cpu, $ts) = m/^
+                .{16}\-(\d+)\s*
+                \[(\d+)\]
+                \s+(?:\S{4}\s+)?
+                (\d+\.\d+)\:
+                /xso;
+    $ts =~ s/\.//go;
+    return ($pid, $cpu, int($ts));
+}
+
+sub _binary_search_ts{
+    my ($ref, $ts, $first) = @_;
+    my ($last, $index) = ($#{$ref}, 0);
+    local $_;
+
+    if(!defined $first){
+        $first = 0;
+    }
+
+    while($first < $last){
+        use bigint;
+        $index = int($first + $last)/2;
+        my $index_ts = (&_split_event(${$ref}[$index]))[-1];
+
+        if($ts == $index_ts){
+            return $index;
+        }elsif ($ts < $index_ts){
+            $last = $index-1;
+        }else{
+            $first = $index+1;
+        }
+    }
+
+    return $first;
+}
+
+# get rid of events that before cpu0
+# detect if this is trace file in old format
+# detect if any lost events in ftrace, which may cause parser confused
+# delete unhandled irq events
+sub filter_events{
+    local $_;
+    my (@events, @cpu_event_index, $splice_index, $event_count);
+    my $cpu_hotplug_event_support = 0;
+    $splice_index = 0;
+
+    # filter comment & events not match our patterns out
+    for(@_){
+        if(m/^\#\senabled\s events\: .*
+            \:\bcpu_hotplug\b/xso){
+            $cpu_hotplug_event_support = 1;
+        }elsif(/^\#/o){
+            ; # skip comments
+        }elsif(m/^.{16}\-\d+\s*\[(\d+)\]/xso){
+            my $cpu = int($1);
+            # the parsing will start from first cpu0 event
+            if(defined $cpu_event_index[0] || $cpu == 0){
+                push (@events, $_);
+                $event_count++;
+                if(!defined $cpu_event_index[$cpu]){
+                    $cpu_event_index[$cpu] = $#events ;
+                }
+            }
+        }
+
+        if(m/^\#\stracer\:\ssched_switch\b/xso){
+            warn "$0: sched_switch tracer is not supported to convert with this script\n";
+            exit 0;
+        }
+        if(/\blost\s.+\sevents\b/io){
+            warn "$0: some events lost in raw trace data, the generated vcd may be incorrect\n";
+        }
+    }
+
+    if(!defined $event_count){
+        die "$0: no events available\n";
+    }
+
+    # if hotplug event support, transform the first index of each cpu
+    if($cpu_hotplug_event_support){
+        my @cpu_events_ts = map{
+            if( m/\s
+                cpu_hotplug\:\s
+                cpu=\d+\s
+                state=online\s
+                last_offline_ts=(\d+)
+            /xso){
+                $1;
+            }else{
+                (&_split_event($_))[-1];
+            }
+           } @events[@cpu_event_index];
+
+           #warn "[".join(",", @cpu_events_ts)."], cpu0=$cpu_event_index[0]\n";
+        my $pivot_ts = &_max(@cpu_events_ts);
+        $splice_index = &_binary_search_ts(\@events, $pivot_ts, $cpu_event_index[0]);
+        #warn "splice_index = $splice_index, pivot_ts=$pivot_ts\n";
+        if((&_split_event($events[$splice_index]))[-1] < $pivot_ts){
+            $splice_index++;
+        }
+
+        #@{$cpu_events{index}} = map{
+        #    if($_ == 0){
+        #        # cpu0 should be never offline
+        #        $cpu_events{index}[0];
+        #    }elsif($events[$cpu_events{index}[$_]] =~ m/\s
+        #        cpu_hotplug\:\s
+        #        cpu=\d+\s
+        #        state=online
+        #        /xso)
+        #    {
+        #        # first event is the cpu_online events
+        #        # no need to splice to the first event on this cpu
+        #        $cpu_events{index}[0];
+        #    }else{
+        #        $cpu_events{index}[$_];
+        #    }
+        #} 1 .. $#{$cpu_events{index}};
+    }
+
+    if($splice_index){
+        splice @events, 0, $splice_index;
+    }
+
+    # filter out unhandled irq events
+    my @output_events;
+    my @irq_unhandled ;
+    for(reverse @events){
+        my $cpu = undef; 
+        if(m/^.{16}\-\d+\s*\[(\d+)\]/xso){
+            $cpu = int($1);
+        }
+
+        if(m/\s
+            irq_handler_exit\:\s+
+            irq=(\d+)\s
+            ret=unhandled
+            /xso)
+        {
+            if(defined $cpu){
+                $irq_unhandled[$cpu] = 1;
+            }
+        }elsif(defined $cpu                 and
+            defined $irq_unhandled[$cpu]    and
+            $irq_unhandled[$cpu] == 1       and
+            m/\s
+            irq_handler_entry\:\s+
+            irq=(\d+)\s
+            name=(.+)
+            /xso)
+        {
+            $irq_unhandled[$cpu] = 0;
+        }else{
+            unshift @output_events, $_ ;
+        }
+    }
+
+    my @tracing_off_index = grep {$output_events[$_] =~ m/${tracing_on_regex}disabled/ } 0 .. $#output_events;
+    if(scalar(@tracing_off_index) > 0){
+        if($tracing_off_index[-1] == $#output_events){
+            splice @output_events, $tracing_off_index[-1];
+        }else{
+            my $last_ts = (&_split_event($output_events[-1]))[-1];
+            my $last_hotplug_ts = (&_split_event($output_events[$tracing_off_index[-1]]))[-1];
+            # if the ts that tracing_on toggled to 0 and the last ts differ within 1ms, remove these events
+            if(($last_ts - $last_hotplug_ts) < 1000){
+                splice @output_events, $tracing_off_index[-1];
+            }
+            #warn "last_ts=$last_ts hotplug_ts=$last_hotplug_ts\n";
+            #if($output_events[$tracing_off_index[-1]] =~ m/${tracing_on_regex}0/){
+            #    splice @output_events, $tracing_off_index[-1];
+            #}
+        }
+    }
+
+    # ignore the first event if it is "toggled to 1" event
+    if($output_events[0] =~ m/\s
+            tracing_on\:\s
+            ftrace\s is\s enabled
+        /xso)
+    {
+        shift @output_events;
+    }
+
+    return \@output_events;
+}
+
 # summerize count of events
 sub count_events{
     local $_ ;
     my $counts = 0;
     my $ref = $_[0];
 
-    #no warnings 'uninitialized';
+    no warnings 'uninitialized';
     if($#_ > 1){
         for(@_[1 .. $#_]){
             $counts += ${$ref}{$_};
@@ -517,6 +689,12 @@ sub reset_stat{
     }
 }
 
+sub _max{
+    use bigint;
+    local $_;
+    return (sort {$a <=> $b} grep {defined $_ } @_)[-1];
+}
+
 # ------------
 # main parsing subroutine
 # ------------
@@ -526,31 +704,20 @@ sub parse {
     my $this_duration;
     my $nested_irq_warn_already = 0;
     my $tracing_on = 1;
-    $tgid_support = 0;
-    my ($timestamp, $first_ts_of_all);
+    my $timestamp;
+    my $first_ts_of_all;
 
     for (@{$ref}){
         chomp;
-        s/[\n\r]+$//o;
 
-        my ($curr_pid, $tgid, $cpu);
-        if((($curr_pid, $tgid, $cpu, $timestamp) = m/^
-            .{16}\-(\d+)\s+
-            (?:\(([\s\d-]{5})\)\s+)?
+        my ($orig_pid, $cpu);
+        if((($orig_pid, $cpu, $timestamp) = m/^
+            .{16}\-(\d+)\s*
             \[(\d+)\]\s+(?:\S{4}\s+)?
             (\d+\.\d+)\:
         /xso)==0){
             # skip unrecognized strings
             next;
-        }
-
-        if(defined $tgid){
-            if($tgid =~ s/^\s*(\d+)$/$1/xgso){
-                $proc_table{$curr_pid}{tgid} = int($tgid);
-                $tgid_support = 1;
-            }else{
-                $proc_table{$curr_pid}{tgid} = $tgid;
-            }
         }
 
         # $timestamp = scalar($timestamp)*1e3;
@@ -569,7 +736,7 @@ sub parse {
             $cpu_table[$cpu]{last_online_ts} = $timestamp;
         }
         $cpu_table[$cpu]{last_ts} = $timestamp;
-        $cpu_table[$cpu]{last_pid} = $curr_pid;
+        $cpu_table[$cpu]{last_pid} = $orig_pid;
 
         if(m/\s
             sched_switch\:\s
@@ -592,10 +759,9 @@ sub parse {
             # check if process being scheduled out and last scheduled in match
             if(defined $exec_stack[$cpu] and scalar(@{$exec_stack[$cpu]}) > 0){
                 my ($type, $id) = (${$exec_stack[$cpu]}[-1] =~ m/^(\w+)\-(\d+)$/o);
-                if($type eq 'proc' and $id != $prev_pid){
-                    warn "$script_name: scheduling event not matched, timestamp=$timestamp, pid_to_schedule_out: $prev_pid, pid_in_exec=$id\n";
+                if($type ne 'proc' or $id != $prev_pid){
+                    warn "$0: scheduling event not matched, timestamp=$timestamp, pid_to_schedule_out: $prev_pid, pid_in_exec=$id\n";
                     return;
-                }elsif($type ne 'proc'){
                 }else{
                     pop @{$exec_stack[$cpu]};
                 }
@@ -621,7 +787,7 @@ sub parse {
 
             # event_count the runable, sleep, mutex, and I/O waiting time for next_pid process
             if(exists $proc_table{$next_pid}{last_event} and defined $proc_table{$next_pid}{state}){
-                $this_duration = $timestamp - &_max($proc_table{$next_pid}{last_event}, $cpu_table[$cpu]{last_online_ts});
+                $this_duration = $timestamp - $proc_table{$next_pid}{last_event};
                 &update_stat_in_table('proc', $next_pid, $proc_table{$next_pid}{state}, $this_duration, $timestamp);
             }
             $proc_table{$next_pid}{last_event} = $timestamp;
@@ -651,7 +817,7 @@ sub parse {
             # avoid this case
 
             if(exists $proc_table{$pid}{last_event} and defined $proc_table{$pid}{state}){
-                $this_duration = $timestamp - &_max($proc_table{$pid}{last_event}, $cpu_table[$cpu]{last_online_ts});
+                $this_duration = $timestamp - $proc_table{$pid}{last_event};
                 &update_stat_in_table('proc', $pid, $proc_table{$pid}{state}, $this_duration, $timestamp);
 
             }
@@ -686,7 +852,7 @@ sub parse {
             $proc_table{$pid}{first_event} = $timestamp unless(defined $proc_table{$pid}{first_event});
 
             if(exists $proc_table{$pid}{last_event} and defined $proc_table{$pid}{state}){
-                $this_duration = $timestamp - &_max($proc_table{$pid}{last_event}, $cpu_table[$cpu]{last_online_ts});
+                $this_duration = $timestamp - $proc_table{$pid}{last_event};
 
                 &update_stat_in_table('proc', $pid, $proc_table{$pid}{state}, $this_duration, $timestamp);
             }
@@ -710,7 +876,7 @@ sub parse {
 
             $event_count{sched_migrate_task}++;
         }elsif(m/\s
-            (?:irq_handler_entry|ipi_handler_entry|irq_entry)\:\s
+            (?:irq|ipi)_handler_entry\:\s
             (?:irq|ipi)=(\d+)\s
             name=(.+)
             /xso)
@@ -720,16 +886,16 @@ sub parse {
 
             my ($pid) = (&find_last_event($exec_stack[$cpu], qr!^proc\-!o) =~ m/^proc\-(\d+)/o);
 
-            #no warnings 'uninitialized';
+            no warnings 'uninitialized';
             if(!defined $pid or $pid eq ''){
-                $pid = $curr_pid;
+                $pid = $orig_pid;
             }
             $pid = "0-$cpu" if($pid eq '0');
 
             if($softirq_count[$cpu] > 0){
                 # preempt softirq
                 my ($softirq) = (&find_last_event($exec_stack[$cpu], qr!^softirq\-!o) =~ m/^softirq\-(\d+)/o); 
-                $this_duration = $timestamp - &_max($softirq_table{"$softirq-$cpu"}{last_entry}, $cpu_table[$cpu]{last_online_ts});
+                $this_duration = $timestamp - $softirq_table{"$softirq-$cpu"}{last_entry};
                 &update_stat_in_table('softirq', "$softirq-$cpu", 'exec', $this_duration, $timestamp);
                 $proc_table{$pid}{softirq_time} += $this_duration;
             }
@@ -742,21 +908,21 @@ sub parse {
             if ($irq_count[$cpu]>0 && $nested_irq_warn_already == 0){
                 my ($last_irq) = (&find_last_event($exec_stack[$cpu], qr!^irq\-!o) =~ m/^irq\-(\d+)/o);
                 $nested_irq_warn_already++;
-                warn "$script_name: nested irq handler detected, time=$timestamp cpu=$cpu irq=$irq-$irq_name in_irq=@{[$last_irq || 'unknown']}";
+                warn "$0: nested irq handler detected, time=$timestamp cpu=$cpu irq=$irq-$irq_name in_irq=@{[$last_irq || 'unknown']}";
                 return;
             }
             $irq_count[$cpu]++;
             push @{$exec_stack[$cpu]}, "irq-$irq";
 
         }elsif(m{\s
-            (?:irq_handler_exit|ipi_handler_exit|irq_exit)\:\s
+            (?:irq|ipi)_handler_exit\:\s
             (?:irq|ipi)=(\d+)
             (?:\sret=handled)?
             }xso)
         {
             my $irq = $1;
 
-            # no warnings 'uninitialized';
+            no warnings 'uninitialized';
             if($softirq_count[$cpu] > 0){
                 # update softirq info before leaving irq
                 my ($softirq) = (&find_last_event($exec_stack[$cpu], qr!^softirq\-!o) =~ m/^softirq\-(\d+)/o); 
@@ -764,14 +930,14 @@ sub parse {
             }
             my ($pid) = (&find_last_event($exec_stack[$cpu], qr!^proc\-!o) =~ m/^proc\-(\d+)/o);
             if(!defined $pid or $pid eq ''){
-                $pid = $curr_pid;
+                $pid = $orig_pid;
             }
             $pid = "0-$cpu" if($pid eq '0');
 
             if(defined $exec_stack[$cpu] and scalar(@{$exec_stack[$cpu]}) > 0){
                 my ($type, $id) = (${$exec_stack[$cpu]}[-1] =~ m/^(\w+)\-(\d+)$/o);
                 if($type ne 'irq' or $id != $irq){
-                    warn "$script_name: irq entry/exit event not matched, timestamp=$timestamp, irq_to_exit=$irq, in_irq=$id\n";
+                    warn "$0: irq entry/exit event not matched, timestamp=$timestamp, irq_to_exit=$irq, in_irq=$id\n";
                     return;
                 }else{
                     pop @{$exec_stack[$cpu]} ;
@@ -808,14 +974,14 @@ sub parse {
             $softirq_table{"$softirq-$cpu"}{name} = $2;
             my ($pid) = (&find_last_event($exec_stack[$cpu], qr!^proc\-!o) =~ m/^proc\-(\d+)/o);
             if(!defined $pid or $pid eq ''){
-                $pid = $curr_pid;
+                $pid = $orig_pid;
             }
             $pid = "0-$cpu" if($pid eq '0');
 
             $softirq_table{"$softirq-$cpu"}{last_entry} = $timestamp;
 
             if(defined $softirq_table{"$softirq-$cpu"}{last_raise}){
-                my $this_duration = $timestamp - &_max($softirq_table{"$softirq-$cpu"}{last_raise}, $cpu_table[$cpu]{last_online_ts});
+                my $this_duration = $timestamp - $softirq_table{"$softirq-$cpu"}{last_raise};
                 &update_stat_in_table('softirq', "$softirq-$cpu", 'wakeup', $this_duration, $timestamp) if($this_duration > 0);
             }
 
@@ -833,11 +999,11 @@ sub parse {
 
             my ($pid) = (&find_last_event($exec_stack[$cpu], qr!^proc\-!o) =~ m/^proc\-(\d+)/o);
             if(!defined $pid or $pid eq ''){
-                $pid = $curr_pid;
+                $pid = $orig_pid;
             }
             $pid = "0-$cpu" if($pid eq '0');
 
-            #no warnings 'uninitialized';
+            no warnings 'uninitialized';
             $this_duration = $timestamp - 
                 &_max($softirq_table{"$softirq-$cpu"}{last_entry}, $cpu_table[$cpu]{last_online_ts});
                 
@@ -848,7 +1014,7 @@ sub parse {
             if(defined $exec_stack[$cpu] and scalar(@{$exec_stack[$cpu]}) > 0){
                 my ($type, $id) = (${$exec_stack[$cpu]}[-1] =~ m/^(\w+)\-(\d+)$/o);
                 if($type ne 'softirq' or $id != $softirq){
-                    warn "$script_name: softirq entry/exit event not matched, timestamp=$timestamp, softirq_to_exit: $softirq, in_softirq=$id\n";
+                    warn "$0: softirq entry/exit event not matched, timestamp=$timestamp, softirq_to_exit: $softirq, in_softirq=$id\n";
                     return;
                 }else{
                     pop @{$exec_stack[$cpu]} ;
@@ -860,7 +1026,7 @@ sub parse {
             $event_count{softirq_exit}++;
         }elsif(m/\s
             tracing_on\:\s
-            ftrace\s is\s ((?:dis|en)abled)
+            ftrace\s is\s ((?:dis|en)abled)$
             /oxs)
         {
             my $enabled = $1;
@@ -884,7 +1050,7 @@ sub parse {
             state=(\w+)\s
         /xso)
         {
-            #no warnings 'uninitialized';
+            no warnings 'uninitialized';
             my $state = $2;
             my $cpu_id = int($1);
 
@@ -907,26 +1073,7 @@ sub parse {
             irq=(\d+)
             /oxs)
         {
-            warn "$script_name: unknown irq=$1, ts=$timestamp\n";
-        }elsif(m/\s
-            workqueue_execute_start\:\s
-            work\sstruct\s(\w+)\:\s
-            function\s(\w+)
-            /oxs)
-        {
-            my ($work_addr, $work_func) = ($1, $2);
-            $workqueue_table{$curr_pid}{$work_addr}{name} = $work_func;
-            $workqueue_table{$curr_pid}{$work_addr}{start} = $timestamp;
-        }elsif(m/\s
-            workqueue_execute_end\:\s
-            work\sstruct\s(\w+)
-            /oxs)
-        {
-            my $work_addr = $1;
-            if(exists $workqueue_table{$curr_pid}{$work_addr}{start}){
-                $workqueue_table{$curr_pid}{$work_addr}{duration} += $timestamp - $workqueue_table{$curr_pid}{$work_addr}{start};
-                $workqueue_support = 1;
-            }
+            warn "$0: unknown irq=$1, ts=$timestamp\n";
         }
     }
 
@@ -944,16 +1091,12 @@ sub print_csv{
     my ($fout) = @_;
     my $total_exectime = 0;
     my $duration_per_cpu = 0;           # max active duration per cpu
-    my $online_cpus = 0;
 
     # find first & last timestamp of all CPUs
-    my ($first_ts_of_all, $last_ts_of_all) = (undef, undef);
-
-    for (my $i = 0; $i <= $#exec_stack ; ++$i) {
-        if (exists $cpu_table[$i]{first_ts}) {
-            $first_ts_of_all = $cpu_table[$i]{first_ts} if($cpu_table[$i]{first_ts} < $first_ts_of_all or !defined($first_ts_of_all));
-            $last_ts_of_all = $cpu_table[$i]{last_ts} if($last_ts_of_all < $cpu_table[$i]{last_ts} or !defined($last_ts_of_all));
-        }
+    my ($first_ts_of_all, $last_ts_of_all) = ($cpu_table[0]{first_ts}, $cpu_table[0]{last_ts});
+    for(my $i = 1; $i <= $#exec_stack ; ++$i){
+        $first_ts_of_all = $cpu_table[$i]{first_ts} if($cpu_table[$i]{first_ts} < $first_ts_of_all);
+        $last_ts_of_all = $cpu_table[$i]{last_ts} if($last_ts_of_all < $cpu_table[$i]{first_ts});
         # warn "cpu=$i, first_ts=$cpu_table[$i]{first_ts}, last_ts=$cpu_table[$i]{last_ts}\n";
     }
     $duration_per_cpu = $last_ts_of_all - $first_ts_of_all;
@@ -962,39 +1105,19 @@ sub print_csv{
 script version %s
 recorded duration(unit:ms),start ts,end ts
 %.3f,%.3f,%.3f
-cpu,offline,idle,busy
+cpu,offline_duration
 HEADER
-    
-    for(my $i = 0; $i <= $#exec_stack ; ++$i) {
-        #no warnings 'uninitialized';
-
-        # skip those cpu that are never online
-        if (!exists $cpu_table[$i]{first_ts}) {
-            next;
-        }
-        &verbose_printf("cpu%d first_ts=%f", $i, $cpu_table[$i]{first_ts});
-        $online_cpus++;
-
-        # calculate idle time for this cpu
-        my $idle_time_per_cpu = 0;
-        if (exists $proc_table{"0-$i"}{exec_time} && $proc_table{"0-$i"}{exec_time} > 0) {
-            $idle_time_per_cpu = $proc_table{"0-$i"}{exec_time} - $proc_table{"0-$i"}{isr_time} - $proc_table{"0-$i"}{softirq_time};
-        }
-
+    for(my $i = 0; $i <= $#exec_stack ; ++$i){
+        no warnings 'uninitialized';
         &reset_stat_per_cpu($i, $cpu_table[$i]{last_ts});
-        printf $fout ("cpu$i,%.3f,%.3f,%.3f\n",
-            $cpu_table[$i]{offline_duration}*1e-3,
-            $idle_time_per_cpu * 1e-3,
-            1e-3 * ($duration_per_cpu - $idle_time_per_cpu - $cpu_table[$i]{offline_duration}));
+        printf $fout ("cpu$i,%.3f\n",
+            $cpu_table[$i]{offline_duration}*1e-3);
     }
 
     
     if(&count_events(\%event_count, "sched_switch", "sched_wakeup", "sched_migrate_task") > 0){
         # summerize total execution but idle process
-        for(grep {
-                !/^0\-/o && exists $proc_table{$_}{exec_time}
-            } keys %proc_table)
-        {
+        for(grep { !/^0\-/o } keys %proc_table){
             $total_exectime += $proc_table{$_}{exec_time};
         }
         
@@ -1002,24 +1125,18 @@ HEADER
         
         my $idle_isr_time = &sum_fields(\%proc_table, qr!^0\-!, 'isr_time', 'softirq_time') || 0;
         # idle processes
-        print $fout "0," if($tgid_support);
         printf $fout (
             "0,IDLE,%2.2f%%,%.3f,%.3f\n",
-            ($online_cpus - $total_exectime/$duration_per_cpu)*1e2,
+            (1-$total_exectime/($#exec_stack+1)/$duration_per_cpu)*1e2*($#exec_stack+1),
             $idle_isr_time*1e-3,
-            ($online_cpus*$duration_per_cpu - $total_exectime - $idle_isr_time)*1e-3,
+            (($#exec_stack+1)*$duration_per_cpu - $total_exectime - $idle_isr_time)*1e-3,
         );
 
         for(grep { !/^0\-/ } keys %proc_table){
             $proc_table{$_}{exec_time} ||= 0;
         }
         for(sort {
-            $proc_table{$b}{exec_time} <=> $proc_table{$a}{exec_time} or
-            ($tgid_support and
-                (exists $proc_table{$a}{tgid} and exists $proc_table{$b}{tgid}) and
-                ($proc_table{$a}{tgid} !~ m/^\-+$/o and $proc_table{$b}{tgid} !~ m/^\-+$/o ) and
-                ($proc_table{$a}{tgid} <=> $proc_table{$b}{tgid})) or
-            $a <=> $b
+            $proc_table{$b}{exec_time} <=> $proc_table{$a}{exec_time} || $a <=> $b
         } grep {
             # filter out idle processes
             !/^0\-/
@@ -1038,7 +1155,7 @@ HEADER
     }
 
     # print IRQ info if irq_handler_entry/exit events are available
-    if(&count_events(\%event_count, "irq_handler_entry", "irq_handler_exit", "ipi_handler_entry", "ipi_handler_exit", "irq_entry", "irq_exit") > 0){
+    if(&count_events(\%event_count, "irq_handler_entry", "irq_handler_exit") > 0){
         print $fout "\n".join(qq(,), @irq_table_header, "\n");
         for(sort {
             my ($airq, $acpu) = ($a =~ m/(\d+)-(\d+)/o);
@@ -1072,7 +1189,7 @@ The load balance distribution on each cpu for each task
 pid,%s
 LOAD_BALANCE_TABLE_HEADER
 
-        #no warnings 'uninitialized';
+        no warnings 'uninitialized';
         for my $pid (sort {$a <=> $b} grep { !/^0\-/o } keys %proc_table){
             print $fout "$pid,".
             join(',', map {sprintf("%.3f", 1e-3*($proc_table{$pid}{"exec_cpu$_"}+$proc_table{$pid}{"runable_cpu$_"}));}
@@ -1083,40 +1200,26 @@ LOAD_BALANCE_TABLE_HEADER
             "\n";
         }
     }
-
-    if($workqueue_support){
-        print $fout "\n";
-        for my $pid (sort {$a <=> $b} keys %workqueue_table){
-            print $fout &per_worker_spirntf($pid);
-            #print $fout "$pid\n";
-            #for my $work_addr(keys %{$workqueue_table{$pid}}){
-            #    print $fout "$workqueue_table{$pid}{$work_addr}{name}:$workqueue_table{$pid}{$work_addr}{duration},";
-            #}
-            #print $fout "\n";
-        }
-    }
 }
 
 sub main {
     my ($input, $output) = ($_[0]||"SYS_FTRACE", $_[1]||"ftrace_cputime.csv");
     my (@inputs, $fout);
 
-    &usage() if($h);
-
-    open $verbose_fout, '>', $v or die "$script_name: unable to open $v" if(defined $v);
-
     if(-e $input and !defined($c)){
-        warn "$script_name: input=$input, output=$output\n";
-        open my $fin, '<', $input or die "$script_name: unable to open $input\n";
-        @inputs = <$fin>;
+        warn "$0: input=$input, output=$output\n";
+        open my $fin, '<', $input or die "$0: unable to open $input\n";
+        # @inputs = <$fin>;
+        @inputs = @{ &filter_events(<$fin>) };
         close $fin;
-        open $fout, '>', $output or die "$script_name: unable to open $output\n";
+        open $fout, '>', $output or die "$0: unable to open $output\n";
     }else{
-        warn "$script_name: $input not exist and read from stdin instead\n";
+        warn "$0: $input not exist and read from stdin instead\n";
         # @inputs = <STDIN>;
-        @inputs = @{ &trim_events(<STDIN>) };
-        open $fout, ">&=STDOUT" or die "$script_name: unable to alias STDOUT: $!\n"
+        @inputs = @{ &filter_events(<STDIN>) };
+        open $fout, ">&=STDOUT" or die "$0: unable to alias STDOUT: $!\n"
     }
+    open $verbose_fout, '>', $v or die "$0: unable to open $v" if(defined $v);
 
     if($w){
         my $idx = 0;
@@ -1130,23 +1233,18 @@ sub main {
     }
     if(!$m){
         @proc_table_header = grep {
-            !m/_max(?:_ts)?$/o and
-            !m/^exec_count$/o and
-            !m/^(?:first|last)_event$/o and
-            !m/^active_duration$/o
+            !m/_max(?:_ts)?$/o && !m/^exec_count$/o && !m/^(?:first|last)_event$/o && !m/^active_duration$/o
         } @proc_table_header;
     }
 
+    warn "1st event: $inputs[0]\n";
     &parse(\@inputs);
-    die "$script_name: no recognized events, exit\n" if(&count_events(\%event_count) == 0);
-
-    if($tgid_support){
-        unshift @proc_table_header, "tgid";
-    }
+    die "$0: no recognized events, exit\n" if(&count_events(\%event_count) == 0);
 
     # output the results
     &print_csv($fout);
     close $verbose_fout if(defined $v);
 }
 
-&main(@ARGV);
+&usage();
+&main(@ARGV) unless($h);
