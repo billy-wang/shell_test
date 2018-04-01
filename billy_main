@@ -30,6 +30,8 @@ usage()
 		-d dmidecode	:	查看主板 内存 信息
 		== ftrace log ==
 		-f ftrace       : 	ftrace
+		== analyze ftrace ==
+		-analyze      	: 	解析ftrace
 		== html systemtrace ==
 		-html systrace  : 	systrace
 		== so ==
@@ -76,7 +78,7 @@ reset_code()
 grep_audio_log()
 {
 	if [ -n "$2" ]; then
-		grep -E "audio|Audio|SpeechDriver|onScreenTurned|music_app|MediaPlayer|PhoneWindow|WindowManager|FmService|FMLIB|FMText|AudioHeadSetMessager|MMITest|Media|Bluetooth|bt_|BtGatt|MtkOmx|OMX|GainTableParamParser|NVRAM|SRS_|audiofocus|aurisys|InCall|setForceUse|Dialer|Ringtone|Extractor|NuPlayer|GenericSource|Event|pause" $2 > audio.log
+		grep -E "audio|Audio|SpeechDriver|onScreenTurned|music_app|MediaPlayer|PhoneWindow|WindowManager|FmService|FMLIB|FMText|AudioHeadSetMessager|MMITest|Media|Bluetooth|bt_|BtGatt|MtkOmx|OMX|GainTableParamParser|NVRAM|SRS_|audiofocus|aurisys|InCall|setForceUse|Dialer|Ringtone|Extractor|NuPlayer|GenericSource|Event|pause|ACodec|MPEG4Writer" $2 > audio.log
 	else
     	echo "$0 logfile"
 	fi
@@ -189,7 +191,7 @@ adb shell "cat /sys/kernel/debug/tracing/buffer_total_size_kb"
 
 #adb shell "echo 'sched_switch sched_wakeup sched_wakeup_new sched_migrate_task softirq_raise softirq_entry softirq_exit cpu_frequency workqueue_execute_start workqueue_execute_end block_bio_frontmerge block_bio_backmerge block_rq_issue block_rq_insert block_rq_complete ipi sched_heavy_task mtk_events' > /sys/kernel/debug/tracing/set_event"
 
-adb shell "echo 'sched_switch sched_wakeup sched_wakeup_new sched_migrate_task softirq_raise softirq_entry softirq_exit cpu_frequency workqueue_execute_start workqueue_execute_end block_bio_frontmerge block_bio_backmerge block_rq_issue block_rq_insert block_rq_complete ipi sched_heavy_task mtk_events irq_handler_entry irq_handler_exit timer_expire_entry hrtimer_init hrtimer_start hrtimer_expire_entry hrtimer_expire_exit timer hrtimer' > /sys/kernel/debug/tracing/set_event"
+adb shell "echo 'sched_switch sched_wakeup sched_wakeup_new sched_migrate_task softirq_raise softirq_entry softirq_exit cpu_frequency workqueue workqueue_execute_start workqueue_execute_end block_bio_frontmerge block_bio_backmerge block_rq_issue block_rq_insert block_rq_complete ipi sched_heavy_task mtk_events irq irq_handler_entry irq_handler_exit timer_expire_entry hrtimer_init hrtimer_start hrtimer_expire_entry hrtimer_expire_exit timer hrtimer rcu:*' > /sys/kernel/debug/tracing/set_event"
 
 
 #rem just in case tracing_enabled is disabled by user or other debugging tool
@@ -209,10 +211,23 @@ read
 
 adb shell "echo 0 > /sys/kernel/debug/tracing/tracing_on"
 echo "Recording stopped..."
-adb shell cat /sys/kernel/debug/tracing/trace > /home/billy/work/SYS_FTRACE
+adb shell cat /sys/kernel/debug/tracing/trace > /home/billy/work/ftrace/SYS_FTRACE
 #pause
 #read
 
+}
+
+analyze_ftrace()
+{
+FTRACE_PERL_PATH=/home/billy/bin/mtk/ftrace_perl
+SYS_FTRACE_PATH=/home/billy/work/ftrace
+
+#perl $FTRACE_PERL_PATH/fix_cmd.pl $SYS_FTRACE_PATH/SYS_FTRACE
+perl $FTRACE_PERL_PATH/convert2vcd.pl $SYS_FTRACE_PATH/SYS_FTRACE $SYS_FTRACE_PATH/trace.vcd
+perl $FTRACE_PERL_PATH/ftrace_cputime.pl $SYS_FTRACE_PATH/SYS_FTRACE $SYS_FTRACE_PATH/ftrace_cputime.csv
+perl $FTRACE_PERL_PATH/convert2systrace.4_3.pl <$SYS_FTRACE_PATH/SYS_FTRACE >$SYS_FTRACE_PATH/trace.html
+
+gtkwave $SYS_FTRACE_PATH/trace.vcd
 }
 
 new()
@@ -604,6 +619,10 @@ get_opts()
 				;;
 			-f)
 				ftrace "$@"
+				exit 0
+				;;
+			-analyze)
+				analyze_ftrace "$@"
 				exit 0
 				;;
 			-html)
