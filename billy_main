@@ -648,8 +648,10 @@ kernel_log_converter()
     do
         case "$2" in
 	   -i)
-		s=`python ~/bin/kernel_log_converter.py $@`
+		s=`python ~/bin/kernel_log_converter.py $2 $3 $4 $5`
 		echo "python ~/bin/kernel_log_converter.py $@"
+		echo $?
+		echo ${s}
             	exit 0
             	;;
 	   -h)

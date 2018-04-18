@@ -6,6 +6,7 @@ import datetime
 import sys
 import getopt
 import os
+import gc
 
 #需要加入 [  691.165602] android time 2017-06-19 17:47:59.765338  
 #06-19 17:47:59.765338 [  691.165602] android time 2017-06-19 17:47:59.765338 
@@ -23,8 +24,15 @@ def usage():
              -i, --inputfile:   input file  to parse
              -o, --outputfile:  output fiel parsed
                         ''')
- 
- 
+
+def clear():
+    for key, value in globals().items():
+        if callable(value) or value.__class__.__name__ == "module":
+            continue
+        del globals()[key]
+    print "clear mem" 
+    gc.collect()
+
 def calc_delta(stream):
     global s_second
     global s_microsecond
@@ -101,6 +109,7 @@ def main(argv):
         sys.exit()
     if outputpath == None:
         outputpath = os.getcwd()+"/out.log"
+    print outputpath
  
     inputfile = open(inputpath, 'r')
     outputfile = open(outputpath, 'w')
@@ -109,5 +118,8 @@ def main(argv):
     calc_delta(inputfile)
     inputfile.close()
     outputfile.close()
+    clear()
+
 if __name__ == "__main__":
     main(sys.argv[1:])
+    
