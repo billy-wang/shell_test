@@ -17,6 +17,7 @@ usage()
 		-m hs		:	耳机回路
 		-m al		: 	音频回路
 		-m am		:	副麦
+		-m stop		:	退出
 		== cpu freq ==
 		-c -g		:	查下CPU支持哪些governor的模式
 		-c -d		:	看CPU支持哪些频率
@@ -45,7 +46,8 @@ usage()
 		== down code ==
 		-down project	:  下载项目源代码
 		== grep audio log ==
-		-grep file		: 	过滤 audio log
+		-grep main file		: 	过滤 main audio log
+		-grep kernel file	: 	过滤 kernel audio log
 		== reset code ==
 		-reset code_version : 复位代码流
 	Actions:
@@ -77,11 +79,31 @@ reset_code()
 
 grep_audio_log()
 {
-	if [ -n "$2" ]; then
-		grep -E "audio|Audio|SpeechDriver|onScreenTurned|music_app|MediaPlayer|PhoneWindow|WindowManager|FmService|FMLIB|FMText|AudioHeadSetMessager|MMITest|Media|Bluetooth|bt_|BtGatt|MtkOmx|OMX|GainTableParamParser|NVRAM|SRS_|audiofocus|aurisys|InCall|setForceUse|Dialer|Ringtone|Extractor|NuPlayer|GenericSource|Event|pause|ACodec|MPEG4Writer" $2 > audio.log
-	else
-    	echo "$0 logfile"
-	fi
+    while true 
+    do
+        case "$2" in
+            main)
+		if [ -n "$3" ]; then
+			grep -E "audio|Audio|SpeechDriver|onScreenTurned|music_app|MediaPlayer|PhoneWindow|WindowManager|FmService|FMLIB|FMText|AudioHeadSetMessager|MMITest|Media|Bluetooth|bt_|BtGatt|MtkOmx|OMX|GainTableParamParser|NVRAM|SRS_|audiofocus|aurisys|InCall|setForceUse|Dialer|Ringtone|Extractor|NuPlayer|GenericSource|Event|pause|ACodec|MPEG4Writer" $3 > audio.log
+		else
+    			echo "$0 $2 logfile"
+		fi
+            	exit 0
+            	;;
+            kernel)
+		if [ -n "$3" ]; then
+			grep -E "audio|Aud|writer|keycode|stream|speech_|mtk_pcm_" $3 > kernel.log
+		else
+    			echo "$0 $2 logfile"
+		fi
+            	exit 0
+            	;;
+	    *)
+            	usage
+            	exit 1
+            	;;
+	esac
+    done
 }
 
 down_mtk_code()
@@ -202,6 +224,8 @@ adb shell "echo 0 > /sys/kernel/debug/tracing/tracing_on"
 adb shell "echo > /sys/kernel/debug/tracing/trace"
 
 echo "start mtklog and del /sdcard/mtklog folder"
+echo "stop mtklog"
+adb shell "am broadcast -a com.mediatek.mtklogger.ADB_CMD -e cmd_name stop --ei cmd_target 1" >/dev/null 2>&1
 adb shell "rm -rf /sdcard/mtklog"
 adb shell "am broadcast -a com.mediatek.mtklogger.ADB_CMD -e cmd_name start --ei cmd_target 1" >/dev/null 2>&1
 
@@ -294,16 +318,35 @@ autommitest()
 	#adb devices | awk '{ print $1 }'
 	local deviceinfo=`adb devices | sed -n '2p' | awk '{ print $1}'`
 	#echo $deviceinfo
-	
-	if [ -n "$deviceinfo" ];then
+
+
+	if [ $2 == "stop" ];then
+		echo "***** 退出autommi *****"
+		adb shell am start -a com.gionee.autommi.dumb 
+		sleep 1
+		echo "stop mtklog"
+		#adb shell "am broadcast -a com.mediatek.mtklogger.ADB_CMD -e cmd_name stop --ei cmd_target 1" >/dev/null 2>&1
+		exit 0
+	fi
+
+	if [ $2 == "start" ];then
+		echo "start mtklog and del /sdcard/mtklog folder"
+		adb shell "am broadcast -a com.mediatek.mtklogger.ADB_CMD -e cmd_name stop --ei cmd_target 1" >/dev/null 2>&1
+		sleep 8
+		adb shell "rm -rf /sdcard/mtklog"
+		adb shell "am broadcast -a com.mediatek.mtklogger.ADB_CMD -e cmd_name start --ei cmd_target 1" >/dev/null 2>&1
+		exit 0
+	fi
+
+    if [ -n "$deviceinfo" ];then
 	echo "***** volume 100% ******"
 	adb shell am start -a com.gionee.autommi.rc -e dura 3 -e volume 100
 	sleep 1
 	
-    while true 
-    do
+    	while true 
+    	do
         case "$2" in
-			dura)
+		dura)
 			echo "***** 听筒测试 *****" 
 			#adb shell -s $deviceinfo am start -a com.gionee.autommi.rc -e dura 3  
 			adb shell am start -a com.gionee.autommi.rc -e dura 3  
@@ -312,32 +355,41 @@ autommitest()
 			adb shell am start -a com.gionee.autommi.dumb
 			exit 0
 			;;
-			dyna)
+		dyna)
 			echo "***** 听筒扫频 *****"
 			adb shell am start -a com.gionee.autommi.rc.dyna --ei level 5
 			exit 0
 			;;
-			ep2rc)
+		ep2rc)
+			echo "***** 关闭主MIC *****"
+			adb shell am start -a com.gionee.autommi.cmr -e state no
+			sleep 1
 			echo "***** 耳麦到听筒 *****"
 			adb shell am start -a com.gionee.autommi.ep2rc --ei level 5 
 			exit 0
 			;;
-			ep2sp)
+		ep2sp)
+			echo "***** 关闭主MIC *****"
+			adb shell am start -a com.gionee.autommi.cmr -e state no
+			sleep 1
 			echo "***** 耳麦到扬声器 *****"
 			adb shell am start -a com.gionee.autommi.ep2sp --ei level 5
 			exit 0
 			;;
-			hs)
+		hs)
+			echo "***** 关闭主MIC *****"
+			adb shell am start -a com.gionee.autommi.cmr -e state no
+			sleep 1
 			echo "***** 耳机回路 *****"
 			adb shell am start -a com.gionee.autommi.hs --ei level 5 
 			exit 0
 			;;
-			al)
+		al)
 			echo "***** 音频回路 *****"
 			adb shell am start -a com.gionee.autommi.al --ei level 5 
 			exit 0
 			;;
-			am)
+		am)
 			echo "***** 副麦 *****"
 			adb shell am start -a com.gionee.autommi.am --ei level 10 
 			exit 0
