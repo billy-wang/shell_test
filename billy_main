@@ -46,8 +46,10 @@ usage()
 		== down code ==
 		-down project	:  下载项目源代码
 		== grep audio log ==
-		-grep main file		: 	过滤 main audio log
+		-grep file		: 	过滤 audio log
 		-grep kernel file	: 	过滤 kernel audio log
+		== kernel_log_converter ==
+		-converter -i file	: 	转换kernel log android 时间
 		== reset code ==
 		-reset code_version : 复位代码流
 	Actions:
@@ -640,6 +642,29 @@ arm_linux_androideabi()
 
 }
 
+kernel_log_converter()
+{
+    while true 
+    do
+        case "$2" in
+	   -i)
+		s=`python ~/bin/kernel_log_converter.py $@`
+		echo "python ~/bin/kernel_log_converter.py $@"
+            	exit 0
+            	;;
+	   -h)
+		s=`python ~/bin/kernel_log_converter.py`
+		echo ${s}
+            	exit 0
+            	;;
+           *)
+                usage
+                exit 1
+                ;;
+        esac
+    done
+}
+
 change_io_desk_block()
 {
 	sdparm -s WCE=1, RCD=0 -S /dev/sda
@@ -742,6 +767,10 @@ get_opts()
 				;;
 			-grep)
 				grep_audio_log "$@"
+				exit 0
+				;;
+			-converter)
+				kernel_log_converter "$@"
 				exit 0
 				;;
 			-reset)
