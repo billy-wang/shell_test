@@ -51,7 +51,9 @@ usage()
 		== kernel_log_converter ==
 		-converter -i file	: 	转换kernel log android 时间
 		== reset code ==
-		-reset code_version : 复位代码流
+		-reset code_version 	: 	复位代码流
+		== android build env ==
+		-android  		:	android编译环境
 	Actions:
 "
 }
@@ -64,6 +66,23 @@ error()
         echo "Error $ret: $info" >&2
         exit $ret
     fi
+}
+android_8_build_env()
+{
+sudo apt-get update
+sudo apt-get install openjdk-8-jdk
+sudo apt-get install libx11-dev:i386 libreadline6-dev:i386 libgl1-mesa-dev g++-multilib
+sudo apt-get install -y git flex bison gperf build-essential libncurses5-dev:i386
+sudo apt-get install tofrodos python-markdown libxml2-utils xsltproc zlib1g-dev:i386
+sudo apt-get install dpkg-dev libsdl1.2-dev libesd0-dev
+sudo apt-get install git-core gnupg flex bison gperf build-essential
+sudo apt-get install zip curl zlib1g-dev gcc-multilib g++-multilib
+sudo apt-get install libc6-dev-i386
+sudo apt-get install lib32ncurses5-dev x11proto-core-dev libx11-dev
+sudo apt-get install libgl1-mesa-dev libxml2-utils xsltproc unzip m4
+sudo apt-get install lib32z-dev ccache
+git config --global user.name "Billy.Wang"
+git config --global user.email "wangbb@chenyee.com"
 }
 
 reset_code()
@@ -154,7 +173,7 @@ down_mtk_code()
 	echo "build "
 	cd /home/billy/work/${PROJECT}/alps/${code_origin}
 	#./TmakeChenyee -v userdebug CSW1705TL_1301 -n
-	./TmakeChenyee -v userdebug CSW1707A_1201_TEST -n
+	#./TmakeChenyee -v userdebug CSW1707A_1201_TEST -n
 }
 
 dmidecode()
@@ -777,6 +796,10 @@ get_opts()
 				;;
 			-reset)
 				reset_code "$@"
+				exit 0
+				;;
+			--android)
+				android_8_build_env "$@"
 				exit 0
 				;;
             *)
