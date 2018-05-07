@@ -798,7 +798,7 @@ get_opts()
 				reset_code "$@"
 				exit 0
 				;;
-			--android)
+			-android)
 				android_8_build_env "$@"
 				exit 0
 				;;
