@@ -1,0 +1,12 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name[en_US]=TIM
+Name[zh_CN]=腾讯TIM
+Exec=env wine /home/billy/.wine/drive_c/Program\ Files\ \(x86\)/Tencent/TIM/Bin/TIM.exe
+#Icon=/home/billy/.wine/drive_c/Program\ Files\ \(x86\)/Tencent/TIM/QQ.png
+Icon=QQ
+Terminal=false
+NoDisplay=false
+StartupNotify=true
+Type=Application
+Categories=Network;InstantMessaging;

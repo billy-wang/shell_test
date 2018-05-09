@@ -1,0 +1,11 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name[en_US]=Source Insight
+Name[zh_CN]=Source Insight
+Exec=env wine /home/billy/.wine/drive_c/Program\ Files\ \(x86\)/Source\ Insight\ 4.0/sourceinsight4.exe 
+Icon=earth
+Terminal=false
+NoDisplay=false
+StartupNotify=true
+Type=Application
+Categories=Wine-Programs;
