@@ -1,0 +1,9 @@
+
+bionic
+ubuntu 18.04 缺少gsku 利用17.10的gksu
+
+Dependency is not satisfiable: gksu
+
+gksu_2.0.2-9ubuntu1_amd64.deb
+
+https://packages.ubuntu.com/artful/gksu
