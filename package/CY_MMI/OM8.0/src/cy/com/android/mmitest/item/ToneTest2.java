@@ -30,7 +30,7 @@ public class ToneTest2 extends BaseActivity implements OnClickListener {
 
     private Button mRightBtn, mWrongBtn, mRestartBtn;
 
-    private static final String TAG = "ToneTest2";
+    private static final String TAG = "ToneTest2_billy";
 
     private boolean mIsToneOn;
     private final int duration = 30; //15 seconds
@@ -106,8 +106,8 @@ public class ToneTest2 extends BaseActivity implements OnClickListener {
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         DswLog.d(TAG, "\n****************退出扬声器2 @" + Integer.toHexString(hashCode()));
+        super.onDestroy();
     }
 
     @Override
@@ -200,6 +200,7 @@ public class ToneTest2 extends BaseActivity implements OnClickListener {
         //Gionee <GN_BSP_MMI> <chengq> <20170420> modify for ID 102000 begin
         mAudioTrack.write(generatedSnd, 0, generatedSnd.length);
         try {
+            DswLog.d(TAG, "play");
             mAudioTrack.play();
             Thread.sleep(50);
         } catch (InterruptedException e) {
@@ -210,7 +211,6 @@ public class ToneTest2 extends BaseActivity implements OnClickListener {
             e.printStackTrace();
         }
         //Gionee <GN_BSP_MMI> <chengq> <20170420> modify for ID 102000 end
-        DswLog.d(TAG, "mAudioTrack.play()");
         //Gionee zhangke 20160428 modify for CR01687958 start
         mIsPass = true;
         if(mIsTimeOver){
@@ -230,7 +230,8 @@ public class ToneTest2 extends BaseActivity implements OnClickListener {
                 mRightBtn.setEnabled(false);
                 mWrongBtn.setEnabled(false);
                 mRestartBtn.setEnabled(false);
-                TestUtils.rightPress(TAG, this);
+                //TestUtils.rightPress(TAG, this);
+                TestUtils.rightPress("ToneTest2", this);
                 break;
             }
 
@@ -238,7 +239,8 @@ public class ToneTest2 extends BaseActivity implements OnClickListener {
                 mRightBtn.setEnabled(false);
                 mWrongBtn.setEnabled(false);
                 mRestartBtn.setEnabled(false);
-                TestUtils.wrongPress(TAG, this);
+                //TestUtils.wrongPress(TAG, this);
+                TestUtils.wrongPress("ToneTest2", this);
                 break;
             }
 
@@ -246,7 +248,8 @@ public class ToneTest2 extends BaseActivity implements OnClickListener {
                 mRightBtn.setEnabled(false);
                 mWrongBtn.setEnabled(false);
                 mRestartBtn.setEnabled(false);
-                TestUtils.restart(this, TAG);
+                //TestUtils.restart(this, TAG);
+                TestUtils.restart(this, "ToneTest2");
                 break;
             }
         }

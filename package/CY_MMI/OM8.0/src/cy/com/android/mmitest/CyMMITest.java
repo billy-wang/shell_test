@@ -265,8 +265,9 @@ public class CyMMITest extends BaseActivity implements OnItemClickListener {
         DswLog.e(TAG, "setaudio after setRingerMode = " + ringMode1);
         //Gionee <zhangxiaowei><2013-04-11> add for CR00796293  begin
 
-        DswLog.e(TAG, "MMI set setParameters :SET_AURISYS_ON=0");
-        am.setParameters("SET_AURISYS_ON=0");
+	/* disable by Billy.Wang */
+        //DswLog.e(TAG, "MMI set setParameters :SET_AURISYS_ON=0");
+        //am.setParameters("SET_AURISYS_ON=0");
 
         setMtkLogSize();
         startMtkLog();
@@ -1031,8 +1032,9 @@ public class CyMMITest extends BaseActivity implements OnItemClickListener {
         int ringMode2 = am.getRingerMode();
         DswLog.e(TAG, "releaseMmi: mmi test is fininsh setRingerMode = " + ringMode2);
 
-        DswLog.e(TAG, "MMI set setParameters :SET_AURISYS_ON=1");
-        am.setParameters("SET_AURISYS_ON=1");
+	/* disable by Billy.Wang */
+        //DswLog.e(TAG, "MMI set setParameters :SET_AURISYS_ON=1");
+        //am.setParameters("SET_AURISYS_ON=1");
 
         try {
             unregisterReceiver(mReceiver);

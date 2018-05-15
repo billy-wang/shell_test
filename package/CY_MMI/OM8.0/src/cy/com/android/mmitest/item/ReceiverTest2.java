@@ -51,7 +51,7 @@ public class ReceiverTest2 extends BaseActivity implements OnClickListener {
 
     private AudioManager mAM;
 
-    private static final String TAG = "ReceiverTest2";
+    private static final String TAG = "ReceiverTest2_billy";
 
     private boolean mIsToneOn;
     private final int duration = 30; // seconds
@@ -147,8 +147,8 @@ public class ReceiverTest2 extends BaseActivity implements OnClickListener {
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         DswLog.d(TAG, "\n****************退出听筒2 @" + Integer.toHexString(hashCode()));
+        super.onDestroy();
     }
 
     private void calibratePs() {
@@ -200,19 +200,21 @@ public class ReceiverTest2 extends BaseActivity implements OnClickListener {
     }
 
     private void testReceiver2() {
-        DswLog.d(TAG, "setMode AudioManager.MODE_NORMAL");
-        mAM.setMode(AudioManager.MODE_NORMAL);
+	/* disable by Billy.Wang */
+        //DswLog.d(TAG, "setMode AudioManager.MODE_NORMAL");
+        //mAM.setMode(AudioManager.MODE_NORMAL);
 
         aString = TestUtils.setStreamVoice("ReceiverTest2");
         int i = Integer.valueOf(aString).intValue();
         DswLog.d(TAG, "i = " + i);
         if (null != mAM) {
             int maxVol = mAM.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL);
-            mAM.setSpeakerphoneOn(false);
-            mAM.setMode(AudioManager.MODE_IN_COMMUNICATION);
-            DswLog.d(TAG, "set mode  = mode MODE_IN_COMMUNICATION");
+	    /* disable by Billy.Wang */
+            //mAM.setSpeakerphoneOn(false);
+            //mAM.setMode(AudioManager.MODE_IN_COMMUNICATION);
+            //DswLog.d(TAG, "set mode  = mode MODE_IN_COMMUNICATION");
+            DswLog.d(TAG, "STREAM_VOICE_CALL maxVol = " + maxVol + " setStreamVolume = " + (maxVol - i));
             mAM.setStreamVolume(AudioManager.STREAM_VOICE_CALL, maxVol - i, 0);
-            DswLog.d(TAG, "maxVol = " + maxVol + " setStreamVolume = " + (maxVol - i));
        //Gionee <GN_BSP_MMI> <chengq> <20170423> modify for ID 113555 end
         }
 
@@ -337,6 +339,7 @@ public class ReceiverTest2 extends BaseActivity implements OnClickListener {
         }
 
         if (null != mAudioTrack) {
+            DswLog.d(TAG, "release");
             mAudioTrack.stop();
             mAudioTrack.release();
         }
@@ -347,8 +350,8 @@ public class ReceiverTest2 extends BaseActivity implements OnClickListener {
             e.printStackTrace();
         }
 
+        DswLog.d(TAG, "B set mode  = mode normal ");
         mAM.setMode(AudioManager.MODE_NORMAL);
-        DswLog.e(TAG, "B set mode  = mode normal ");
     }
 
     void genTone() {
@@ -371,12 +374,19 @@ public class ReceiverTest2 extends BaseActivity implements OnClickListener {
     }
 
     void playSound() {
+	
+        /* add by Billy.Wang */
+        DswLog.d(TAG, "setMode AudioManager.MODE_IN_CALL");
+        mAM.setMode(AudioManager.MODE_IN_CALL);
+
+        DswLog.d(TAG, "new AudioTrack");
         mAudioTrack = new AudioTrack(AudioManager.STREAM_VOICE_CALL, sampleRate, AudioFormat.CHANNEL_CONFIGURATION_MONO,
                 AudioFormat.ENCODING_PCM_16BIT, numSamples, AudioTrack.MODE_STATIC);
         //Gionee <GN_BSP_MMI> <chengq> <20170420> modify for ID 102000 begin
         mAudioTrack.write(generatedSnd, 0, generatedSnd.length);
         try {
             Thread.sleep(50);
+            DswLog.d(TAG, "play");
             mAudioTrack.play();
         } catch (InterruptedException e) {
             DswLog.i(TAG, "ReceiverTest InterruptedException ");
@@ -397,7 +407,8 @@ public class ReceiverTest2 extends BaseActivity implements OnClickListener {
             mRightBtn.setEnabled(false);
             mWrongBtn.setEnabled(false);
             mRestartBtn.setEnabled(false);
-            TestUtils.rightPress(TAG, this);
+            //TestUtils.rightPress(TAG, this);
+            TestUtils.rightPress("ReceiverTest2", this);
             break;
         }
 
@@ -405,7 +416,8 @@ public class ReceiverTest2 extends BaseActivity implements OnClickListener {
             mRightBtn.setEnabled(false);
             mWrongBtn.setEnabled(false);
             mRestartBtn.setEnabled(false);
-            TestUtils.wrongPress(TAG, this);
+            //TestUtils.wrongPress(TAG, this);
+            TestUtils.wrongPress("ReceiverTest2", this);
             break;
         }
 
@@ -413,7 +425,8 @@ public class ReceiverTest2 extends BaseActivity implements OnClickListener {
             mRightBtn.setEnabled(false);
             mWrongBtn.setEnabled(false);
             mRestartBtn.setEnabled(false);
-            TestUtils.restart(this, TAG);
+            //TestUtils.restart(this, TAG);
+            TestUtils.restart(this, "ReceiverTest2");
             break;
         }
         }

@@ -93,7 +93,8 @@ public class PhoneLoopbackTest extends BaseActivity implements OnClickListener {
                 mRightBtn.setEnabled(false);
                 mWrongBtn.setEnabled(false);
                 mRestartBtn.setEnabled(false);
-                TestUtils.rightPress(TAG, this);
+                //TestUtils.rightPress(TAG, this);
+                TestUtils.rightPress("PhoneLoopbackTest", this);
                 break;
             }
 
@@ -102,7 +103,8 @@ public class PhoneLoopbackTest extends BaseActivity implements OnClickListener {
                 mRightBtn.setEnabled(false);
                 mWrongBtn.setEnabled(false);
                 mRestartBtn.setEnabled(false);
-                TestUtils.wrongPress(TAG, this);
+                //TestUtils.wrongPress(TAG, this);
+                TestUtils.wrongPress("PhoneLoopbackTest", this);
                 break;
             }
 
@@ -110,7 +112,8 @@ public class PhoneLoopbackTest extends BaseActivity implements OnClickListener {
                 mRightBtn.setEnabled(false);
                 mWrongBtn.setEnabled(false);
                 mRestartBtn.setEnabled(false);
-                TestUtils.restart(this, TAG);
+                //TestUtils.restart(this, TAG);
+                TestUtils.restart(this, "PhoneLoopbackTest");
                 break;
             }
         }

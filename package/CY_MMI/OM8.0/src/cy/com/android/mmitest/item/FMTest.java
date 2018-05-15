@@ -35,7 +35,7 @@ import android.view.View.OnClickListener;
 public class FMTest extends BaseActivity implements OnClickListener {
 
 
-    private String TAG = "FMTest";
+    private String TAG = "FMTest_billy";
     private Button mRightBtn, mWrongBtn, mRestartBtn,mToggleBtn;
     private TextView mTitleTv;
 
@@ -106,7 +106,8 @@ public class FMTest extends BaseActivity implements OnClickListener {
                     editor.putString("52", "P");
                     editor.commit();
                 }
-                TestUtils.rightPress(TAG, this);
+                //TestUtils.rightPress(TAG, this);
+                TestUtils.rightPress("FMTest", this);
                 break;
             }
 
@@ -114,7 +115,8 @@ public class FMTest extends BaseActivity implements OnClickListener {
                 mRightBtn.setEnabled(false);
                 mWrongBtn.setEnabled(false);
                 mRestartBtn.setEnabled(false);
-                TestUtils.wrongPress(TAG, this);
+                //TestUtils.wrongPress(TAG, this);
+                TestUtils.wrongPress("FMTest", this);
                 break;
             }
 
@@ -122,7 +124,8 @@ public class FMTest extends BaseActivity implements OnClickListener {
                 mRightBtn.setEnabled(false);
                 mWrongBtn.setEnabled(false);
                 mRestartBtn.setEnabled(false);
-                TestUtils.restart(this, TAG);
+                //TestUtils.restart(this, TAG);
+                TestUtils.restart(this, "FMTest");
                 break;
             }
 

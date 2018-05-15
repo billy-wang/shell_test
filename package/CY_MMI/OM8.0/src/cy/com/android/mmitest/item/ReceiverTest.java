@@ -109,16 +109,22 @@ public class ReceiverTest extends BaseActivity implements OnClickListener {
     public void onResume() {
         super.onResume();
         DswLog.d(TAG, "onResume");
-	//DswLog.d(TAG, "setMode AudioManager.MODE_NORMAL");
-	//mAM.setMode(AudioManager.MODE_NORMAL);
-        aString = TestUtils.setStreamVoice("ReceiverTest");
+	
+	    /* disable by Billy.Wang */
+	    //DswLog.d(TAG, "setMode AudioManager.MODE_NORMAL");
+	    //mAM.setMode(AudioManager.MODE_NORMAL);
+        
+	    aString = TestUtils.setStreamVoice("ReceiverTest");
         int i = Integer.valueOf(aString).intValue();
         DswLog.d(TAG, "i = " + i);
         int maxVol = mAM.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL);
+	
+	    /* disable by Billy.Wang */
         //mAM.setSpeakerphoneOn(false);
         //DswLog.d(TAG, "setMode MODE_IN_COMMUNICATION) ");
         //mAM.setMode(AudioManager.MODE_IN_COMMUNICATION);
-        mAM.setStreamVolume(AudioManager.STREAM_VOICE_CALL, maxVol - i, 0);
+        
+	    mAM.setStreamVolume(AudioManager.STREAM_VOICE_CALL, maxVol - i, 0);
         DswLog.d(TAG, "maxVol = " + maxVol + " setStreamVolume = " + (maxVol - i));
 
 
@@ -156,8 +162,8 @@ public class ReceiverTest extends BaseActivity implements OnClickListener {
             e.printStackTrace();
         }
 
+        DswLog.d(TAG, "A set mode  = mode normal ");
         mAM.setMode(AudioManager.MODE_NORMAL);
-        DswLog.i(TAG, "A set mode  = mode normal ");
 
     }
     //Gionee zhangxiaowei 20130905 modify for CR00880893 end
@@ -183,8 +189,11 @@ public class ReceiverTest extends BaseActivity implements OnClickListener {
 
     void playSound() {
         // Gionee xiaolin 20121017 modify for CR00715318 start
+	
+	    /* add by Billy.Wang */
         DswLog.d(TAG, "setMode AudioManager.MODE_IN_CALL");
         mAM.setMode(AudioManager.MODE_IN_CALL);
+
         DswLog.d(TAG, "new AudioTrack STREAM_VOICE_CALL");
         mAudioTrack = new AudioTrack(AudioManager.STREAM_VOICE_CALL, sampleRate,
                 AudioFormat.CHANNEL_CONFIGURATION_MONO, AudioFormat.ENCODING_PCM_16BIT, numSamples,
@@ -217,26 +226,32 @@ public class ReceiverTest extends BaseActivity implements OnClickListener {
         // TODO Auto-generated method stub
         switch (v.getId()) {
             case R.id.right_btn: {
+            	DswLog.i(TAG, "ok");
                 mRightBtn.setEnabled(false);
                 mWrongBtn.setEnabled(false);
                 mRestartBtn.setEnabled(false);
-                TestUtils.rightPress(TAG, this);
+		        TestUtils.rightPress("ReceiverTest", this);
+                //TestUtils.rightPress(TAG, this);
                 break;
             }
 
             case R.id.wrong_btn: {
+            	DswLog.i(TAG, "failed");
                 mRightBtn.setEnabled(false);
                 mWrongBtn.setEnabled(false);
                 mRestartBtn.setEnabled(false);
-                TestUtils.wrongPress(TAG, this);
+                TestUtils.wrongPress("ReceiverTest", this);
+                //TestUtils.wrongPress(TAG, this);
                 break;
             }
 
             case R.id.restart_btn: {
+            	DswLog.i(TAG, "restart");
                 mRightBtn.setEnabled(false);
                 mWrongBtn.setEnabled(false);
                 mRestartBtn.setEnabled(false);
-                TestUtils.restart(this, TAG);
+                TestUtils.restart(this, "ReceiverTest");
+                //TestUtils.restart(this, TAG);
                 break;
             }
         }

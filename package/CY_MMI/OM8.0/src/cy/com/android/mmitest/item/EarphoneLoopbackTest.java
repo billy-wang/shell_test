@@ -269,17 +269,20 @@ public class EarphoneLoopbackTest extends BaseActivity implements OnClickListene
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.right_btn: {
-                TestUtils.rightPress(TAG, this);
+                //TestUtils.rightPress(TAG, this);
+                TestUtils.rightPress("EarphoneLoopbackTest", this);
                 break;
             }
 
             case R.id.wrong_btn: {
-                TestUtils.wrongPress(TAG, this);
+                //TestUtils.wrongPress(TAG, this);
+                TestUtils.wrongPress("EarphoneLoopbackTest", this);
                 break;
             }
 
             case R.id.restart_btn: {
-                TestUtils.restart(this, TAG);
+                //TestUtils.restart(this, TAG);
+                TestUtils.restart(this, "EarphoneLoopbackTest");
                 break;
             }
         }

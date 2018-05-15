@@ -229,7 +229,8 @@ public class ToneTest extends BaseActivity implements OnClickListener {
                 mRightBtn.setEnabled(false);
                 mWrongBtn.setEnabled(false);
                 mRestartBtn.setEnabled(false);
-                TestUtils.rightPress(TAG, this);
+                //TestUtils.rightPress(TAG, this);
+                TestUtils.rightPress("ToneTest", this);
                 break;
             }
 
@@ -237,7 +238,8 @@ public class ToneTest extends BaseActivity implements OnClickListener {
                 mRightBtn.setEnabled(false);
                 mWrongBtn.setEnabled(false);
                 mRestartBtn.setEnabled(false);
-                TestUtils.wrongPress(TAG, this);
+                //TestUtils.wrongPress(TAG, this);
+                TestUtils.wrongPress("ToneTest", this);
                 break;
             }
 
@@ -245,7 +247,8 @@ public class ToneTest extends BaseActivity implements OnClickListener {
                 mRightBtn.setEnabled(false);
                 mWrongBtn.setEnabled(false);
                 mRestartBtn.setEnabled(false);
-                TestUtils.restart(this, TAG);
+                //TestUtils.restart(this, TAG);
+                TestUtils.restart(this, "ToneTest");
                 break;
             }
         }
