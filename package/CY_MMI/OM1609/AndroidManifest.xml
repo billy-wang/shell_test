@@ -1,0 +1,538 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="gn.com.android.mmitest"
+    android:sharedUserId="android.uid.phone"
+    android:versionCode="10100008"
+    android:versionName="1.1.0.ah">
+
+    <uses-sdk android:minSdkVersion="24" />
+    <!--Gionee <GN_BSP_MMI> <chengq> <20170106> modify for ID 59869 begin-->
+    <uses-permission android:name="com.waves.maxxaudio.WavesFXProvider.PERMISSION" />
+    <!--Gionee <GN_BSP_MMI> <chengq> <20170106> modify for ID 59869 end-->
+    <uses-permission android:name="android.permission.ACCESS_FM_RADIO" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" />
+    <uses-permission android:name="android.permission.VIBRATE"></uses-permission>
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.FLASHLIGHT" />
+    <uses-permission android:name="android.permission.NFC" />
+
+    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature
+        android:name="android.hardware.nfc"
+        android:required="true" />
+    <uses-feature android:name="android.hardware.camera.front" />
+
+    <uses-permission android:name="android.permission.RECORD_AUDIO"></uses-permission>
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.hardware.sensor.gyroscope" />
+    <uses-permission android:name="android.hardware.sensor.compass" />
+    <uses-permission android:name="android.hardware.sensor.light" />
+    <uses-permission android:name="android.hardware.sensor.proximity" />
+    <uses-permission android:name="android.hardware.sensor.ambient_temperature" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"></uses-permission>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"></uses-permission>
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM"></uses-permission>
+    <uses-permission android:name="android.permission.MASTER_CLEAR" />
+    <uses-permission android:name="android.permission.SET_ORIENTATION" />
+    <uses-permission android:name="android.permission.TRANSMIT_IR" />
+    <uses-permission android:name="com.fingerprints.service.ACCESS_FINGERPRINT_MANAGER" />
+    <uses-permission android:name="com.fingerprints.service.ACCESS_EXTENSION_SERVICE" />
+    <uses-permission android:name="com.fingerprints.service.MANAGE_DEVICE_DATA" />
+    <!--Gionee zhangke 20160311 add for CR01650400 start-->
+    <uses-permission android:name="android.permission.REBOOT" />
+    <!--Gionee zhangke 20160311 add for CR01650400 end-->
+
+    <uses-permission android:name="android.permission.MANAGE_NOTIFICATIONS"/>
+    <application
+        android:name=".GnMMITestApplication"
+        android:icon="@drawable/icon"
+        android:label="@string/app_name"
+        android:persistent="false"
+        android:theme="@android:style/Theme.Black">
+        <activity
+            android:name=".GnMMITest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/app_name"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen">
+            <intent-filter>
+                <action android:name="gn.com.android.mmitest.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <!-- Gionee huangjianqiang 201601254 add  begin -->
+            <intent-filter>
+                <action android:name="gn.com.android.mmitest.FORSALE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <!-- Gionee huangjianqiang 201601254 add  end -->
+        </activity>
+        <activity
+            android:name=".SingleTestGridView"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/single_test"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen"></activity>
+
+        <activity
+            android:name=".item.KeysTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/keys"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen"></activity>
+        <activity
+            android:name=".item.TouchPadTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/touch_pad"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen"></activity>
+        <activity
+            android:name=".item.TouchPadPrivTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/touch_priv_pad"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen"></activity>
+        <activity
+            android:name=".item.ColorTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/color"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen"></activity>
+        <activity
+            android:name=".item.ScreenBrightnessTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/screen_brightness"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+
+        <activity
+            android:name=".item.VibrateTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/vibrate"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <activity
+            android:name=".item.LightTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/light"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <activity
+            android:name=".item.PhoneLoopbackTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/phone_loopback"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <activity
+            android:name=".item.PhoneLoopbackTest2"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/phone_loopback2"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <activity
+            android:name=".item.EarphoneLoopbackTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/earphone_loopback"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <activity
+            android:name=".item.HiFiTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/hifi"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <activity
+            android:name=".item.ToneTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/tone"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <activity
+            android:name=".item.ToneTest2"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/tone2"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <activity
+            android:name=".item.ReceiverTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/receiver"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <activity
+            android:name=".item.ReceiverTest2"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/receiver2"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <activity
+            android:name=".item.FingerPrintsTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/fingerprints"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <activity
+            android:name=".item.FingerPrintsTest2"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/fingerprints2"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <!--Gionee <GN_BSP_MMI> <chengq> <20170105> add for ID 59512 begin-->
+        <activity android:name=".item.FingerPrintsTest3"
+                android:screenOrientation="portrait"
+                android:theme="@style/Fullscreen"
+                android:excludeFromRecents="true"
+                android:configChanges="keyboardHidden|orientation|mcc|mnc"
+                android:label="@string/fingerprints3">
+        </activity>
+        <!--Gionee <GN_BSP_MMI> <chengq> <20170105> add for ID 59512 begin-->
+        <activity
+            android:name=".item.GyroscopeTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/gyroscope"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <activity
+            android:name=".item.AlsAndPsTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/light_proximity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen">
+            <!--Gionee huangjianqiang 20160125 add for CR01625818 start-->
+            <intent-filter>
+                <action android:name="gn.com.android.mmitest.ALSANDPS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <!--Gionee huangjianqiang 20160125 add for CR01625818 end-->
+        </activity>
+        <activity
+            android:name=".item.BackCameraTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/back_camera"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <activity
+            android:name=".item.FrontCameraTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/front_camera"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <!-- android:process="com.android.phone" -->
+        <activity
+            android:name=".item.GPSTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/gps"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen">
+            <intent-filter>
+                <action android:name="gn.com.android.mmitest.GPS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".item.FMTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/fm"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <activity
+            android:name=".item.BluetoothTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/bluetooth"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <activity
+            android:name=".item.WIFITest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/wifi"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <activity
+            android:name=".item.WIFITest5G"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/wifi5g"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <activity
+            android:name=".item.NFCTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/nfc"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen">
+            <intent-filter>
+                <action android:name="android.nfc.action.TECH_DISCOVERED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.nfc.action.TECH_DISCOVERED"
+                android:resource="@xml/nfc_tech_filter" />
+        </activity>
+        <activity
+            android:name=".item.NFCTest2"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/nfc2"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <activity
+            android:name=".item.OTGTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/otg"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <activity
+            android:name=".item.FlashTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/flash"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <activity
+            android:name=".item.FlashTest2"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/flash2"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <activity
+            android:name=".item.BatteryTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/battery"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+	<!--Gionee <GN_BSP_MMI> <chengq> <20170106> modify for ID 60451 begin-->
+        <activity
+            android:name=".item.LargeBatteryTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/largebattery"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+	<!--Gionee <GN_BSP_MMI> <chengq> <20170106> modify for ID 60451 end-->
+        <activity
+            android:name=".item.ClockTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/clock"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <activity
+            android:name=".item.SoftWareVersion"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/sw_version"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen">
+            <!-- Gionee huangjianqiang 201601254 add for CR01628245 begin -->
+            <intent-filter>
+                <action android:name="gn.com.android.mmitest.INTERNAL_VERSION" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <!-- Gionee huangjianqiang 201601254 add for CR01628245 end -->
+
+        </activity>
+        <activity
+            android:name=".item.AccelerationTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/acceleration"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <activity
+            android:name=".item.MagneticFieldTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/magnetic_field"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <!-- Gionee zhangxiaowei 20130726 add for CR00843342 start -->
+        <activity
+            android:name=".item.FlashLight"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/FlashLight"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <!-- Gionee zhangxiaowei 20130726 add for CR00843342 start -->
+        <!-- Gionee huangjianqiang 20160420 add for CR01681501 start -->
+        <activity
+            android:name=".item.FrontFlashTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/FrontFlashTest"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <!-- Gionee huangjianqiang 20160420 add for CR01681501 end -->
+        <activity
+            android:name=".item.SetColor"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/SetColor"
+            android:process="com.android.phone"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <!-- Gionee zhangxiaowei 20130726 add for CR00843342 end -->
+        <activity
+            android:name=".item.IrTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/irtest"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <!-- GIONEE 2015-08-28 add for CR01543998 begin -->
+        <!--Gionee <GN_BSP_MMI> <chengq> <20170215> modify for ID 68092 begin-->
+        <activity
+            android:name=".item.IrTest2"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/irtest"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <!--Gionee <GN_BSP_MMI> <chengq> <20170215> modify for ID 68092 end-->
+        <activity
+            android:name=".item.TemperatureTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/temperature"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <!-- GIONEE 2015-08-28 add for CR01543998 end -->
+        <!-- Gionee zhangke 20151110 add for CR01588796 start -->
+        <activity
+            android:name=".item.LaserTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/laser_cal"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <!-- Gionee zhangke 20151110 add for CR01588796 end -->
+        <!-- Gionee zhangke 20160105 modify for CR01617603 start
+                    android:process="com.android.phone"
+        -->
+        <activity
+            android:name=".TestResult"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/test_result"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <!-- Gionee zhangke 20160105 modify for CR01617603 end-->
+        <activity
+            android:name=".TestT"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/test_result"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <service
+            android:name="gn.com.android.mmitest.AdjvService"
+            android:enabled="true"></service>
+        <!-- Gionee zhangke 20160105 modify for CR01617603 start
+                    android:process="com.android.phone"
+        -->
+        <service
+            android:name="gn.com.android.mmitest.item.NvService"
+            android:enabled="true"></service>
+        <!-- Gionee zhangke 20160105 modify for CR01617603 end-->
+
+        <!--Gionee zhangke 20151114 add for CR01591381 start-->
+        <activity
+            android:name=".item.ForceTouchTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/force_touch"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <activity
+            android:name="com.hideep.zcalib.standalone.activity.ViewActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/title_activity_view"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
+            <meta-data
+                android:name="hwc-navi"
+                android:value="Navi" />
+        </activity>
+        <!--Gionee zhangke 20151114 add for CR01591381 end-->
+        <!--Gionee zhangke 20151208 add for CR01588796 start-->
+        <activity
+            android:name=".item.LaserPreTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/laser_cal"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <activity
+            android:name="com.gionee.laser.LaserTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/laser_cal"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <!--Gionee zhangke 20151208 add for CR01588796 end-->
+        <!--Gionee zhangke 20151210 add for CR01607303 start-->
+        <activity
+            android:name=".item.TouchPadFailInfoTest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/touch_fail_info"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen"></activity>
+        <!--Gionee zhangke 20151210 add for CR01607303 end-->
+        <!--Gionee zhangke 20160826 add for CR01753455 start-->
+        <activity
+            android:name=".item.BackCameraTest2"
+	    android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/back_camera2"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen" >
+        </activity>
+        <!--Gionee zhangke 20160826 add for CR01753455 end-->
+        <!--Gionee zhangke 20160923 add for CR01763471 start-->
+        <activity
+            android:name=".item.BackFlashlightCalTest"
+	    android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/back_flashlight_cal_test"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen" >
+        </activity>
+        <!--Gionee zhangke 20160923 add for CR01763471 end-->
+    </application>
+</manifest>

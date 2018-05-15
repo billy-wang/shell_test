@@ -46,10 +46,12 @@ usage()
 		== down code ==
 		-down project	:  下载项目源代码
 		== grep audio log ==
-		-grep file		: 	过滤 audio log
+		-grep main file		: 	过滤 audio log
 		-grep kernel file	: 	过滤 kernel audio log
+		-grep sys file		: 	过滤 sys log
 		== kernel_log_converter ==
 		-converter -i file	: 	转换kernel log android 时间
+		-converter -h		: 	转换kernel log android 时间帮助
 		== reset code ==
 		-reset code_version 	: 	复位代码流
 		== android build env ==
@@ -94,7 +96,7 @@ sudo service udev restart
 
 git config --global user.name "Billy.Wang"
 git config --global user.email "wangbb@chenyee.com"
-echo "export LC_ALL=C" >> ~/.bashrc
+#echo "export LC_ALL=C" >> ~/.bashrc
 }
 
 reset_code()
@@ -125,12 +127,20 @@ grep_audio_log()
             	;;
             kernel)
 		if [ -n "$3" ]; then
-			grep -E "audio|Aud|writer|keycode|stream|speech_|mtk_pcm_" $3 > kernel.log
+			grep -E "audio|Aud|AUD|Lineout_|writer|keycode|stream|speech_|mtk_pcm_|accdet|Headset|mtk_voice|pmic_thread|modem_" $3 > kernel.log
 		else
     			echo "$0 $2 logfile"
 		fi
             	exit 0
             	;;
+            sys)
+		if [ -n "$3" ]; then
+			grep -E "EarphoneLoopbackTest|WiredAccessoryManager|Telecom" $3 > sys.log
+		else
+			echo "$0 $2 logfile"
+		fi
+		exit 0
+		;;
 	    *)
             	usage
             	exit 1
@@ -679,14 +689,14 @@ kernel_log_converter()
     do
         case "$2" in
 	   -i)
-		s=`python ~/bin/kernel_log_converter.py $2 $3 $4 $5`
+		s=`python ~/bin/shell_test/kernel_log_converter.py $2 $3 $4 $5`
 		echo "python ~/bin/kernel_log_converter.py $@"
 		echo $?
 		echo ${s}
             	exit 0
             	;;
 	   -h)
-		s=`python ~/bin/kernel_log_converter.py`
+		s=`python ~/bin/shell_test/kernel_log_converter.py`
 		echo ${s}
             	exit 0
             	;;

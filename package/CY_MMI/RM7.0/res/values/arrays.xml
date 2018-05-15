@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="test_project_item">
+        <item>@string/auto_test</item>
+        <item>@string/single_test</item>
+        <item>@string/test_result</item>
+        <item>@string/master_clear</item>
+        <item>@string/auto_test_2</item>
+        <!--Gionee zhangke 201603010 add for CR01650400 start--> 
+        <item>@string/set_rpmb_key</item>
+        <!--Gionee zhangke 201603010 add for CR01650400 end-->
+    </string-array>
+    <string-array name="single_test_items">
+        <item>@string/sw_version</item>
+        <item>@string/screen_brightness</item>
+        <item>@string/color</item>
+        <item>@string/keys</item>
+        <item>@string/receiver</item>
+        <item>@string/receiver2</item>
+        <item>@string/tone</item>
+        <item>@string/tone2</item>
+        <item>@string/vibrate</item>
+        <item>@string/phone_loopback</item>
+        <item>@string/phone_loopback2</item>
+        <item>@string/earphone_loopback</item>
+        <item>@string/hifi</item>
+        <item>@string/fm</item>
+        <item>@string/touch_priv_pad</item>
+        <item>@string/touch_pad</item>
+        <item>@string/back_flashlight_cal_test</item>
+        <item>@string/back_camera</item>
+        <!--Gionee <GN_BSP_MMI> <lifeilong> <20170222> modify for ID 73439 begin-->
+        <item>@string/back_camera2</item>
+        <!--Gionee <GN_BSP_MMI> <lifeilong> <20170222> modify for ID 73439 end-->
+        <item>@string/front_camera</item>
+        <item>@string/front_camera2</item>
+        <item>@string/light_proximity</item>
+        <item>@string/acceleration</item>
+        <item>@string/magnetic_field</item>
+        <item>@string/gyroscope</item>
+        <item>@string/bluetooth</item>
+        <item>@string/wifi</item>
+        <item>@string/wifi5g</item>
+        <item>@string/nfc</item>
+        <item>@string/nfc2</item>
+        <item>@string/irtest</item>
+        <item>@string/otg</item>
+        <item>@string/gps</item>
+        <item>@string/flash</item>
+        <item>@string/flash2</item>
+        <item>@string/FlashLight</item>
+        <item>@string/frontflash</item>
+        <item>@string/fingerprints</item>
+        <item>@string/fingerprints2</item>
+        <item>@string/temperature</item>
+        <item>@string/force_touch</item>
+        <item>@string/laser_cal</item>
+        <item>@string/touch_fail_info</item>
+        <item>@string/battery</item>
+        <item>@string/a3_test</item>
+        <item>@string/cplc</item>
+        <item>@string/SetColor</item>
+    </string-array>
+    <string-array name="single_test_keys">
+        <item>"SoftWareVersion"</item>
+        <item>"ScreenBrightnessTest"</item>
+        <item>"ColorTest"</item>
+        <item>"KeysTest"</item>
+        <item>"ReceiverTest"</item>
+        <item>"ReceiverTest2"</item>
+        <item>"ToneTest"</item>
+        <item>"ToneTest2"</item>
+        <item>"VibrateTest"</item>
+        <item>"PhoneLoopbackTest"</item>
+        <item>"PhoneLoopbackTest2"</item>
+        <item>"EarphoneLoopbackTest"</item>
+        <item>"HiFiTest"</item>
+        <item>"FMTest"</item>
+        <item>"TouchPadPrivTest"</item>
+        <item>"TouchPadTest"</item>
+        <item>"BackFlashlightCalTest"</item>
+        <item>"BackCameraTest"</item>
+        <!--Gionee <GN_BSP_MMI> <lifeilong> <20170222> modify for ID 73439 begin-->
+        <item>"BackCameraTest2"</item>
+        <!--Gionee <GN_BSP_MMI> <lifeilong> <20170222> modify for ID 73439 end-->
+        <item>"FrontCameraTest"</item>
+        <item>"FrontCameraTest2"</item>
+        <item>"AlsAndPsTest"</item>
+        <item>"AccelerationTest"</item>
+        <item>"MagneticFieldTest"</item>
+        <item>"GyroscopeTest"</item>
+        <item>"BluetoothTest"</item>
+        <item>"WIFITest"</item>
+        <item>"WIFITest5G"</item>
+        <item>"NFCTest"</item>
+        <item>"NFCTest2"</item>
+        <item>"IrTest"</item>
+        <item>"OTGTest"</item>
+        <item>"GPSTest"</item>
+        <item>"FlashTest"</item>
+        <item>"FlashTest2"</item>
+        <item>"FlashLight"</item>
+        <item>"FrontFlash"</item>
+        <item>"FingerPrintsTest"</item>
+        <item>"FingerPrintsTest2"</item>
+        <item>"TemperatureTest"</item>
+        <item>"ForceTouchTest"</item>
+        <item>"LaserPreTest"</item>
+        <item>"TouchPadFailInfoTest"</item>
+        <item>"BatteryTest"</item>
+        <item>"A3Activity"</item>
+        <item>"CplcActivity"</item>
+        <item>"SetColor"</item>
+    </string-array>
+       <string-array name="auto_test_items">
+        <item>@string/sw_version</item>
+        <item>@string/screen_brightness</item>
+        <item>@string/color</item>
+        <item>@string/keys</item>
+        <item>@string/receiver</item>
+        <item>@string/receiver2</item>
+        <item>@string/tone</item>
+        <item>@string/tone2</item>
+        <item>@string/vibrate</item>
+        <item>@string/phone_loopback</item>
+        <item>@string/phone_loopback2</item>
+        <item>@string/fm</item>
+        <item>@string/earphone_loopback</item>
+        <item>@string/hifi</item>
+        <item>@string/touch_priv_pad</item>
+        <item>@string/touch_pad</item>
+        <item>@string/acceleration</item>
+        <item>@string/magnetic_field</item>
+        <item>@string/gyroscope</item>
+        <item>@string/bluetooth</item>
+        <item>@string/otg</item>
+        <item>@string/gps</item>
+        <item>@string/flash</item>
+        <item>@string/flash2</item>
+        <item>@string/FlashLight</item>
+        <item>@string/frontflash</item>
+        <item>@string/fingerprints2</item>
+        <item>@string/fingerprints</item>
+        <item>@string/back_flashlight_cal_test</item>
+        <item>@string/nfc</item>
+        <item>@string/nfc2</item>
+        <item>@string/cplc</item>
+        <item>@string/a3_test</item>
+        <item>@string/light_proximity</item>
+        <item>@string/back_camera</item>
+        <item>@string/back_camera2</item>
+        <item>@string/front_camera</item>
+        <item>@string/front_camera2</item>
+        <item>@string/SetColor</item>
+        <item>@string/irtest</item>
+        <item>@string/battery</item>
+        <!--
+        <item>@string/wifi</item>
+        <item>@string/wifi5g</item>
+        <item>@string/temperature</item>
+        <item>@string/force_touch</item>
+        <item>@string/laser_cal</item>
+        -->
+    </string-array>
+    <string-array name="auto_test_keys">
+        <item>"SoftWareVersion"</item>
+        <item>"ScreenBrightnessTest"</item>
+        <item>"ColorTest"</item>
+        <item>"KeysTest"</item>
+        <item>"ReceiverTest"</item>
+        <item>"ReceiverTest2"</item>
+        <item>"ToneTest"</item>
+        <item>"ToneTest2"</item>
+        <item>"VibrateTest"</item>
+        <item>"PhoneLoopbackTest"</item>
+        <item>"PhoneLoopbackTest2"</item>
+        <item>"FMTest"</item>
+        <item>"EarphoneLoopbackTest"</item>
+        <item>"HiFiTest"</item>
+        <item>"TouchPadPrivTest"</item>
+        <item>"TouchPadTest"</item>
+        <item>"AccelerationTest"</item>
+        <item>"MagneticFieldTest"</item>
+        <item>"GyroscopeTest"</item>
+        <item>"BluetoothTest"</item>
+        <item>"OTGTest"</item>
+        <item>"GPSTest"</item>
+        <item>"FlashTest"</item>
+        <item>"FlashTest2"</item>
+        <item>"FlashLight"</item>
+        <item>"FrontFlash"</item>
+        <item>"FingerPrintsTest2"</item>
+        <item>"FingerPrintsTest"</item>
+        <item>"BackFlashlightCalTest"</item>
+        <item>"NFCTest"</item>
+        <item>"NFCTest2"</item>
+        <item>"CplcActivity"</item>
+        <item>"A3Activity"</item>
+        <item>"AlsAndPsTest"</item>
+        <item>"BackCameraTest"</item>
+        <item>"BackCameraTest2"</item>
+        <item>"FrontCameraTest"</item>
+        <item>"FrontCameraTest2"</item>
+        <item>"SetColor"</item>
+        <item>"IrTest"</item>
+        <item>"BatteryTest"</item>
+        <!--
+        <item>"WIFITest"</item>
+        <item>"WIFITest5G"</item>
+        <item>"ForceTouchTest"</item>
+        <item>"TemperatureTest"</item>
+        <item>"LaserPreTest"</item>
+        -->
+    </string-array>
+        <string-array name="auto_test_items_2">
+        <item>@string/screen_brightness</item>
+        <item>@string/color</item>
+        <item>@string/keys</item>
+        <item>@string/receiver</item>
+        <item>@string/receiver2</item>
+        <item>@string/tone</item>
+        <item>@string/tone2</item>
+        <item>@string/vibrate</item>
+        <item>@string/phone_loopback</item>
+        <item>@string/phone_loopback2</item>
+        <item>@string/earphone_loopback</item>
+        <item>@string/hifi</item>
+        <item>@string/fm</item>
+        <item>@string/touch_priv_pad</item>
+        <item>@string/touch_pad</item>
+        <item>@string/back_flashlight_cal_test</item>
+        <item>@string/back_camera</item>
+        <item>@string/back_camera2</item>
+        <item>@string/front_camera</item>
+        <item>@string/front_camera2</item>
+        <item>@string/light_proximity</item>
+        <item>@string/acceleration</item>
+        <item>@string/magnetic_field</item>
+        <item>@string/gyroscope</item>
+        <item>@string/bluetooth</item>
+        <item>@string/wifi</item>
+        <item>@string/wifi5g</item>
+        <item>@string/nfc</item>
+        <item>@string/nfc2</item>
+        <item>@string/irtest</item>
+        <item>@string/otg</item>
+        <item>@string/gps</item>
+        <item>@string/flash</item>
+        <item>@string/flash2</item>
+        <item>@string/FlashLight</item>
+        <item>@string/fingerprints</item>
+        <item>@string/fingerprints2</item>
+        <item>@string/force_touch</item>
+        <!--Gionee <GN_BSP_MMI> <lifeilong> <20170221> modify for ID 71708 begin-->
+        <item>@string/battery</item>        
+        <!--Gionee <GN_BSP_MMI> <lifeilong> <20170221> modify for ID 71708 end-->
+    </string-array>
+    <string-array name="auto_test_keys_2">
+        <item>"ScreenBrightnessTest"</item>
+        <item>"ColorTest"</item>
+        <item>"KeysTest"</item>
+        <item>"ReceiverTest"</item>
+        <item>"ReceiverTest2"</item>
+        <item>"ToneTest"</item>
+        <item>"ToneTest2"</item>
+        <item>"VibrateTest"</item>
+        <item>"PhoneLoopbackTest"</item>
+        <item>"PhoneLoopbackTest2"</item>
+        <item>"EarphoneLoopbackTest"</item>
+        <item>"HiFiTest"</item>
+        <item>"FMTest"</item>
+        <item>"TouchPadPrivTest"</item>
+        <item>"TouchPadTest"</item>
+        <item>"BackFlashlightCalTest"</item>
+        <item>"BackCameraTest"</item>
+        <item>"BackCameraTest2"</item>
+        <item>"FrontCameraTest"</item>
+        <item>"FrontCameraTest2"</item>
+        <item>"AlsAndPsTest"</item>
+        <item>"AccelerationTest"</item>
+        <item>"MagneticFieldTest"</item>
+        <item>"GyroscopeTest"</item>
+        <item>"BluetoothTest"</item>
+        <item>"WIFITest"</item>
+        <item>"WIFITest5G"</item>
+        <item>"NFCTest"</item>
+        <item>"NFCTest2"</item>
+        <item>"IrTest"</item>
+        <item>"OTGTest"</item>
+        <item>"GPSTest"</item>
+        <item>"FlashTest"</item>
+        <item>"FlashTest2"</item>
+        <item>"FlashLight"</item>
+        <item>"FingerPrintsTest"</item>
+        <item>"FingerPrintsTest2"</item>
+        <item>"ForceTouchTest"</item>
+        <!--Gionee <GN_BSP_MMI> <lifeilong> <20170221> modify for ID 71708 begin-->
+        <item>"BatteryTest"</item>
+        <!--Gionee <GN_BSP_MMI> <lifeilong> <20170221> modify for ID 71708 end-->
+    </string-array>
+    <string-array name="key_test_items">
+        <item>@string/power_key</item>
+        <item>@string/volume_up_key</item>
+        <item>@string/volume_down_key</item>
+        <item>@string/back_key</item>
+        <item>@string/home_key</item>
+        <item>@string/app_key</item>
+        <item>@string/menu_key</item>
+        <item>@string/hall_o_key</item>
+        <item>@string/hall_c_key</item>
+        <item>@string/camera_key</item>
+        <item>@string/focus_key</item>
+        <item>@string/search_key</item>
+        
+    </string-array>
+    <string-array name="key_test_keys">
+        <!--Gionee <GN_BSP_MMI><lifeilong><20170106> modify for ID 31754 bedin-->
+        <item>"KEYCODE_POWER"</item><!--26-->
+        <item>"KEYCODE_VOLUME_UP"</item><!--24-->
+        <item>"KEYCODE_VOLUME_DOWN"</item><!--25-->
+        <item>"KEYCODE_BACK"</item><!--4-->
+        <item>"KEYCODE_HOME"</item><!--3-->
+        <item>"KEYCODE_APP_SWITCH"</item><!--187-->
+        <item>"KEYCODE_MENU"</item><!--82-->
+        <!--Gionee GN_BSP_MMI lifeilong modify for ID 31754 begin-->
+        <item>"KEYCODE_HALL_O"</item><!--301-->
+        <item>"KEYCODE_HALL_C"</item><!--302-->
+        <!--Gionee GN_BSP_MMI lifeilong modify for ID 31754 end-->
+        <item>"KEYCODE_CAMERA"</item><!--27-->
+        <item>"KEYCODE_FOCUS"</item><!--80-->
+        <item>"KEYCODE_SEARCH"</item><!--84-->
+        <!--Gionee <GN_BSP_MMI><lifeilong><20170106> modify for ID 31754 end-->
+    </string-array>
+
+
+
+    <string-array name="key_test_items_ear">
+        <item>@string/volume_up_key</item>
+        <item>@string/volume_down_key</item>
+        <item>@string/headsethook</item>
+    </string-array>
+    <string-array name="key_test_keys_ear">
+        <item>"KEYCODE_VOLUME_UP"</item><!--24-->
+        <item>"KEYCODE_VOLUME_DOWN"</item><!--25-->
+        <item>"KEYCODE_HEADSETHOOK"</item><!--79-->
+    </string-array>
+
+
+
+
+    <string-array name="key_test_items_hall">
+        <item>@string/hall_o_key</item>
+        <item>@string/hall_c_key</item>
+        
+    </string-array>
+    <string-array name="key_test_keys_hall">
+        <item>"KEYCODE_HALL_O"</item><!--301-->
+        <item>"KEYCODE_HALL_C"</item><!--302-->
+    </string-array>
+
+    
+</resources>

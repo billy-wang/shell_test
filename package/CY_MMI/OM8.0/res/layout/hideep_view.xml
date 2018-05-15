@@ -1,0 +1,25 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    android:paddingBottom="0pt"
+    android:paddingLeft="0pt"
+    android:paddingRight="0pt"
+    android:paddingTop="0pt" >
+
+
+	<!--
+	    - To add background image (2015.08.14)
+	-->
+    <com.hideep.zcalib.standalone.activity.ZCalibView
+        android:id="@+id/CanvasView"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_above="@+id/BTN_OPTIONS"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:background="@drawable/bg_image"
+        />
+</LinearLayout>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--//Gionee <GN_BSP_MMI> <lifeilong> <20161230> for 57608 begin-->
+    <style name="Fullscreen" parent="AppTheme">
+        <item name="android:windowFullscreen">true</item>
+    </style>
+    <!--Gionee zhangke 20151110 add for CR01591381 start-->
+    <style name="AppTheme" parent="android:ThemeOverlay.Material.Dark">
+    </style>
+    <!--Gionee zhangke 20151110 add for CR01591381 end-->
+    <!--//Gionee <GN_BSP_MMI> <lifeilong> <20161230> for 57608 end-->
+</resources>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <include
+        android:id="@+id/temp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        layout="@layout/right_wrong_restart" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/temp"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="30dp"
+        android:layout_marginTop="60dp"
+        android:orientation="vertical" >
+
+        <TextView
+            android:id="@+id/temp_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/temp_detected" />
+
+        <TextView
+            android:id="@+id/chip_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:layout_marginTop="4dp"
+            android:background="#333"
+            android:minWidth="30dp"
+            android:text="@string/chip_value"
+            android:textSize="24sp" />
+
+        <TextView
+            android:id="@+id/object_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:layout_marginTop="4dp"
+            android:background="#333"
+            android:minWidth="30dp"
+            android:text="@string/object_value"
+            android:textSize="24sp" />
+
+        <TextView
+            android:id="@+id/human_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:layout_marginTop="4dp"
+            android:background="#333"
+            android:minWidth="30dp"
+            android:text="@string/human_value"
+            android:textSize="24sp" />
+    </LinearLayout>
+
+</RelativeLayout>

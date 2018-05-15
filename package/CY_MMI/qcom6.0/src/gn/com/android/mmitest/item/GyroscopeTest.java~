@@ -1,0 +1,163 @@
+
+package gn.com.android.mmitest.item;
+
+import gn.com.android.mmitest.R;
+import gn.com.android.mmitest.TestUtils;
+
+import java.util.List;
+
+import android.app.Activity;
+import android.content.res.Resources;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.TextView;
+
+public class GyroscopeTest extends Activity implements SensorEventListener, OnClickListener {
+    private TextView mTitleTv;
+
+    private TextView mContentTv;
+
+    private Button mRightBtn, mWrongBtn, mRestartBtn;
+    private boolean mIsAccuracyRight;
+
+    private static String TAG = "GyroscopeTest";
+
+    SensorManager mSensorMgr;
+
+    Sensor mSensor;
+    Resources mRs;
+    StringBuilder mBuilder;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        WindowManager.LayoutParams lp = getWindow().getAttributes();
+        lp.flags |= WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON | WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED; 
+        //lp.dispatchAllKey = 1;
+        getWindow().setAttributes(lp);
+        
+        setContentView(R.layout.common_textview);
+
+        mTitleTv = (TextView) findViewById(R.id.test_title);
+        mContentTv = (TextView) findViewById(R.id.test_content);
+        mSensorMgr = (SensorManager) this.getSystemService(SENSOR_SERVICE);
+        // Gionee xiaolin 20120531 modify for CR00613896 start
+        if (null != mSensorMgr) {
+            List<Sensor> sl = mSensorMgr.getSensorList(Sensor.TYPE_GYROSCOPE);
+            if ( null != sl) {
+                if (sl.size() != 0) {
+                    mSensor = sl.get(0);
+                }
+            }
+        }
+        // Gionee xiaolin 20120531 modify for CR00613896 end
+        mBuilder = new StringBuilder();
+        mRightBtn = (Button) findViewById(R.id.right_btn);
+        mWrongBtn = (Button) findViewById(R.id.wrong_btn);
+        mRightBtn.setOnClickListener(this);
+        mWrongBtn.setOnClickListener(this);
+        mRestartBtn = (Button) findViewById(R.id.restart_btn);
+        mRestartBtn.setOnClickListener(this);
+        mRs = this.getResources();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+  
+        // Gionee xiaolin 20120531 modify for CR00613896 start
+        if (null != mSensorMgr && null != mSensor) {
+            boolean isTrue = mSensorMgr.registerListener(this, mSensor,
+                    SensorManager.SENSOR_DELAY_NORMAL);
+        }
+        // Gionee xiaolin 20120531 modify for CR00613896 end
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        // TODO Auto-generated method stub
+        Log.e(TAG, "event.accuracy = " + event.accuracy);
+        if (false == mIsAccuracyRight) {
+            if (2 <= event.accuracy) {
+                mTitleTv.setText(mRs.getString(R.string.gyroscope) + " --- " + mRs.getString(R.string.test_right));
+                mRightBtn.setEnabled(true);
+                Log.e(TAG, "event.accuracy = " + event.accuracy + "  pass ");
+            } else {
+                mTitleTv.setText(mRs.getString(R.string.gyroscope) + " --- " + mRs.getString(R.string.test_wrong));
+                Log.e(TAG, "event.accuracy = " + event.accuracy + "no pass ");
+            }
+            mIsAccuracyRight = true;
+        }
+
+        // TODO Auto-generated method stub
+        if (mBuilder.length() > 1) {
+            mBuilder.delete(0, mBuilder.length() - 1);
+        }
+        mBuilder.append("x = " + event.values[SensorManager.DATA_X] + "\n");
+        mBuilder.append("y = " + event.values[SensorManager.DATA_Y] + "\n");
+        mBuilder.append("z = " + event.values[SensorManager.DATA_Z] + "\n");
+        mContentTv.setText(mBuilder.toString());
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        // Gionee xiaolin 20120531 modify for CR00613896 start
+        if (null != mSensorMgr && null != mSensor) {
+            mSensorMgr.unregisterListener(this);
+        }
+        // Gionee xiaolin 20120531 modify for CR00613896 end
+    }
+
+    @Override
+    public void onClick(View v) {
+        // TODO Auto-generated method stub
+        switch (v.getId()) {
+
+            case R.id.right_btn: {
+                mRightBtn.setEnabled(false);
+                mWrongBtn.setEnabled(false);
+                mRestartBtn.setEnabled(false);
+                TestUtils.rightPress(TAG, this);
+                break;
+            }
+
+            case R.id.wrong_btn: {
+                mRightBtn.setEnabled(false);
+                mWrongBtn.setEnabled(false);
+                mRestartBtn.setEnabled(false);
+                TestUtils.wrongPress(TAG, this);
+                break;
+            }
+            
+            case R.id.restart_btn: {
+                mRightBtn.setEnabled(false);
+                mWrongBtn.setEnabled(false);
+                mRestartBtn.setEnabled(false);
+                TestUtils.restart(this, TAG);
+                break;
+            }
+        }
+
+    }
+
+    @Override
+    public boolean dispatchKeyEvent (KeyEvent event) {
+        return true;
+    }
+}

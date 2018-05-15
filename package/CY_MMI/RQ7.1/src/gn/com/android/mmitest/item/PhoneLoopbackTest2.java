@@ -1,0 +1,171 @@
+
+package gn.com.android.mmitest.item;
+
+import gn.com.android.mmitest.R;
+import gn.com.android.mmitest.TestUtils;
+import android.app.Activity;
+import android.content.Context;
+import android.media.AudioFormat;
+import android.media.AudioManager;
+import android.media.AudioRecord;
+import android.media.AudioTrack;
+import android.media.MediaRecorder;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.TextView;
+
+public class PhoneLoopbackTest2 extends Activity implements OnClickListener {
+
+    boolean mIsRecording, mIsStop, mIsGetState;
+    TextView mContentTv;
+    AudioRecord mRecord;
+
+    AudioTrack mTrack;
+
+    AudioManager mAM;
+
+    int mRecBuffSize, mTrackBuffSize;
+
+    private Button mRightBtn, mWrongBtn, mRestartBtn;
+
+    private static String TAG = "PhoneLoopbackTest2";
+
+    RecordThread mRecThread;
+    // private EarphonePluginReceiver mEarphonePluginReceiver;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        TestUtils.setWindowFlags(this);
+        setContentView(R.layout.common_textview);
+        mRightBtn = (Button) findViewById(R.id.right_btn);
+        mRightBtn.setOnClickListener(this);
+        mWrongBtn = (Button) findViewById(R.id.wrong_btn);
+        mWrongBtn.setOnClickListener(this);
+        mRightBtn.setEnabled(true);
+        mRestartBtn = (Button) findViewById(R.id.restart_btn);
+        mRestartBtn.setOnClickListener(this);
+        TextView recordTitle = (TextView) findViewById(R.id.test_title);
+        recordTitle.setText(R.string.mic2test);
+        // Gionee xiaolin 20120608 add for CR00622935 start
+        mAM = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        // Gionee xiaolin 20120613 modify for CR00624109 start
+        // Gionee <xuna><2013-06-03> delete for CR00873055 begin
+        mRecBuffSize = AudioRecord.getMinBufferSize(8000, AudioFormat.CHANNEL_CONFIGURATION_MONO,
+                AudioFormat.ENCODING_PCM_16BIT);
+        mTrackBuffSize = AudioTrack.getMinBufferSize(8000, AudioFormat.CHANNEL_CONFIGURATION_MONO,
+                AudioFormat.ENCODING_PCM_16BIT);
+        mRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, 8000, AudioFormat.CHANNEL_CONFIGURATION_MONO,
+                AudioFormat.ENCODING_PCM_16BIT, mRecBuffSize);
+        mTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 8000, AudioFormat.CHANNEL_CONFIGURATION_MONO,
+                AudioFormat.ENCODING_PCM_16BIT, mTrackBuffSize, AudioTrack.MODE_STREAM);
+        // Gionee <xuna><2013-06-03> delete for CR00873055 end
+    }
+
+    @Override
+    public void onClick(View v) {
+        // TODO Auto-generated method stub
+        switch (v.getId()) {
+        case R.id.right_btn: {
+            mIsStop = true;
+            mRightBtn.setEnabled(false);
+            mWrongBtn.setEnabled(false);
+            mRestartBtn.setEnabled(false);
+            TestUtils.rightPress(TAG, this);
+            break;
+        }
+
+        case R.id.wrong_btn: {
+            mIsStop = true;
+            mRightBtn.setEnabled(false);
+            mWrongBtn.setEnabled(false);
+            mRestartBtn.setEnabled(false);
+            TestUtils.wrongPress(TAG, this);
+            break;
+        }
+
+        case R.id.restart_btn: {
+            mRightBtn.setEnabled(false);
+            mWrongBtn.setEnabled(false);
+            mRestartBtn.setEnabled(false);
+            TestUtils.restart(this, TAG);
+            break;
+        }
+        }
+    }
+
+    // Gionee xiaolin 20120608 modify for CR00622935 start
+    @Override
+    public void onStart() {
+        super.onStart();
+        mAM.setMode(AudioManager.MODE_NORMAL);
+        mAM.setParameters("MMIMic=3");
+        Log.e(TAG, " onStart set mode --> mode_normal,setParameters MMIMic2=1");
+        if (!mIsRecording) {
+            new RecordThread().start();
+        }
+        if (null != mAM) {
+            int maxVol = mAM.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+            String aString = TestUtils.setStreamVoice("PhoneLoopbackTest2");
+            int i = Integer.valueOf(aString).intValue();
+            mAM.setStreamVolume(AudioManager.STREAM_MUSIC, maxVol - i, 0);
+        }
+    }
+
+    @Override
+    public void onPause() {
+        mIsStop = true;
+        super.onPause();
+        mAM.setParameters("MMIMic=0");
+        mAM.setMode(AudioManager.MODE_NORMAL);
+        Log.e(TAG, " onPause set mode --> mode_normal,setParameters MMIMic=0");
+        // Gionee xiaolin 20120615 add for CR00624700 start
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        // Gionee xiaolin 20120615 add for CR00624700 end
+    }
+
+    class RecordThread extends Thread {
+        public void run() {
+            try {
+                byte[] buffer = new byte[mRecBuffSize];
+                mRecord.startRecording();
+                mTrack.play();
+                mIsRecording = true;
+                while (false == mIsStop) {
+                    int bufferReadResult = mRecord.read(buffer, 0, mRecBuffSize);
+                    if (bufferReadResult > 0 && bufferReadResult % 2 == 0) {
+                        Log.e("lich", "bufferReadResult = " + bufferReadResult);
+                        byte[] tmpBuf = new byte[bufferReadResult];
+                        System.arraycopy(buffer, 0, tmpBuf, 0, bufferReadResult);
+                        mTrack.write(tmpBuf, 0, bufferReadResult);
+                    }
+                }
+                // Gionee xiaolin 20120613 modify for CR00624109 start
+                mTrack.stop();
+                mRecord.stop();
+                mTrack.release();
+                mRecord.release();
+                // Gionee xiaolin 20120613 modify for CR00624109 end
+                mIsRecording = false;
+            } catch (Throwable t) {
+            }
+        }
+    }
+    // Gionee xiaolin 20120608 modify for CR00622935 end
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        return true;
+    }
+
+}

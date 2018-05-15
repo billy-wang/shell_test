@@ -1,0 +1,512 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Gionee huangjianqiang 20160126 modify begin -->
+<resources>
+    <string name="auto_test">"AutoTest"</string>
+    <string name="auto_test_2">"AutoTest2"</string>
+    <string name="single_test">"HW Test"</string>
+    <string name="test_result">"Test Report"</string>
+    <string name="master_clear">"Restore factory"</string>
+    <string name="wait">"Please wait..."</string>
+
+    <string name="result_from_sn">"Test results from the flag"</string>
+    <string name="result_from_test">"Test results of the AutoTest"</string>
+    <string name="no_mmitest">"No Test completed"</string>
+    <string name="mmitest_success">"Test succeed"</string>
+    <string name="mmitest_fail">"Test failed"</string>
+    <string name="sn_info">"SN："</string>
+    <string name="Send_IR_2">"Send_IR_2"</string>
+    <string name="Send_IR_1">"Send_IR_1"</string>
+    <string name="Send_IR_3">"Send_IR_3"</string>
+    <string name="Welcome">"Welcome"</string>
+    <string name="IR_Code">"IR_Code :"</string>
+    <string name="send_data">"Send data"</string>
+    <string name="send_data_ok">"Send data succeed"</string>
+    <string name="send_data_fail">"send data failed"</string>
+    <string name="Carrier_Freq">"Carrier Freq :"</string>
+    <string name="receiver_data">"Receive"</string>
+    <string name="receiver_data_ing">"Please wait while receiving data....."</string>
+    <string name="fingerprints">"Fingerprints"</string>
+    <string name="fingerprints2">"Fingerprint pixel test"</string>
+    <!--Gionee <GN_BSP_MMI> <chengq> <20170116> modify for ID 63449 begin-->
+    <string name="fingerprints3">"fingerprint performance identification</string>
+    <string name="fingerprints_test">"It takes 5s to test fingerprint performance. Please touch the fingerprint sensor every 1s within 5s"</string>
+    <string name="fingertestsucc">fingerprint performance identification succeed!</string>
+    <string name="fingertestfaild">fingerprint performance identification failed!</string>
+    <!--Gionee <GN_BSP_MMI> <chengq> <20170116> modify for ID 63449 end-->
+    <string name="fingerprints_note">"Put your fingers in the fingerprint reader, the fingerprint identification will start."</string>
+    <string name="fingerprints_note2">"Put your fingers in the fingerprint reader and test fingerprint defective pixel"</string>
+    <string name="capturefailed">Capture failed!</string>
+    <string name="capturesucc">Capture succeed!</string>
+    <string name="sensortest_deadpixel_test_success">Defective pixel test pass!</string>
+    <string name="sensortest_deadpixel_test_fail">The number of defective pixel is：！</string>
+    <string name="sensortest_deadpixel_test_exception">Defective pixel test exception!</string>
+    <string name="sensortest_exception">unknown test exception!</string>
+    <string name="test_right">"Test passed"</string>
+    <string name="test_wrong">"Test failed"</string>
+    <string name="fix">"Please Calibrate"</string>
+    <string name="right">"Pass"</string>
+    <string name="wrong">"Fail"</string>
+    <string name="plus">"+"</string>
+    <string name="minus">"-"</string>
+    <string name="default_value">"reset"</string>
+    <string name="test_title">"Please judge the test results"</string>
+
+    <string name="master_clear_title" msgid="5907939616087039756">"Restore factory"</string>
+    <string name="master_clear_final_desc" msgid="6917971132484622696">"Do you want to remove all personal information and downloaded applications?This operation cannot be restored!"</string>
+
+
+    <string name="hello">Hello World, GnHardWareTestActivity!</string>
+    <string name="app_name">GnHardWareTest</string>
+    <string name="sw_version">"SW Version"</string>
+    <string name="keys">"Key Test"</string>
+    <string name="touch_pad">"CTP(Line)"</string>
+    <string name="touch_priv_pad">"CTP(Full)"</string>
+    <string name="touch_priv_pad_ing">"CTP full testing"</string>
+    <string name="touch_priv_pad_ok">"CTP full test succeed"</string>
+    <string name="touch_priv_pad_fail">"CTP full test failed"</string>
+    <string name="pass">"Pass"</string>
+    <string name="restart">"Restart"</string>
+    <string name="quit">"Quit"</string>
+    <string name="quit1">" Save setting data and exit"</string>
+    <string name="color">"LCD"</string>
+    <string name="screen_brightness">"Backlight"</string>
+    <string name="vibrate">"Vibrate"</string>
+    <string name="light">"LED"</string>
+    <string name="tone">"Speaker"</string>
+    <string name="tone2">"Speaker2"</string>
+    <string name="receiver">"Receiver"</string>
+    <string name="receiver2">"Receiver2/Proximity""</string>
+    <string name="gyroscope">"Gyroscope"</string>
+    <string name="acceleration">"Accelerometer"</string>
+    <string name="magnetic_field">"Magnetic"</string>
+    <string name="light_proximity">"proximity/light sensor"</string>
+    <string name="light_sensor">"light sensor"</string>
+    <!--Gionee <xuna><2012-11-02> add for CR00723817 begin -->
+    <string name="light_num_default">"1"</string>
+    <!--Gionee <xuna><2012-11-02> add for CR00723817 end -->
+    <!--Gionee <xuna><2012-11-02> add for CR00724154 begin -->
+    <string name="mcrnt_distanse">"Distance/Thresholds"</string>
+    <string name="mfix_distanse">"Value"</string>
+    <!--Gionee <xuna><2012-11-02> add for CR00724154 end -->
+    <string name="proximity_sensor">"proximity sensor"</string>
+    <string name="back_camera">"Back Camera"</string>
+    <!--Gionee zhangke 20160826 add for CR01753455 start-->
+    <string name="back_camera2">"Back Camera 2"</string>
+    <!--Gionee zhangke 20160826 add for CR01753455 end-->
+    <string name="front_camera">"Front Camera"</string>
+    <string name="front_camera2">"Front Camera2"</string>
+    <string name="take_picture">"Take picture"</string>
+    <string name="preview">"Preview"</string>
+    <string name="acceler_cal">"Please flat the phone for calibration, and wait about five seconds"</string>
+    <string name="acceler_ok">"Calibrate succeed"</string>
+    <string name="acceler_fail">"Calibrate failed，please flat the phone for calibration"</string>
+    <string name="acceler_caling">"calibration....."</string>
+    <string name="acceler">"Auto calibration"</string>
+
+
+
+    <!-- Gionee zhangxiaowei 20130726 add for CR00843342 start -->
+    <string name="FlashLight">"Torch"</string>
+    <string name="FlashLight2">"FrontTorch"</string>
+    <string name="phone_loopback1">"PhoneLoopback"</string>
+    <string name="SetColor">"Set Color</string>
+
+    <!-- Gionee zhangxiaowei 20130726 add for CR00843342 end -->
+    <!--Gionee <xuna><2012-11-02> modify -->
+    <string name="acceleration_note">"Please rotate the phone to positive/negative/up/down/left/right six directions , when measured in six direction finished, pass button will active."</string>
+
+    <string name="magnetic_field_test">"Please calibrate the phone:\nRotate the phone and draw the shape like “8”  constantly，phone will be calibrated"</string>
+    <!--Gionee <Nancy><2012-06-02> modify for MagneticFieldTest begin -->
+    <string name="north">North</string>
+    <string name="south">South</string>
+    <string name="east">East</string>
+    <string name="west">West</string>
+    <string name="northeast">Northeast</string>
+    <string name="northwest">Northwest</string>
+    <string name="southeast">Southeast</string>
+    <string name="southwest">Southwest</string>
+    <string name="degree">°</string>
+    <!--Gionee <Nancy><2012-06-02> modify for MagneticFieldTest end -->
+    <string name="gps">GPS</string>
+    <string name="bluetooth">"BT"</string>
+    <string name="fm">"FM"</string>
+    <string name="fm2">"FM2"</string>
+    <string name="wifi">"WLAN"</string>
+    <string name="wifi5g">"5GWLAN"</string>
+    <string name="nfc">"NFC"</string>
+    <string name="nfc2">"NFC2"</string>
+    <string name="otg">"OTG"</string>
+    <string name="battery">"Battery"</string>
+    <!--Gionee <GN_BSP_MMI> <chengq> <20170106> modify for ID 60451 begin-->
+    <string name="largebattery">"Large Battery Test"</string>
+    <!--Gionee <GN_BSP_MMI> <chengq> <20170106> modify for ID 60451 end-->
+    <string name="clock">"Clock"</string>
+    <string name="irtest">"Infrared test"</string>
+    <!--Gionee <GN_BSP_MMI> <chengq> <20170215> modify for ID 68092 begin-->
+    <string name="irtest2">"Infrared test2"</string>
+    <!--Gionee <GN_BSP_MMI> <chengq> <20170215> modify for ID 68092 end-->
+    <string name="irtest3">"Infrared test3"</string>
+    <string name="power_key">"Power"</string>
+    <string name="volume_up_key">"Vol +"</string>
+    <string name="volume_down_key">"Vol -"</string>
+    <string name="camera_key">"Camera"</string>
+    <string name="focus_key">"Focus"</string>
+    <string name="back_key">"Back"</string>
+    <string name="menu_key">"Menu"</string>
+    <string name="home_key">"HOME"</string>
+    <string name="search_key">"Search"</string>
+    <string name="app_key">"APP"</string>
+    <string name="hall_o_key">"Opened"</string>
+    <string name="hall_c_key">"Covered"</string>
+
+    <!--Gionee liss 20111215 add for CR00478802 start -->
+    <string name="a_key">"A"</string>
+    <string name="b_key">"B"</string>
+    <string name="c_key">"C"</string>
+    <string name="d_key">"D"</string>
+    <string name="e_key">"E"</string>
+    <string name="f_key">"F"</string>
+    <string name="g_key">"G"</string>
+    <string name="h_key">"H"</string>
+    <string name="i_key">"I"</string>
+    <string name="j_key">"J"</string>
+    <string name="k_key">"K"</string>
+    <string name="l_key">"L"</string>
+    <string name="m_key">"M"</string>
+    <string name="n_key">"N"</string>
+    <string name="o_key">"O"</string>
+    <string name="p_key">"P"</string>
+    <string name="q_key">"Q"</string>
+    <string name="r_key">"R"</string>
+    <string name="s_key">"S"</string>
+    <string name="t_key">"T"</string>
+    <string name="u_key">"U"</string>
+    <string name="v_key">"V"</string>
+    <string name="w_key">"W"</string>
+    <string name="x_key">"X"</string>
+    <string name="y_key">"Y"</string>
+    <string name="z_key">"Z"</string>
+    <string name="comma_key">", ;"</string>
+    <string name="period_key">". :"</string>
+    <string name="alt_key">"ALT"</string>
+    <string name="shift_key">"SHIFT"</string>
+    <string name="space_key">"SPACE"</string>
+    <string name="sym_key">"SYM"</string>
+    <string name="enter_key">"ENTER"</string>
+    <string name="del_key">"DEL"</string>
+    <string name="tab_key">"TAB"</string>
+    <!--Gionee liss 20111215 add for CR00478802 end -->
+
+    <string name="vibrate_note">"whether the phone is vibrate?"</string>
+    <string name="stop_vibrate">"Stop vibrate"</string>
+    <string name="set_color_info">"According to the color of machine, select the appropriate button, click the Save button at the bottom right and exit"</string>
+    <string name="black">"Black"</string>
+    <string name="blue">"Blue"</string>
+    <string name="pink">"Pink"</string>
+    <string name="violet">"Violet"</string>
+    <string name="yellow">"Yellow"</string>
+    <string name="white">"White"</string>
+    <string name="quite">"Save setting data"</string>
+    <string name="led_light_note">"Please note is the camera flash turned on"</string>
+    <string name="red_light">"Red LED"</string>
+    <string name="green_light">"Green LED"</string>
+    <string name="blue_light">"Blue LED"</string>
+    <string name="flash_light">"Flash"</string>
+    <string name="close_flash_light">"Trun off Flash"</string>
+    <string name="record">"Record"</string>
+    <string name="stop_record">"Stop record"</string>
+    <string name="earphone_loopback">"Earphone loopback"</string>
+    <string name="hifi">"HiFi测试"</string>
+    <string name="phone_loopback">"Phone loopback"</string>
+    <string name="phone_loopback2">"Mic2"</string>
+    <string name="headsethook_note">"Please press the earphone control button"</string>
+    <string name="headsethook_press">"Headphone control button has been pressed, begin headphone loop testing"</string>
+
+
+    <string name="earphone_loopback_note">"Earphone has plugin,start earphone loopback test"</string>
+    <string name="earphone_loopback_wrong_note">"Please plug in earphone to start earphone loopback test"</string>
+    <string name="earphone_loopback_no_state_note">"Unable to determine the earphone state, please plug in earphone again to start earphone loopback test"</string>
+
+    <string name="phone_loopback_note">"Earphone unplugged,start phone loopback test"</string>
+    <string name="phone_loopback_wrong_note">"Please plug out the earphone to start phone loopback test"</string>
+    <string name="phone_loopback_no_state_note">"Unable to determine the earphone state, if the earphone is plugged in, unplug it to start phone loopback test"</string>
+
+    <string name="record_test">"Click the button to switch the sound recording. if earphone had plug in then test earphone, otherwise test the phone"</string>
+    <string name="tone_note">"Whether the speaker emit 1KHz sound 15 seconds"</string>
+    <string name="receiver_note">"Whether the Receiver emit 300Hz sound 15 seconds"</string>
+    <string name="receiver_note_2">"Whether the Receiver emit 500Hz sound 15 seconds?"</string>
+    <string name="flash_note">"The flashlight is turned on?"</string>
+    <string name="flash2_note">"The flashlight2 is turned on?"</string>
+    <string name="flash">"FlashLight"</string>
+    <string name="flash2">"FlashLight2"</string>
+    <string name="mic2test">"Please blowing the secondary mic,the speaker should have sound"</string>
+
+    <string name="start_tone">"Start tone"</string>
+    <string name="stop_tone">"Stop tone"</string>
+
+    <string name="no_back_camera">"Back camera does not exist"</string>
+    <string name="no_front_camera">"Front camera does not exist"</string>
+
+    <string name="opening_gps">"Openning GPS,please wait"</string>
+    <string name="scanning_gps">"GPS opened，Locating"</string>
+    <string name="gps_scan_time">"Scan time： "</string>
+    <string name="info_text">Longitude：%1$.3f\nLatitude：%2$.3f\nAltitude：%3$.3f</string>
+    <string name="satellite_count">"Satellites number：\n"</string>
+    <string name="satellite_snc">"%1$d satellite signal to noise ratio： "</string>
+
+
+
+    <string name="init_gps_fail">"Open GPS failed"</string>
+    <string name="opening_bluetooth">"Openning BT，Please wait..."</string>
+    <string name="init_bluetooth_fail">"Open BT failed"</string>
+    <string name="scanning_bluetooth_device">"Scanning BT devices，please wait for 12 seconds"</string>
+    <string name="find_bluetooth_device_num">"The number of BT devices：%1$s"</string>
+    <string name="opening_wifi">"Openning WIFI, please wait..."</string>
+    <string name="init_wifi_fail">"Open WIFI failed"</string>
+    <string name="scanning_wifi">"Scanning WIFI..."</string>
+    <string name="find_wifi_num">"The WIFI number：%1$s"</string>
+    <string name="rescan_wifi">"Rescan WIFI"</string>
+    <!-- Gionee xiaolin 20121106 modify for CR00725238 start -->
+    <string name="insert_earphone">"earphone is plugged out"</string>
+    <string name="inserted_earphone">"earphone is plugged in"</string>
+    <!-- Gionee xiaolin 20121106 modify for CR00725238 end -->
+    <string name="current_hz">"Curren Frequency： %1$sMHz"</string>
+    <string name="light_proximity_title">"Hand over the sensor, the screen backlight will turn green"</string>
+    <string name="light_proximity_title_105">"Hand over the sensor, the screen backlight will turn green"</string>
+    <string name="init_light_sensor_fail">"Light sensors failed to initialize"</string>
+    <string name="init_proximity_sensor_fail">"Proximity sensors failed to initialize"</string>
+    <string name="otg_test_title">"Please connect OTG device to the phone and wait 3 seconds to detect whether the phone OTG function properly"</string>
+    <string name="nfc_test_title">"NFC function has turned on, please put the NFC card close to the phone."</string>
+    <string name="nfc_content">"NFC content："</string>
+    <string name="nfctest2_note">"put the phone close to the NFC reader, observe the reader status light is flashing?"</string>
+    <string name="info">Scanning...</string>
+    <string name="otg_info">Waiting OTG device connect.....</string>
+    <string name="test_right_nfc">"--------test succeed"</string>
+    <string name="test_right_otg">"--------OTG test succeed"</string>
+
+    <string name="battery_status_unknow">"Charging state unknow"</string>
+    <string name="battery_status_full">"fully charged"</string>
+    <string name="battery_status_charging">"charging"</string>
+    <string name="battery_status_nocharging">"Not charging"</string>
+    <string name="battery_status_discharging">"discharging"</string>
+    <string name="battery_status">"Battery charging State: "</string>
+
+
+    <string name="battery_health">"The battery state: "</string>
+    <string name="battery_health_unknow">"Unknow"</string>
+    <string name="battery_health_good">"Fine"</string>
+    <string name="battery_health_dead">"Battery empty"</string>
+    <string name="battery_health_over_voltage">"Battery voltage too high"</string>
+    <string name="battery_health_overheart">"Battery overheating"</string>
+    <string name="battery_health_unspecified_failure">"Unknown error"</string>
+
+
+    <string name="battery_plugged">"Is in charge: "</string>
+    <string name="no_battery_plugged">"Not charging"</string>
+    <string name="battery_plugged_ac">"AC"</string>
+    <string name="battery_plugged_usb">"USB"</string>
+    <string name="battery_power">"Remaining battery(%): "</string>
+    <string name="battery_capacity">"Battery capacity(%): "</string>
+    <string name="battery_v">"Battery voltage: "</string>
+    <string name="battery_temperature">"Battery temperature："</string>
+    <string name="battery_technology">"Battery technology： "</string>
+    <string name="charge_v">"Charging voltage："</string>
+    <string name="charge_i">"Charging Current："</string>
+    <string name="gn_ft_bt_result_success">Pass</string>
+    <string name="gn_ft_bt_result_fail">Fail</string>
+    <string name="gn_ft_bt_result_no">Null</string>
+    <string name="isnull">Unknow</string>
+    <string name="buildtime">BuildTime</string>
+    <!--Gionee tanbotao 20160824 modify for CR01751404 begin -->
+    <string name="external_version">Version</string>
+    <!--Gionee tanbotao 20160824 modify for CR01751404 end -->
+
+    <string name="test_result_count">"%1$d items test failed"</string>
+    <!-- add for CR00483616 start-->
+    <string name="reade_sn_fail">Read SN failed</string>
+    <string name="write_sn_fail">Write SN failed</string>
+    <!-- add for CR00483616 end-->
+    <string name="temperature">temperature</string>
+    <string name="temp_detected">实测温度：</string>
+    <string name="chip_value">芯片温度：<Data><![CDATA[ <b><font color="#ff0000">%.2f °C</font></b> ]]></Data></string>
+    <string name="object_value">物体温度：<Data><![CDATA[ <b><font color="#ff0000">%.2f °C</font></b> ]]></Data></string>
+    <string name="human_value">人体温度：<Data><![CDATA[ <b><font color="#ff0000">%.2f °C</font></b> ]]></Data></string>
+
+    <!--Gionee zhangke 20151014 add for CR01567923 start-->
+    <string name="mmi_version_name">MMI ver：</string>
+    <!--Gionee zhangke 20151014 add for CR01567923 end-->
+
+    <!--Gionee zhangke 20151110 add for CR01588796 start-->
+    <string name="laser_cal">laser calibration</string>
+    <string name="laser_offset_cal">Offset calibration</string>
+    <string name="laser_crosstalk_cal">Crosstalk calibration</string>
+    <string name="offset">Offset: </string>
+    <string name="crosstalk">Crosstalk: </string>
+    <string name="distance">distance: </string>
+    <string name="cal_start">start calibration</string>
+    <string name="success">success</string>
+    <string name="fail">fail</string>
+    <string name="cal_no">no calibration</string>
+    <string name="title_laser">laser calibration</string>
+    <string name="laser_cal_note" formatted="false">(请使用标准的88%白卡和17%灰卡校准，严禁随意校准)</string>
+    <string name="laser_pcb_testing">正在进行板级激光校准...</string>
+    <string name="laser_offset_testing">Offset calibration ongoing,do not operate...</string>
+    <string name="laser_crosstalk_testing">Crosstalk calibration ongoing,do not operate...</string>
+    <string name="laser_distance_testing">Laser ranging...</string>
+    <string name="title_laser_pcb">板级激光校准：</string>
+    <string name="title_laser_offset">Laser Offset Calibration：</string>
+    <string name="title_laser_crosstalk">Laser Crosstalk Calibration：</string>
+    <string name="title_laser_distance">Laser Ranging：</string>
+    <string name="laser_offset">Offset：</string>
+    <string name="laser_crosstalk">Crosstalk：</string>
+    <string name="laser_distance">distance：</string>
+    <string name="laser_offset_no">No Offset Calibration</string>
+    <string name="laser_crosstalk_no">No Crosstalk Calibration</string>
+    <string name="laser_distance_100_error">100mm ranging fail</string>
+    <string name="laser_distance_100_success">100mm ranging success</string>
+    <string name="laser_distance_400_error">400mm ranging fail</string>
+    <string name="laser_distance_400_success">400mm ranging success</string>
+    <!--Gionee zhangke 20151110 add for CR01588796 end-->
+    <!--Gionee zhangke 20151110 add for CR01591381 start-->
+    <string name="force_touch">3D Touch</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_view">ViewActivity</string>
+    <string name="string_target_z_value">Target Z Value: </string>
+    <string name="string_spec_range">Spec (±%): </string>
+    <string name="string_offset">Offset: </string>
+    <string name="string_1_point">1 P</string>
+    <string name="string_5_points">5 P</string>
+    <string name="string_9_points">9 P</string>
+    <string name="string_15_points">15 P</string>
+    <string name="string_start">START</string>
+    <string name="default_offset">100</string>
+    <string name="title_activity_options">OptionsActivity</string>
+    <string name="title_activity_password">ZCalib</string>
+    <string name="title_activity_do_the_z">DoTheZActivity</string>
+    <string name="zcalib">Z-Calib</string>
+    <string name="zcalib_null">"      "</string>
+    <!--Gionee zhangke 20151110 add for CR01591381 end-->
+    <!--Gionee zhangke 20151210 add for CR01607303 start-->
+    <string name="touch_fail_info">CTP original info</string>
+    <string name="touch_note">Analysis only for CTP fullscreen test original information</string>
+    <!--Gionee zhangke 20151210 add for CR01607303 end-->
+
+    <!--Gionee zhangke 20160113 add for CR01623114 start-->
+    <!--Gionee huangjianqiang 20160316 modify for CR01653010 start-->
+    <string name="psensor_caling">"calibration....."</string>
+    <!--Gionee huangjianqiang 20160316 modify for CR01653010 end-->
+    <!--Gionee zhangke 20160113 add for CR01623114 end-->
+    <!--Gionee zhangke 20160115 add for CR01624124 start-->
+    <!-- Accessibility description sent when user starts drawing a lock pattern. [CHAR LIMIT=NONE] -->
+    <string name="lockscreen_access_pattern_start">Pattern started</string>
+    <!-- Accessibility description sent when the pattern times out and is cleared. [CHAR LIMIT=NONE] -->
+    <string name="lockscreen_access_pattern_cleared">Pattern cleared</string>
+    <!-- Accessibility description sent when user adds a cell to the pattern. [CHAR LIMIT=NONE]  -->
+    <string name="lockscreen_access_pattern_cell_added">Cell added</string>
+    <!-- Accessibility description sent when user completes drawing a pattern. [CHAR LIMIT=NONE] -->
+    <string name="lockscreen_access_pattern_detected">Pattern completed</string>
+    <string name="lock_pattern_view_note">The phone would crash down when you enter wrong%1s times!</string>
+    <string name="lock_pattern_view_back_btn">I don\'t know the password</string>
+    <string name="lock_pattern_view_toast1">Don\'t guess</string>
+    <string name="lock_pattern_view_toast2">Crash down when you are wrong one more time</string>
+    <string name="lock_pattern_view_toast3">Don\'t you scare?</string>
+    <string name="lock_pattern_view_toast4">Blow up after 10s and throw away right now </string>
+    <!--Gionee zhangke 20160115 add for CR01624124 start-->
+    <!--Gionee zhangke 20160119 add for CR01606391 start-->
+    <string name="fingerprints_capture_not_enough">Fingerprint capture fail because of fingerprint moves too fast</string>
+    <string name="fingerprints_load_fail">Fingerprint load fail. Please root if you can\'t recover.</string>
+    <string name="fingerprint_capture_image_timeout">test time out !  no finger input</string>
+    <!--Gionee zhangke 20160119 add for CR01606391 end-->
+    <!--Gionee zhangke 20160202 add for CR01634616 start-->
+    <string name="wchat_soter">WechatSoter</string>
+    <!--Gionee zhangke 20160202 add for CR01634616 end-->
+    <!--Gionee zhangke 20160301 add for CR01643363 start-->
+    <string name="key_diff_ok">Diff值检测通过</string>
+    <string name="key_diff_error">Diff值检测失败,请放手指后重试</string>
+    <string name="tp_not_support_diff">不支持diff值检测</string>
+    <!--Gionee zhangke 20160301 add for CR01643363 end-->
+    <!--Gionee zhangke 201603010 add for CR01650400 start-->
+    <string name="set_rpmb_key">Write Rpmb Key</string>
+    <string name="rpmb_key_note">Write Rpmb Key and Reboot？</string>
+    <string name="rpmb_key_has_writed">Has written Rpmb Key，no need to write again</string>
+    <!--Gionee zhangke 201603010 add for CR01650400 end-->
+    <!-- Gionee huangjianqiang 20160126 add for CR01625818 start-->
+    <string name="gn_oversea_light_proximity">"proximity/light"</string>
+    <string name="gn_oversea_light_proximity_title">"Cover the sensor,the screen backlight will turn green"</string>
+    <string name="gn_oversea_light_sensor">"Light sensor"</string>
+    <string name="gn_oversea_proximity_sensor">"proximity sensor"</string>
+    <string name="gn_oversea_right">"Pass"</string>
+    <string name="gn_oversea_wrong">"Fail"</string>
+    <string name="gn_oversea_restart">"Restart"</string>
+    <!-- Gionee huangjianqiang 20160126 add for CR01625818 end-->
+    <string name="setcolor_title">Select color by model color</string>
+    <string name="setcolor_note">"You select "</string>
+    <string name="setcolor_fail">Operation failure</string>
+
+
+    <string name="test_time">Now Time:</string>
+    <!-- Gionee huangjianqiang 20160420 add for CR01681501 start -->
+    <string name="FrontFlashTest">FrontFlash</string>
+    <!-- Gionee huangjianqiang 20160420 add for CR01681501 end -->
+    <string name="recovery_title">Prompt</string>
+    <string name="recovery_alter">Deleting files...</string>
+    <!--Gionee zhangke 20160525 add for CR01706554 start-->
+    <string name="ifaa_key">IFAA KEY</string>
+    <!--Gionee zhangke 20160525 add for CR01706554 end-->
+    <!--Gionee zhangke 20160812 add for CR01745459 start-->
+    <string name="receiver2_psensor">"Receiver2/Proximity"</string>
+    <string name="receiver2_psensor_title">Whether the Receiver emit 500Hz sound 15 seconds?\nWhen the hand blocks the sensor, whether the distance value will change?</string>
+    <!--Gionee zhangke 20160812 add for CR01745459 end-->
+    <!--Gionee zhangke 20160419 add for CR01680501 start-->
+    <string name="psensor_cal_fail">Calibrate failed，do not block the light and recalibrate</string>
+    <!--Gionee zhangke 20160419 add for CR01680501 end-->
+    <!--Gionee zhangke 20160902 add for CR01756457 begin-->
+    <string name="dual_back_camera_test">Dual back camera test </string>
+    <string name="back_flashlight_cal_test">Back flashlight calibration </string>
+    <!--Gionee zhangke 20160902 add for CR01756457 end-->
+    <!--Gionee zhangke 20161110 add for ID21863 begin-->
+    <string name="fingerprint_dirty">Test failed：Fingerprint is dirty，please test again</string>
+    <string name="fingerprint_small_area">Test failed：Fingerprint area is too small, please test again</string>
+    <string name="fingerprint_rawdata_out">Test failed：Fingerprint rawdata out </string>
+    <!--Gionee zhangke 20161110 add for ID21863 end-->
+    <string name="toggle_on">turn on</string>
+    <string name="toggle_off">turn off</string>
+    <string name="unitytest">Unity Test</string>
+    <string name="unity_title">please choose the right area of the list</string>
+    <string name="startmmi">start mmi</string>
+    <string name="country_area">Country:</string>
+    <string name="country_gi">GI</string>
+    <string name="country_gn">GN</string>
+    <string name="country_gm">GM</string>
+    <string name="country_gp">GP</string>
+    <string name="country_gs">GS</string>
+    <string name="country_gl">GL</string>
+    <string name="country_gd">GD</string>
+    <string name="country_gh">GH</string>
+    <string name="country_ga">GA</string>
+    <string name="country_ge">GE</string>
+    <string name="country_gk">GK</string>
+    <string name="country_gc">GC</string>
+    <string name="country_gu">GU</string>
+
+    <string name="efuse_check_password">Enter the password to write efuse or the password to skip!</string>
+    <string name="efuse_write_faild">Efuse write failed, please check whether the file path exists.</string>
+    <string name="efuse_need_write">Not yet written efuse, need to write efuse?</string>
+    <string name="efuse_to_backup">Efuse has been written, whether to restore factory settings?</string>
+    <string name="efuse_battery_lower">The battery is less than 25%, please meet the conditions and then write efuse.</string>
+    <string name="efuse_mmi_failed">MMI all tests did not pass, please meet the conditions and then write efuse.</string>
+    <string name="efuse_wchate_faild">WeChat soter test did not pass, please meet the conditions and then write efuse.</string>
+    <string name="efuse_ifaa_failed">IFAA test did not pass, please meet the conditions and then write efuse.</string>
+    <string name="efuse_file_notexists">Efuse flag read failed, please meet the conditions and then write efuse.</string>
+
+    <string name="res_exefactory_success">the flag writed successfully,begin to restore the factory settings</string>
+    <string name="res_exefactory_fail">the flag writed unsuccessfully,stop the restore factory settings</string>
+    <string name="chenyee_type">Type</string>
+    <string name="chenyee_gtl_type">Devices Info</string>
+    <string name="reset_mtp_ex">SmartPA calibration</string>
+    <string name="altitude">"altitude： "</string>
+    <string name="longitude">"longitude： "</string>
+    <string name="latitude">"latitude： "</string>
+</resources>
+
+    <!-- Gionee huangjianqiang 20160126 modify end -->

@@ -1,0 +1,404 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auto_test">"自动测试"</string>
+    <string name="auto_test_2">"自动测试2"</string>
+     <string name="auto_test_3">"自动测试3"</string>
+    <string name="single_test">"硬件测试"</string>
+    <string name="test_result">"测试报告"</string>
+    <string name="master_clear">"恢复出厂设置"</string>
+    <string name="wait">"请稍候。。。"</string>
+    <string name="not_support">"该版本不支持该功能"</string>
+    <string name="factory_enter">"确认"</string>
+    <string name="result_from_sn">"从标志位中得到的测试结果"</string>    
+    <string name="result_from_test">"自动测试中的测试结果"</string>
+    <string name="no_mmitest">"未进行过MMI测试"</string>
+    <string name="mmitest_success">"从标志位数据判断MMI测试已成功"</string>
+    <string name="mmitest_fail">"从标志位数据判断MMI测试失败"</string>
+    <string name="sn_info">"序列号码："</string>
+        
+    <string name="test_right">"测试通过"</string>
+    <string name="test_wrong">"未通过测试"</string>
+    <string name="fix">"请校准"</string>
+    <string name="right">"通过"</string>
+    <string name="wrong">"失败"</string>
+    <string name="plus">"+"</string>
+    <string name="minus">"-"</string>
+    <string name="default_value">"复位"</string>
+    <string name="test_title">"请判断测试结果"</string>
+    
+    <string name="master_clear_title" msgid="5907939616087039756">"恢复出厂设置"</string>
+    <string name="master_clear_final_desc" msgid="6917971132484622696">"是否删除所有个人信息和下载的所有应用程序？此操作无法还原！"</string>
+    <string name="ifaa_key_failed" >"ifaa配置文件删除失败，请检查原因 ！ "</string>
+    <string name="ifaa_enter" >"ifaa配置文件删除失败，请检查原因 ！ "</string>
+    <string name="hello">Hello World, GnHardWareTestActivity!</string>
+    <string name="app_name">Gn_MMI</string>
+    <string name="sw_version">"软件版本检测"</string>
+    <string name="keys">"按键"</string>
+    <string name="touch_pad">"CTP划线"</string>
+    <string name="touch_priv_pad">"CTP全屏检测"</string>
+    <string name="touch_priv_pad2">"CTP全屏检测2"</string>
+    <string name="touch_priv_pad_ing">"CTP全屏检测中，请稍候....."</string>
+    <string name="touch_priv_pad_ok">"CTP全屏检测成功"</string>
+    <string name="touch_priv_pad_fail">"CTP全屏检测失败"</string>
+    <string name="touch_priv_pad_pre_note">"请确保屏幕干净，屏幕上不要有任何异物覆盖"</string>
+    <string name="touch_priv_pad_start_test">"开始测试"</string>
+    <string name="pass">"成功"</string>
+    <string name="restart">"重测"</string>
+    <string name="quit">"退出"</string>
+    <string name="color">"LCD"</string>
+    <string name="screen_brightness">"背光/按键背光"</string>
+    <string name="vibrate">"震动"</string>
+    <string name="light">"LED灯"</string>
+    <string name="tone">"扬声器"</string>
+    <string name="tone2">"扬声器2"</string>
+    <string name="receiver">"听筒"</string>
+    <string name="receiver2">"听筒2"</string>
+    <string name="gyroscope">"陀螺仪"</string>
+    <string name="acceleration">"加速仪"</string>
+    <string name="magnetic_field">"地磁感应"</string>
+    <string name="light_proximity">"距离/光感"</string>
+    <string name="light_sensor">"光敏传感器"</string>
+    <string name="proximity_sensor">"距离传感器"</string>
+    <string name="mcrnt_distanse">"距离值和阀值"</string>
+    <string name="colour">"色温            "</string>
+    <string name="pressure">"气压值"</string>
+    <string name="back_camera">"后摄像头"</string>
+    <!--Gionee zhangke 20160826 add for CR01753455 start-->
+    <string name="back_camera2">"后摄像头2"</string>
+    <!--Gionee zhangke 20160826 add for CR01753455 end-->
+    <string name="front_camera">"前摄像头"</string>
+    <string name="take_picture">"拍照"</string>
+    <string name="preview">"预览"</string>
+     <string name="acceler_cal">"请平放手机做校准,并等待5秒左右"</string>
+     <string name="acceler_ok">"校准成功"</string>
+      <string name="acceler_fail">"校准失败，请平放手机重新校准"</string>
+     <string name="acceler_caling">"正在校准中....."</string>
+      <string name="acceler">"加速仪自动校准"</string>
+    <string name="theme">"主题"</string>
+    <string name="music">"音乐"</string>
+    <string name="video">"视频"</string>
+    <string name="change">"随变"</string>
+    <string name="FlashLight">"手电筒"</string>
+    <string name="FlashLight2">"前闪光灯"</string>
+    <string name="acceleration_note">"把手机竖起，然后在竖直平面内转动手机朝正反上下左右六个方向，当转到六个方向时屏幕将出现指向天空的手机图片，当六个方向测完，正确按钮可用"</string>
+    
+    <string name="magnetic_field_test">"请校准手机:\n手机屏幕面向天空，在你的身旁，拿着手机画8字形状，画两次。再把手机的屏幕面对自己画8字，画两次。"</string>
+    <string name="gps">GPS</string>
+    <string name="bluetooth">"蓝牙"</string>
+    <string name="fm">"FM"</string>
+    <string name="wifi">"WLAN"</string>
+    <string name="nfc">"NFC"</string>
+    <string name="otg">"OTG"</string>
+    
+    <string name="battery">"电池/充电"</string>
+    <!--Gionee <Gn_MMI><lifeilong><20161104> add for 75  begin-->
+    <string name="bigbattery">"大电流/充电"</string>
+    <!--Gionee <Gn_MMI><lifeilong><20161104> add for 75  end-->
+    <string name="clock">"闹钟"</string>
+    
+    <string name="power_key">"电源键"</string>
+    <string name="volume_up_key">"增大声音按键"</string>
+    <string name="volume_down_key">"减小声音按键"</string>
+    <string name="camera_key">"拍照键"</string>
+    <string name="back_key">"返回键"</string>
+    <string name="menu_key">"菜单键"</string>
+    <string name="home_key">"HOME键"</string>
+    <string name="search_key">"搜索键"</string>
+    <string name="app_key">"APP键"</string>
+	<string name="hall_o_key">"翻盖"</string>
+    <string name="hall_c_key">"合盖"</string>
+    
+    <!--Gionee liss 20111215 add for CR00478802 start -->
+    <string name="a_key">"A"</string>
+    <string name="b_key">"B"</string>
+    <string name="c_key">"C"</string>
+    <string name="d_key">"D"</string>
+    <string name="e_key">"E"</string>
+    <string name="f_key">"F"</string>
+    <string name="g_key">"G"</string>
+    <string name="h_key">"H"</string>
+    <string name="i_key">"I"</string>
+    <string name="j_key">"J"</string>
+    <string name="k_key">"K"</string>
+    <string name="l_key">"L"</string>
+    <string name="m_key">"M"</string>
+    <string name="n_key">"N"</string>
+    <string name="o_key">"O"</string>
+    <string name="p_key">"P"</string>
+    <string name="q_key">"Q"</string>
+    <string name="r_key">"R"</string>
+    <string name="s_key">"S"</string>
+    <string name="t_key">"T"</string>
+    <string name="u_key">"U"</string>
+    <string name="v_key">"V"</string>
+    <string name="w_key">"W"</string>
+    <string name="x_key">"X"</string>
+    <string name="y_key">"Y"</string>
+    <string name="z_key">"Z"</string>
+    <string name="comma_key">", ;"</string>
+    <string name="period_key">". :"</string>
+    <string name="alt_key">"ALT"</string>
+    <string name="shift_key">"SHIFT"</string>
+    <string name="space_key">"SPACE"</string>
+    <string name="sym_key">"SYM"</string>
+    <string name="enter_key">"ENTER"</string>
+    <string name="del_key">"DEL"</string>
+    <string name="tab_key">"TAB"</string>
+    <!--Gionee liss 20111215 add for CR00478802 end -->
+    
+    <string name="vibrate_note">"请注意马达是否震动"</string>
+    <string name="stop_vibrate">"停止马达震动"</string>
+    
+    <string name="led_light_note">"请注意键盘灯和相机闪光灯是否打开"</string>
+    <string name="red_light">"红色LED"</string>
+    <string name="green_light">"绿色LED"</string>
+    <string name="blue_light">"蓝色LED"</string>
+    <string name="flash_light">"闪光灯"</string>
+    <string name="close_flash_light">"关闭闪光灯"</string>
+    <string name="record">"录音"</string>
+    <string name="stop_record">"停止录音"</string>
+    <string name="earphone_loopback">"耳机回路"</string>
+    <string name="phone_loopback">"音频回路"</string>
+    <string name="phone_loopback1">"音频回路"</string>
+    <string name="phone_loopback3">"音频回路2"</string>
+    <string name="phone_loopback4">"音频回路3"</string>
+    <string name="headsethook_note">"请按下按键耳机控制开关"</string>
+    <string name="headsethook_press">"耳机控制开关已按，开始进行耳机回路测试"</string>
+    
+    
+    <string name="earphone_loopback_note">"已插入耳机，进行耳机回路测试"</string>
+    <string name="earphone_loopback_wrong_note">"请插入耳机，进行耳机回路测试"</string>
+    <string name="earphone_loopback_no_state_note">"无法判断耳机是否插入，如果未耳机插入请插入，进行耳机回路测试"</string>
+        
+    <string name="phone_loopback_note">"已移除耳机，进行音频回路测试"</string>
+    <string name="phone_loopback_wrong_note">"请移除耳机，进行手机回路测试"</string>
+    <string name="phone_loopback_no_state_note">"无法判断耳机是否插入，如果耳机已插入请拔出，进行音频回路测试"</string>
+    
+    <string name="record_test">"点击按钮来开关录音，插上耳机则测试耳机，没有耳机则测试手机"</string>
+    <string name="tone_note">"扬声器是否发出15秒左右1千赫兹音调"</string>
+    <string name="receiver_note">"听筒是否发出15秒左右300赫兹音调"</string>
+    <string name="receiver_note_2">"听筒是否发出15秒左右500赫兹音调"</string>
+    
+    <string name="start_tone">"发出声调"</string>
+    <string name="stop_tone">"停止声调"</string>
+    
+    <string name="no_back_camera">"后置摄像头不存在"</string>
+    <string name="no_front_camera">"前置摄像头不存在"</string>
+    
+    <string name="opening_gps">"正在打开GPS,请稍候"</string>
+    <string name="scanning_gps">"已打开GPS，开始定位"</string>
+    <string name="gps_scan_time">"定位时间： "</string>
+    <string name="altitude">"海拔： "</string>
+    <string name="longitude">"经度： "</string>
+    <string name="latitude">"纬度： "</string>
+    <string name="satellite_count">"卫星数目： "</string>
+    <string name="satellite_snc">"第%1$d个卫星信噪比： "</string>
+    
+    
+    
+    <string name="init_gps_fail">"打开蓝牙失败"</string>    
+    <string name="opening_bluetooth">"正在打开蓝牙，请稍候。。。"</string>
+    <string name="init_bluetooth_fail">"打开蓝牙失败"</string>
+    <string name="scanning_bluetooth_device">"正在搜索蓝牙设备，请等待12秒"</string>
+    <string name="find_bluetooth_device_num">"搜索到蓝牙设备数量：%1$s"</string>
+    <string name="opening_wifi">"正在打开无线网络，请稍候。。。"</string>
+    <string name="init_wifi_fail">"打开无线网络失败"</string>
+    <string name="scanning_wifi">"正在搜索无线网络。。。"</string>
+    <string name="find_wifi_num">"搜索到无线网络数量：%1$s"</string>
+    <string name="rescan_wifi">"重新扫描无线网络"</string>
+    <string name="insert_earphone">"耳机已拔出"</string>
+    <string name="inserted_earphone">"耳机已插入"</string>
+    <string name="current_hz">"当前频率： %1$sMHz"</string>
+    <string name="light_proximity_title">"用手捂住传感器，屏幕背光将变为绿色"</string>
+    <string name="light_proximity_title_105">"用手捂住传感器，屏幕背光将变为绿色"</string>
+    <string name="init_light_sensor_fail">"初始化光感传感器失败"</string>
+    <string name="init_proximity_sensor_fail">"初始化距离传感器失败"</string>
+     <string name="pressure_test_title">"气压值是否在980～1040毫巴范围内，在则通过，否则失败"</string>
+
+    <string name="nfc_test_title">"NFC功能已打开，请将卡片靠近手机以便检测手机NFC功能"</string>
+    <string name="otg_test_title">"请将OTG设备连接手机，并等待3秒，以便检测手机的OTG功能是否正常"</string>
+    <string name="nfc_content">"卡片内容为："</string>
+    <string name="info">扫描中。。。</string>
+    <string name="otg_info">OTG设备连接中.....</string>
+    <string name="test_right_nfc">"--------测试通过"</string>
+     <string name="test_right_otg">"--------OTG测试通过"</string>
+
+    <string name="battery_status_unknow">"充放电未知状态"</string>
+    <string name="battery_status_full">"已充满电"</string>
+    <string name="battery_status_charging">"正在充电"</string>
+    <string name="battery_status_nocharging">"未充电"</string>
+    <string name="battery_status_discharging">"正在放电"</string>
+    <string name="battery_status">"电池充放电状态: "</string>
+    
+    
+    <string name="battery_health">"电池健康状态: "</string>
+    <string name="battery_health_unknow">"未知"</string>
+    <string name="battery_health_good">"良好"</string>
+    <string name="battery_health_dead">"电池没有电"</string>
+    <string name="battery_health_over_voltage">"电池电压过高"</string>
+    <string name="battery_health_overheart">"电池过热"</string>
+    <string name="battery_health_unspecified_failure">"未知错误"</string>
+    
+    
+    <string name="battery_plugged">"是否已插电: "</string>
+    <string name="no_battery_plugged">"未插电"</string>
+    <string name="battery_plugged_ac">"交流电"</string>
+    <string name="battery_plugged_usb">"USB"</string>
+    <string name="battery_power">"电池剩余电量(%): "</string>
+    <string name="battery_capacity">"电池容量(%): "</string>
+    <string name="battery_v">"电池电压: "</string>
+    <string name="battery_temperature">"电池温度："</string>
+    <string name="battery_technology">"电池技术： "</string>
+     <string name="temperature_unit">"℃"</string>
+    <string name="battery_isfast">"是否快速充电： "</string>
+    <string name="battery_fast">"是"</string>
+    <string name="battery_normal">"否 "</string>
+    <string name="charge_v">"充电电压："</string>
+    <string name="charge_i">"充电电流(>200mA)："</string>
+    <string name="charge_ii">"充电电流(>2000mA)："</string>
+    <string name="gn_ft_bt_result_success">通过</string>
+    <string name="gn_ft_bt_result_fail">失败</string>
+    <string name="gn_ft_bt_result_no">未检测</string>
+    <string name="isnull">未知</string>
+    <string name="buildtime">创建时间</string>
+    <string name="external_version">版本号</string>
+    
+    <string name="test_result_count">"共%1$d项测试失败"</string>
+    <!-- add for CR00483616 start-->
+    <string name="reade_sn_fail">读取SN失败</string>
+    <string name="write_sn_fail">写入SN失败</string>
+    <!-- add for CR00483616 end-->
+    
+        <!--CPU Freq test part-->
+    <string name="Cpufreq">CPU Freq Test</string>
+    <string name="CpuFreq_BtnStartTest">START</string>
+    <string name="CpuFreq_BtnStopTest">STOP</string>
+    <string name="CpuFreq_BtnCurrentTest">START[Never Returned]</string>
+    <string name="CpuFreq_Info">Info:</string>
+    <string name="CpuFreq_BtnStartTest_Text">CPU Freq Test</string>
+    <string name="CpuFreq_BtnStopTest_Text">CPU Freq Test</string>
+    <string name="CpuFreq_BtnCurrentTest_Text">Currenct Test</string>
+    
+     <string name="mic2test">"请朝副麦吹气，扬声器应该有声音"</string>
+     <string name="phone_loopback2">"副麦"</string>
+      <string name="SetColor">"设置颜色"</string>
+    <string name="temperature">温度</string>
+    <string name="temp_detected">实测温度：</string>
+    <string name="chip_value">芯片温度：<Data><![CDATA[ <b><font color="#ff0000">%.2f °C</font></b> ]]></Data></string>
+    <string name="object_value">物体温度：<Data><![CDATA[ <b><font color="#ff0000">%.2f °C</font></b> ]]></Data></string>
+    <string name="human_value">人体温度：<Data><![CDATA[ <b><font color="#ff0000">%.2f °C</font></b> ]]></Data></string>
+
+    <!--Gionee zhangke 20151014 add for CR01567923 start-->
+    <string name="mmi_version_name">MMI版本号：</string>
+    <!--Gionee zhangke 20151014 add for CR01567923 end-->
+
+    <!--Gionee zhangke 20151110 add for CR01588796 start-->
+    <string name="laser_cal">激光校准</string>
+    <string name="laser_offset_cal">Offset校准</string>
+    <string name="laser_crosstalk_cal">Crosstalk校准</string>
+    <string name="offset">Offset: </string>
+    <string name="crosstalk">Crosstalk: </string>
+    <string name="distance">距离: </string>
+    <string name="cal_start">开始校准</string>
+    <string name="success">成功</string>
+    <string name="fail">失败</string>
+    <string name="cal_no">未校准</string>
+    <string name="title_laser">激光校准</string>
+    <string name="laser_cal_note" formatted="false">(请使用标准的88%白卡和17%灰卡校准，严禁随意校准)</string>
+    <string name="laser_pcb_testing">正在进行板级激光校准...</string>
+    <string name="laser_offset_testing">正在Offset校准,请勿操作,耐心等待...</string>
+    <string name="laser_crosstalk_testing">正在Crosstalk校准,请勿操作,耐心等待...</string>
+    <string name="laser_distance_testing">正在进行激光测距...</string>
+    <string name="title_laser_pcb">板级激光校准：</string>
+    <string name="title_laser_offset">激光Offset校准：</string>
+    <string name="title_laser_crosstalk">激光Crosstalk校准：</string>
+    <string name="title_laser_distance">激光测距：</string>
+    <string name="laser_offset">Offset：</string>
+    <string name="laser_crosstalk">Crosstalk：</string>
+    <string name="laser_distance">距离：</string>
+    <string name="laser_offset_no">未进行Offset校准</string>
+    <string name="laser_crosstalk_no">未进行Crosstalk校准</string>
+    <string name="laser_distance_100_error">100mm测距未通过</string>
+    <string name="laser_distance_100_success">100mm测距已通过</string>
+    <string name="laser_distance_400_error">400mm测距未通过</string>
+    <string name="laser_distance_400_success">400mm测距已通过</string>
+    <!--Gionee zhangke 20151110 add for CR01588796 end-->
+    <!--Gionee zhangke 20151110 add for CR01591381 start-->
+    <string name="force_touch">3D Touch</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_view">ViewActivity</string>
+    <string name="string_target_z_value">Target Z Value: </string>
+    <string name="string_spec_range">Spec (±%): </string>
+    <string name="string_offset">Offset: </string>
+    <string name="string_1_point">1 P</string>
+    <string name="string_5_points">5 P</string>
+    <string name="string_9_points">9 P</string>
+    <string name="string_15_points">15 P</string>
+    <string name="string_start">START</string>
+    <string name="default_offset">100</string>
+    <string name="title_activity_options">OptionsActivity</string>
+    <string name="title_activity_password">ZCalib</string>
+    <string name="title_activity_do_the_z">DoTheZActivity</string>
+    <string name="zcalib">Z-Calib</string>
+    <string name="zcalib_null">"      "</string>
+    <!--Gionee zhangke 20151110 add for CR01591381 end-->
+    <!--Gionee zhangke 20151210 add for CR01607303 start-->
+    <string name="touch_fail_info">CTP全屏检测原始信息</string>
+    <string name="touch_note">仅供分析CTP全屏检测原始数据</string>
+    <!--Gionee zhangke 20151210 add for CR01607303 end-->
+
+    <!--Gionee zhangke 20160113 add for CR01623114 start-->
+    <string name="psensor_caling">正在校准，请勿遮挡</string>
+    <!--Gionee zhangke 20160113 add for CR01623114 end-->
+    <string name="psensor_cal_fail">校准失败，请勿遮挡，重新校准</string>
+    <!--Gionee zhangke 20160624 add for CR01722713 start-->
+    <string name="a3_test">A3加密芯片</string>
+    <string name="update">升级固件</string>
+    <string name="wait_message">芯片正在执行动作，请等候出现PASS或者FAILURE。</string>
+    <string name="test_cps">测试当前芯片</string>
+    <string name="update_cos_fireware">升级芯片固件</string>
+    <string name="update_test">升级固件并测试</string>
+    <string name="a3_sn">SN:</string>
+    <!--Gionee zhangke 20160624 add for CR01722713 end-->
+    <!--Gionee zhangke 20160627 add for CR01723140 start-->
+    <string name="hifi">"HiFi测试"</string>  
+    <string name="wifi5g">"5GWLAN"</string>
+    <string name="nfc2">"NFC2"</string> 
+    <string name="nfctest2_note">"请将手机靠近读卡器，观察读卡器状态灯是否闪烁"</string>
+    <string name="irtest">"红外测试"</string>
+    <string name="flash">"闪光灯"</string>
+    <string name="flash2">"闪光灯2"</string>
+    <string name="fingerprints">"指纹识别"</string>
+    <string name="fingerprints2">"指纹坏点检测</string>
+    <string name="fingerprints_capture_not_enough">指纹捕获失败，按压面积过小</string>
+    <string name="fingerprints_load_fail">指纹模块加载失败，若无法恢复请重启手机</string>
+    <string name="fingerprints_note">"将手指放入指纹识别器中，进行指纹的识别"</string>
+    <string name="fingerprints_note2">"正在进行指纹坏点检测，请不要触摸指纹模块,请稍候"</string>
+     <string name="capturefailed">捕获指纹失败!</string>
+    <string name="capturesucc">捕获指纹成功!</string>
+    <string name="sensortest_deadpixel_test_success">坏点测试通过！</string>
+    <string name="sensortest_deadpixel_test_fail">器件存在坏点，个数：！</string>
+    <string name="sensortest_deadpixel_test_exception">坏点测试异常！</string>
+    <string name="sensortest_exception">未知测试异常！</string>
+    <!--Gionee zhangke 20160627 add for CR01723140 end-->
+    <!--Gionee zhangke 20160921 add for CR01763025 begin-->
+    <string name="toggle_on">打开</string>
+    <string name="toggle_off">关闭</string>
+    <!--Gionee zhangke 20160921 add for CR01763025 end-->
+    <string name="bootup_info">开机信息</string>
+    <string name="fingerprint_capture_image_noise">图像质量太差</string>
+    <string name="fingerprint_capture_image_fail">FPC按键失败</string>
+    <string name="fingerprint_capture_image_timeout">测试超时，没有手指按下</string>
+    <!--Gionee <GN_BSP_MMI><zhangke><20161106> add for ID19681 begin--> 
+    <string name="set_rpmb_key">写入Rpmb Key</string>
+    <string name="rpmb_key_note">是否写入Rpmb Key并重启？</string>
+    <string name="rpmb_key_fail">写入Rpmb Key失败.</string>
+    <string name="rpmb_key_has_writed">已经写过Rpmb Key，不需要再次写入</string>
+    <string name="rpmb_key_success">RPMB写入成功</string>
+    <string name="wchat_soter">微信Soter</string>
+    <string name="ifaa_key">IFAA KEY</string>
+    <!--Gionee <GN_BSP_MMI><zhangke><20161106> add for ID19681 end--> 
+    <string name="chooseLanguages">choose language(选择语言)</string>
+    <string name="Chinese">中文</string>
+    <string name="english">English</string>
+</resources>

@@ -1,0 +1,28 @@
+#<The first way to do not proguard  fpc package>
+#-dontwarn com.gionee.fingerprint.**
+#-keep class com.gionee.fingerprint.** { *;}
+
+-dontwarn gn.com.android.mmitest.item.FMTest
+-dontwarn com.caf.fmradio.IFmRadioService
+-dontwarn com.caf.fmradio.IFMRadioServiceCallbacks
+-dontwarn com.caf.fmradio.IFMRadioServiceCallbacks
+-dontwarn com.caf.fmradio.**
+-dontwarn com.fingerprints.service.*
+-dontwarn gn.com.android.mmitest.item.FingerPrintsTest
+-dontwarn gn.com.android.mmitest.item.FingerPrintsTest2
+-dontwarn gn.com.android.mmitest.item.SoftWareVersion
+-dontwarn com.qualcomm.qcnvitems.**
+-dontwarn com.qualcomm.qcrilhook.**
+-dontwarn android.hardware.fingerprint.IGnFingerprintServiceReceiver.*
+
+-keep class com.fingerprints.service.** { *;}
+-keep class com.caf.fmradio.** { *;}
+-keep class gn.com.android.mmitest.item.FingerPrintsTest { *;}
+-keep class gn.com.android.mmitest.item.FingerPrintsTest2 { *;}
+-keep class gn.com.android.mmitest.item.FMTest { *;}
+-keep class com.caf.fmradio.IFmRadioService { *;}
+-keep class com.caf.fmradio.IFMRadioServiceCallbacks { *;}
+-keep class gn.com.android.mmitest.item.SoftWareVersion { *;}
+-keep class com.qualcomm.qcnvitems.** { *;}
+-keep class com.qualcomm.qcrilhook.** { *;}
+-keep class android.hardware.fingerprint.IGnFingerprintServiceReceiver { *;}

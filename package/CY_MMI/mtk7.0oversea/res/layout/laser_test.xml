@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:orientation="vertical"
+  android:paddingTop="10dp"
+  android:paddingBottom="10dp"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent">
+  
+    <TextView 
+        android:id="@+id/test_title"
+        android:text="@string/test_title"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:background="@color/test_blue"
+        android:textColor="@android:color/white"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+    <TextView 
+        android:id="@+id/test_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="19sp"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:layout_below="@id/test_title"/>
+    <TextView 
+        android:id="@+id/test_note"
+        android:layout_below="@id/test_content"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/laser_cal_note"
+        android:textColor="@android:color/holo_red_light"
+        android:textSize="19sp"/>
+    <Button
+        android:id="@+id/offset_button"
+        android:layout_below="@id/test_note"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dip"
+        android:enabled="false"
+        android:text="@string/laser_offset_cal" />
+    <TextView 
+        android:id="@+id/offset_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="19sp"
+        android:layout_below="@id/offset_button"/>
+    <Button
+        android:id="@+id/crosstalk_button"
+        android:layout_below="@id/offset_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dip"
+        android:enabled="false"
+        android:text="@string/laser_crosstalk_cal" />
+    <TextView 
+        android:id="@+id/crosstalk_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="19sp"
+        android:layout_below="@id/crosstalk_button"/>
+    <include layout="@layout/right_wrong_restart"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_alignParentBottom="true"/>
+        
+</RelativeLayout>

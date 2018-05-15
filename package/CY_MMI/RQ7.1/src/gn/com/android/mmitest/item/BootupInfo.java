@@ -1,0 +1,194 @@
+
+package gn.com.android.mmitest.item;
+
+import gn.com.android.mmitest.TestUtils;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.Button;
+
+import gn.com.android.mmitest.R;
+
+//Gionee zhangke 20151210 add for CR01607303 start
+import android.widget.TextView;
+//Gionee zhangke 20151210 add for CR01607303 end
+
+
+public class BootupInfo extends Activity implements Button.OnClickListener {
+    private static final String TAG = "BootupInfo";
+
+
+    private Button mRightBtn;
+    private Button mWrongBtn;
+    private Button mRestartBtn;
+
+    private TextView mContent;
+    private String mNodeData;
+    private static final String node = "/proc/bootprof";
+    private static final int MSG_SHOW_RESULT = 0;
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        TestUtils.setWindowFlags(this);
+
+        setContentView(R.layout.common_textview);
+
+        mContent = (TextView)findViewById(R.id.test_content);
+        mRightBtn = (Button) findViewById(R.id.right_btn);
+        mRightBtn.setOnClickListener(this);
+
+        mWrongBtn = (Button) findViewById(R.id.wrong_btn);
+        mWrongBtn.setOnClickListener(this);
+
+        mRestartBtn = (Button) findViewById(R.id.restart_btn);
+        mRestartBtn.setOnClickListener(this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        new Thread(new Runnable() {
+            public void run() {
+                mNodeData = getNodeData(node);
+                mHandler.sendEmptyMessage(MSG_SHOW_RESULT);
+            }
+        }).start();
+    }
+
+    private Handler mHandler = new Handler() {
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+            case MSG_SHOW_RESULT:
+                Log.e(TAG, "mHandler MSG_SHOW_RESULT");
+                mContent.setText(mNodeData);
+                break;
+            }
+        }
+    };
+
+    @Override
+    public void onStop() {
+        super.onStop();
+    }
+
+
+    void closeStreamQuiet(InputStream stream) {
+        if (stream != null) {
+            try {
+                stream.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                stream = null;
+            }
+        }
+    }
+
+    void closeReaderQuiet(Reader reader) {
+        if (reader != null) {
+            try {
+                reader.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                reader = null;
+            }
+        }
+    }
+
+    @Override
+    public void onClick(View v) {
+        // TODO Auto-generated method stub
+        switch (v.getId()) {
+            case R.id.right_btn: {
+                mRightBtn.setEnabled(false);
+                mWrongBtn.setEnabled(false);
+                mRestartBtn.setEnabled(false);
+                TestUtils.rightPress(TAG, this);
+                break;
+            }
+
+            case R.id.wrong_btn: {
+                mRightBtn.setEnabled(false);
+                mWrongBtn.setEnabled(false);
+                mRestartBtn.setEnabled(false);
+                TestUtils.wrongPress(TAG, this);
+                break;
+            }
+
+            case R.id.restart_btn: {
+                mRightBtn.setEnabled(false);
+                mWrongBtn.setEnabled(false);
+                mRestartBtn.setEnabled(false);
+                TestUtils.restart(this, TAG);
+                break;
+            }
+        }
+
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        return true;
+    }
+
+    public String getNodeData(String fileName) {
+        StringBuffer nodeData = new StringBuffer("");
+        FileInputStream fileInputStream = null;
+        InputStreamReader inputStreamReader = null;
+        BufferedReader br = null;
+        try {
+            try {
+                File file = new File(fileName);
+                if (file.exists()) {
+                    fileInputStream = new FileInputStream(file);
+                    inputStreamReader = new InputStreamReader(fileInputStream);
+                    br = new BufferedReader(inputStreamReader);
+                    String data = null;
+                    while ((data = br.readLine()) != null) {
+                        Log.d(TAG, "data=" + data);
+                        nodeData.append(data);
+                        nodeData.append("\n");
+                    }
+                }
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (fileInputStream != null) {
+                    fileInputStream.close();
+                }
+                if (inputStreamReader != null) {
+                    inputStreamReader.close();
+                }
+                if (br != null) {
+                    br.close();
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Log.d(TAG, fileName+":nodeData=" + nodeData.toString());
+        return nodeData.toString();
+    }
+    //Gionee zhangke 20151210 add for CR01607303 end
+}

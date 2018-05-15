@@ -12,6 +12,10 @@
 # 橘黄色
 /C1
 
+headsetState
+KEY_PLAYPAUSE
+Headset_mic Headset_no_mic
+
 audio_format
 format
 fmt
@@ -56,6 +60,9 @@ transferAudioFormatToPcmFormat
 setMasterVolume
 keyPressed keyCode keycode scanCode
 KEYCODE_POWER
+KEY_VOLUMEUP
+plug-in
+
 notifyStartedGoingToSleep
 
 
@@ -70,7 +77,7 @@ mOutputDevices
 
 # 天蓝色
 /C3
-
+accdet
 AudioALSAPlaybackHandlerNormal
 AudioALSACaptureHandlerNormal
 
@@ -178,6 +185,7 @@ ToneTest2
 
 input
 
+connected
 CONNECT_AUDIO
 
 setAudioRoute
@@ -222,6 +230,11 @@ INCALL
 
 # 粉红色
 /C6
+
+NO_DEVICE
+plug-out
+
+disconnected
 
 clientPid
 -open

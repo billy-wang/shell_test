@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/layout01"
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/send_data"
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:text="@string/send_data"
+                android:textSize="20sp" />
+
+            <Button
+                android:id="@+id/receiver_data"
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="20dp"
+                android:text="@string/receiver_data"
+                android:textSize="20sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:orientation="vertical">
+
+            <CheckedTextView
+                android:id="@+id/CheckedTextView01"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/IR_Code" />
+
+            <TextView
+                android:id="@+id/ir_code_string"
+                android:layout_width="264dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:scrollbars="vertical"
+                android:singleLine="false"
+                android:textSize="15sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:orientation="horizontal">
+
+            <CheckedTextView
+                android:id="@+id/checkedTextView1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/Carrier_Freq" />
+
+            <TextView
+                android:id="@+id/carrier_freq"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="15sp" />
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+    <include
+        layout="@layout/right_wrong_restart"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>
+
+    <!--android:layout_width="264dp"-->
+    <!--android:layout_width="104dp"-->

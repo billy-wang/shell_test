@@ -1,0 +1,218 @@
+#! /bin/bash  
+  
+###############################################  
+#  
+#功能：repo status后出现一大堆需要处理的，该脚本 可以全部处理；  
+# 处理repo status出现的3种情况， -- , -m , -d   
+#  
+#使用方法：拷贝该文件到sdk的根目录，执行就可  
+#  
+#author luoyun  
+##############################################  
+  
+echo "i will start"  
+rm repostatus  
+rm -f f_tmp*  
+repo status > repostatus  
+  
+################################################################################################################################  
+grep -n "\-[md-]" repostatus > f_tmp4  
+tmp1=`cat f_tmp4`  
+if [ -n "$tmp1" ]  
+then  
+    echo "has -m or -d or --"  
+    awk -F ':' '{print $1}' f_tmp4 > f_tmp5  
+    tmp1=`sed -n '1p' f_tmp5`  
+    if [ -f f_tmp6 ]  
+    then  
+        rm f_tmp6  
+    fi  
+  
+    for each_l in `cat f_tmp5`  
+    do  
+        let "tmp2 = $each_l - 1"  
+  
+        if [ $tmp1 -eq $tmp2 ]  
+        then  
+            tmp1=$each_l  
+        else  
+            echo $each_l >> f_tmp6  
+            tmp1=$each_l  
+        fi  
+    done  
+    echo "#####ly cat f_tmp6 #######"  
+    cat f_tmp6  
+    echo "###########"  
+    if [ -f f_tmp7 ]  
+    then  
+        rm f_tmp7  
+    fi  
+  
+    for each_l in `cat f_tmp6`  
+    do  
+        let "tmp6 = $each_l - 1"  
+        sed -n "${tmp6}p" repostatus >> f_tmp7  
+    done  
+    echo "######ly cat f_tmp7####"  
+    cat f_tmp7  
+    #awk -F ' ' '{print $2}' f_tmp7  
+    awk -F ' ' '{print $2}' f_tmp7 > f_tmp8  
+    echo "############"  
+    for each_d in `cat f_tmp8`  
+    do  
+        #echo "##"  
+        echo $each_d  
+        #############################################################  
+        cd $each_d  
+        git checkout .  
+        cd -  
+    done  
+    rm f_tmp*  
+else  
+    echo "no -m or no -- or no -d"  
+fi  
+if [ -f f_tmp4 ]  
+then  
+    rm f_tmp4  
+fi  
+  
+#############################################################################  
+#repo status > repostatus  
+#grep -n "\-\-" repostatus  
+grep -n "\-[md-]" repostatus > f_tmp4  
+tmp1=`cat f_tmp4`  
+if [ -n "$tmp1" ]  
+then  
+    echo "2 has -- or  -d or -m "  
+    #awk -F ':' '{print $1}' f_tmp4  
+    awk -F ':' '{print $1}' f_tmp4 > f_tmp5  
+    #sed -n '1p' f_tmp5  
+    tmp1=`sed -n '1p' f_tmp5`  
+    #echo $tmp1 > f_tmp6  
+  
+    ######################  
+    #tmp3=11  
+    #tmp4=11  
+    #tmp5=12  
+    #if [ $tmp3 -eq $tmp4 ]  
+    #then  
+    #echo "tmp3==tmp4"  
+    #fi  
+    #if [ $tmp3 -eq $tmp5 ]  
+    #then  
+    #echo "tmp3==tmp5"  
+    #else  
+    #echo "tmp3!=tmp5"  
+    #fi  
+    #######################  
+       
+    for each_l in `cat f_tmp5`  
+    do  
+    #tmp2=(($each_l -1))  
+    let "tmp2 = $each_l - 1"  
+    #echo $tmp2  
+    #echo "# #"  
+    #if [ $tmp1 -eq (($each_l - 1)) ]  
+    #then  
+    #   tmp1=$each_l  
+    #else  
+    #   echo $each_l >> f_tmp6  
+    #   tmp1=$each_l  
+    #fi  
+    if [ $tmp1 -eq $tmp2 ]  
+    then  
+        tmp1=$each_l  
+    else  
+        echo $each_l >> f_tmp6  
+        tmp1=$each_l  
+    fi  
+    done  
+    echo "#####ly 1 #######"  
+    #cat f_tmp6  
+    echo "###########"  
+    for each_l in `cat f_tmp6`  
+    do  
+        let "tmp6 = $each_l - 1"  
+        sed -n "${tmp6}p" repostatus >> f_tmp7  
+    done  
+    echo "##########"  
+    #cat f_tmp7  
+    #awk -F ' ' '{print $2}' f_tmp7  
+    awk -F ' ' '{print $2}' f_tmp7 > f_tmp8  
+    echo "############"  
+    for each_d in `cat f_tmp8`  
+    do  
+        #echo "# #"  
+        echo $each_d  
+        #############################################################  
+        cd $each_d  
+        #cd common  
+        git status > ../f_tmp  
+        cat ../f_tmp  
+  
+        grep -n "git add" ../f_tmp > ../f_tmp1  
+        #cat ../f_tmp1  
+        tmp=`cat ../f_tmp1`  
+        if [ -n "$tmp" ]  
+        then  
+            echo "ly --- need del"  
+            startl=`awk -F ':' '{print $1}' ../f_tmp1`  
+            echo $startl > ../f_tmp2  
+  
+            a1=`awk -F ' ' '{print $1}' ../f_tmp2`  
+            a2=`awk -F ' ' '{print $2}' ../f_tmp2`  
+  
+            echo $a1  
+            echo $a2  
+            echo "#####################"  
+            sed -n "$a1,${a2}p" ../f_tmp  
+            echo "################"  
+            sed -n '5,10p' ../f_tmp  
+            echo "################"  
+            #sed -n "{${a1}+2},{${a2}-1}p" ../f_tmp > ../f_tmp3  
+            sed -n "$a1,${a2}p" ../f_tmp > ../f_tmp3  
+            sed -i '1,2d' ../f_tmp3  
+            #cat ../f_tmp3  
+            sed -i '$d' ../f_tmp3  
+            cat ../f_tmp3  
+            echo "##########"  
+            sed -i 's/#/ /g' ../f_tmp3  
+  
+            cat ../f_tmp3  
+            echo "###########"  
+  
+            for each_add in `cat ../f_tmp3`  
+            do  
+            #echo $each_add  
+            #echo "#"  
+            rm -rf $each_add  
+            done  
+            git status  
+            echo "################"  
+        else  
+            echo "ly --- nothing to del"  
+        fi  
+  
+        rm ../f_tmp*  
+        cd -  
+        #rm f_tmp*  
+    done  
+    echo "###########"  
+  
+else  
+    echo "2no -- or  -m or -d"  
+fi  
+  
+rm -f f_tmp*  
+################################################################################################################################  
+  
+  
+#############################################################################  
+  
+#rm repostatus  
+echo "########################################"  
+echo "ly before execute this script  repo status"  
+cat repostatus  
+echo "#########################################"  
+echo "end script"  
+repo status

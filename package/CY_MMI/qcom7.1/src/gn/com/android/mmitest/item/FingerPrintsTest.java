@@ -1,0 +1,183 @@
+
+package gn.com.android.mmitest.item;
+
+import gn.com.android.mmitest.R;
+import gn.com.android.mmitest.TestUtils;
+import java.lang.reflect.Method;
+import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.Matrix;
+import android.graphics.drawable.BitmapDrawable;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
+import com.fingerprints.service.IFingerprintService;
+import com.fingerprints.service.IFingerprintSensorTest;
+import com.fingerprints.service.IFingerprintSensorTestListener;
+import com.fingerprints.service.FingerprintSensorTest;
+import com.fingerprints.service.FingerprintSensorTest.FingerprintSensorTestListener;
+
+public class FingerPrintsTest extends Activity implements OnClickListener {
+    Button mToneBt;
+
+    private Button mRightBtn, mWrongBtn, mRestartBtn;
+    private ImageView mImageView;
+    TextView titleTv;
+    private static final String TAG = "FingerPrintsTest";
+    private IFingerprintSensorTest mService;
+    FingerprintSensorTest mFingerprintSensorTest;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        TestUtils.setWindowFlags(this);
+
+        setContentView(R.layout.fingerprints_textview);
+
+        titleTv = (TextView) findViewById(R.id.test_title);
+        titleTv.setText(R.string.fingerprints_note);
+        mImageView = (ImageView) findViewById(R.id.imgview);
+        try {
+            mFingerprintSensorTest = new FingerprintSensorTest();
+        } catch (Exception e) {
+            Log.i(TAG, "mFingerprintSensorTest e=" + e.getMessage());
+        }
+
+        // Gionee zhangke 20160428 modify for CR01687958 start
+        mRightBtn = (Button) findViewById(R.id.right_btn);
+        mWrongBtn = (Button) findViewById(R.id.wrong_btn);
+        mRestartBtn = (Button) findViewById(R.id.restart_btn);
+        mRightBtn.setEnabled(false);
+        mWrongBtn.setEnabled(false);
+        mRestartBtn.setEnabled(false);
+
+        mRightBtn.setOnClickListener(FingerPrintsTest.this);
+        mWrongBtn.setOnClickListener(FingerPrintsTest.this);
+        mRestartBtn.setOnClickListener(FingerPrintsTest.this);
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+
+            @Override
+            public void run() {
+                // TODO Auto-generated method stub
+                Log.i(TAG, "hand enable button");
+
+                mWrongBtn.setEnabled(true);
+                mRestartBtn.setEnabled(true);
+            }
+        }, 10000);
+
+        // Gionee zhangke 20160428 modify for CR01687958 end
+
+    }
+
+    private FingerprintSensorTestListener mFingerprintSensorTestListener = new FingerprintSensorTestListener() {
+
+        @Override
+        public void onSelfTestResult(boolean result) {
+            // TODO Auto-generated method stub
+            Log.i(TAG, "onSelfTestResult result=" + result);
+        }
+
+        @Override
+        public void onImagequalityTestResult(int result) {
+            // TODO Auto-generated method stub
+            Log.i(TAG, "onImagequalityTestResult result=" + result);
+        }
+
+        @Override
+        public void onCheckerboardTestResult(int result) {
+            // TODO Auto-generated method stub
+            Log.i(TAG, "onCheckerboardTestResult result=" + result);
+        }
+
+        @Override
+        public void onCaptureTestResult(int result) {
+            // TODO Auto-generated method stub
+            Log.i(TAG, "onCaptureTestResult result=" + result);
+            if (result == 0) {
+                titleTv.setText(R.string.capturesucc);
+                mRightBtn.setEnabled(true);
+            } else if (result == -1) {
+                titleTv.setText(R.string.fingerprint_capture_image_noise);
+            } else if (result == -2) {
+                titleTv.setText(R.string.fingerprint_capture_image_fail);
+            } else if (result == -3) {
+                titleTv.setText(R.string.fingerprint_capture_image_timeout);
+            } else if (result == 5) {
+                titleTv.setText(R.string.fingerprints_capture_not_enough);
+            } else {
+                titleTv.setText(R.string.capturefailed);
+            }
+            mWrongBtn.setEnabled(true);
+            mRestartBtn.setEnabled(true);
+        }
+
+    };
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.i(TAG, "onResume mFingerprintSensorTest selfTest :mFingerprintSensorTest=" + mFingerprintSensorTest);
+        try {
+            Log.i(TAG, "onResume begin captureImage");
+            mFingerprintSensorTest.captureImage(true, mFingerprintSensorTestListener);
+            Log.i(TAG, "onResume end captureImage");
+        } catch (Exception e) {
+            titleTv.setText(R.string.fingerprints_load_fail);
+            Log.e(TAG, "captureImage Exception=" + e.getMessage());
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (mFingerprintSensorTest != null) {
+            mFingerprintSensorTest.cancel();
+        }
+    }
+
+    @Override
+    public void onClick(View v) {
+        // TODO Auto-generated method stub
+        switch (v.getId()) {
+        case R.id.right_btn: {
+            mRightBtn.setEnabled(false);
+            mWrongBtn.setEnabled(false);
+            mRestartBtn.setEnabled(false);
+            TestUtils.rightPress(TAG, this);
+            break;
+        }
+
+        case R.id.wrong_btn: {
+            mRightBtn.setEnabled(false);
+            mWrongBtn.setEnabled(false);
+            mRestartBtn.setEnabled(false);
+            TestUtils.wrongPress(TAG, this);
+            break;
+        }
+
+        case R.id.restart_btn: {
+            mRightBtn.setEnabled(false);
+            mWrongBtn.setEnabled(false);
+            mRestartBtn.setEnabled(false);
+            TestUtils.restart(this, TAG);
+            break;
+        }
+        }
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        return true;
+    }
+
+}

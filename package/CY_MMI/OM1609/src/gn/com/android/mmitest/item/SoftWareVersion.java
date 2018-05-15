@@ -1,0 +1,423 @@
+
+package gn.com.android.mmitest.item;
+
+import gn.com.android.mmitest.BaseActivity;
+import gn.com.android.mmitest.R;
+import gn.com.android.mmitest.TestUtils;
+
+import java.text.SimpleDateFormat;
+
+import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.Context;
+import android.os.Bundle;
+import android.os.RemoteException;
+import android.os.ServiceManager;
+import android.os.SystemProperties;
+import android.telephony.TelephonyManager;
+import android.text.TextUtils;
+import android.util.Log;
+import android.view.IWindowManager;
+import android.view.KeyEvent;
+import android.view.Surface;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.TextView;
+/*Gionee futao 20150217 modfy for CR01635407 begin*/
+import java.lang.reflect.Method;
+import java.util.Locale;
+/*Gionee futao 20150217 modfy for CR01635407 end*/
+
+public class SoftWareVersion extends BaseActivity implements OnClickListener {
+
+    private Button mRightBtn, mWrongBtn, mRestartBtn;
+
+    private TextView mContentTv;
+
+    private static String TAG = "SoftWareVersion";
+    /* Gionee huangjianqiang 20160125 add for CR01628438 begin*/
+    private boolean mInterVer = false;
+    private boolean mCaliInfo = false;
+    /* Gionee huangjianqiang 20160125 add for CR01628438 end*/
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        // Gionee xiaolin 20120924 add for CR00693542 start
+        /* Gionee huangjianqiang 20160125 add for CR01628438 begin*/
+        mInterVer = getIntent().getBooleanExtra("InternalVersion", false);
+        mCaliInfo = getIntent().getBooleanExtra("CalibrationInfo", false);
+        /* Gionee huangjianqiang 20160125 add for CR01628438 end*/
+        /* Gionee huangjianqiang 20160125 modify for CR01628438 begin*/
+        if (!mInterVer && !mCaliInfo) {
+            TestUtils.checkToContinue(this);
+        }
+        /* Gionee huangjianqiang 20160125 modify for CR01628438 end*/
+
+        // Gionee xiaolin 20120924 add for CR00693542 end
+        setContentView(R.layout.common_textview);
+        mRightBtn = (Button) findViewById(R.id.right_btn);
+        mRightBtn.setOnClickListener(this);
+        mWrongBtn = (Button) findViewById(R.id.wrong_btn);
+        mWrongBtn.setOnClickListener(this);
+        mRestartBtn = (Button) findViewById(R.id.restart_btn);
+        mRestartBtn.setOnClickListener(this);
+
+        /* Gionee huangjianqiang 20160125 add for CR01628438 begin*/
+        if (mInterVer || mCaliInfo) {
+            findViewById(R.id.test_title).setVisibility(View.GONE);
+            mRightBtn.setText("OK");
+            mWrongBtn.setVisibility(View.GONE);
+            mRestartBtn.setVisibility(View.GONE);
+            /* Gionee huangjianqiang 20160216 add for CR01635480 begin*/
+            gn.com.android.mmitest.item.FeatureOption.initMmiXml();
+            /* Gionee huangjianqiang 20160216 add for CR01635480 end*/
+        }
+        if (mCaliInfo) {
+            this.setTitle("Calibration Info");
+        }
+        /* Gionee huangjianqiang 20160125 add for CR01628438 end*/
+
+        mContentTv = (TextView) findViewById(R.id.test_content);
+        // Gionee xiaolin 20120827 add for CR00680743 start
+        //Gionee zhangke 20151017 delete for platform start
+        /*
+        try {
+            IWindowManager wm = IWindowManager.Stub.asInterface(
+                                    ServiceManager.getService(Context.WINDOW_SERVICE));
+            wm.freezeRotation(Surface.ROTATION_0); 
+        } catch (RemoteException exc) {
+             Log.e(TAG, "Unable to set Surface.ROTATION_0");    
+        }
+        */
+        //Gionee zhangke 20151017 delete for platform end
+        // Gionee xiaolin 20120827 add for CR00680743 end
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        // Gionee xiaolin 20130115 modify for CR00763354 start
+        // Gionee xiaolin 20130305 modify for CR00778810 start
+        /*Gionee futao 20160227 modify for CR01635407 begin*/
+        //String gnvernumber = SystemProperties.get("ro.gn.gnznvernumber");
+        String gnvernumber = SystemProperties.get("ro.gn.gnvernumber");
+        /*Gionee futao 20160227 modify for CR01635407 end*/
+
+        if ("eng".equals(SystemProperties.get("ro.build.type"))) {
+            gnvernumber += "_eng";
+        }
+        // Gionee xiaolin 20130305 modify for CR00778810 end
+        // Gionee xiaolin 20130115 modify for CR00763354 end
+        String buildTime = SystemProperties.get("ro.build.date");
+        String uct = SystemProperties.get("ro.build.date.utc");
+        String gnvernumberrel = SystemProperties.get("ro.gn.gnvernumberrel");
+        ContentResolver cv = this.getContentResolver();
+        //GIONEE: luohui 2012-06-19 modify for CR00625161 minute wrong start->             
+        //SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:dd");
+        /*Gionee huangjianqiang 20160531 modify for CR01711022 begin*/
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm",Locale.ENGLISH);
+        /*Gionee huangjianqiang 20160531 modify for CR01711022 end*/
+        //GIONEE: luohui 2012-06-19 modify for CR00625161 minute wrong end<-
+        if (uct != null && !uct.equals("")) {
+            buildTime = sdf.format(Long.parseLong(uct) * 1000);
+        }
+        String btResult = getResources().getString(R.string.gn_ft_bt_result_no);
+        String ftResult = getResources().getString(R.string.gn_ft_bt_result_no);
+
+        String wbtResult = getResources().getString(R.string.gn_ft_bt_result_no);
+        String wftResult = getResources().getString(R.string.gn_ft_bt_result_no);
+        //Gionee zhangke 20151008 add for CR01562334 start
+        String cdmabtResult = getResources().getString(R.string.gn_ft_bt_result_no);
+        String cdmaftResult = getResources().getString(R.string.gn_ft_bt_result_no);
+        //Gionee zhangke 20151008 add for CR01562334 end
+        //Gionee <niejn><2013-04-19> add for CR00798345 start
+        String tdbtResult = getResources().getString(R.string.gn_ft_bt_result_no);
+        String tdftResult = getResources().getString(R.string.gn_ft_bt_result_no);
+        //Gionee <niejn><2013-04-19> add for CR00798345 start
+        String lbtResult = getResources().getString(R.string.gn_ft_bt_result_no);
+        String lftResult = getResources().getString(R.string.gn_ft_bt_result_no);
+        String lbtResult1 = getResources().getString(R.string.gn_ft_bt_result_no);
+        String lftResult1 = getResources().getString(R.string.gn_ft_bt_result_no);
+        String lftTddAntResult = getResources().getString(R.string.gn_ft_bt_result_no);
+        String efuse = getResources().getString(R.string.gn_ft_bt_result_no);
+        String snInfo = getResources().getString(R.string.sn_info);
+        TelephonyManager teleMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+        String sn = SystemProperties.get("gsm.serial");
+
+        /* Gionee huangjianqiang 20160125 add for CR01629117 begin */
+        String mMemoryinfo;
+        GnMemoryinfo Memoryinfo = new GnMemoryinfo();
+        mMemoryinfo = "\n" + " " + "\n" + "RAM: " + Memoryinfo.getTotalRam(this);
+        mMemoryinfo += "   ROM: " + Memoryinfo.getTotalRom(this) + "\n";
+        /* Gionee huangjianqiang 20160125 add for CR01629117 end */
+
+        Log.d(TAG, " read sn = " + sn);
+        if (sn != null) {
+            char[] barcodes = sn.toCharArray();
+            //Gionee zhangke 20151008 add for CR01562334 start
+            if (FeatureOption.GN_RW_GN_MMI_EFUSE_SUPPORT && TestUtils.getSbcFlag()) {
+                efuse = getResources().getString(R.string.gn_ft_bt_result_success);
+            }
+            if (barcodes != null && barcodes.length >= 36) {
+                if ('P' == barcodes[35])
+                    cdmabtResult = getResources().getString(R.string.gn_ft_bt_result_success);
+                else if ('F' == barcodes[35])
+                    cdmabtResult = getResources().getString(R.string.gn_ft_bt_result_fail);
+            }
+            if (barcodes != null && barcodes.length >= 37) {
+                if ('P' == barcodes[36])
+                    cdmaftResult = getResources().getString(R.string.gn_ft_bt_result_success);
+                else if ('F' == barcodes[36])
+                    cdmaftResult = getResources().getString(R.string.gn_ft_bt_result_fail);
+            }
+
+            //Gionee zhangke 20151008 add for CR01562334 end
+            if (barcodes != null && barcodes.length >= 41) {
+                if ('P' == barcodes[40])
+                    lbtResult1 = getResources().getString(R.string.gn_ft_bt_result_success);
+                else if ('F' == barcodes[40])
+                    lbtResult1 = getResources().getString(R.string.gn_ft_bt_result_fail);
+            }
+            if (barcodes != null && barcodes.length >= 42) {
+                if ('P' == barcodes[41])
+                    lftResult1 = getResources().getString(R.string.gn_ft_bt_result_success);
+                else if ('F' == barcodes[41])
+                    lftResult1 = getResources().getString(R.string.gn_ft_bt_result_fail);
+            }
+            if (barcodes != null && barcodes.length >= 43) {
+                if ('P' == barcodes[42])
+                    lbtResult = getResources().getString(R.string.gn_ft_bt_result_success);
+                else if ('F' == barcodes[42])
+                    lbtResult = getResources().getString(R.string.gn_ft_bt_result_fail);
+            }
+            if (barcodes != null && barcodes.length >= 44) {
+                if ('P' == barcodes[43])
+                    lftResult = getResources().getString(R.string.gn_ft_bt_result_success);
+                else if ('F' == barcodes[43])
+                    lftResult = getResources().getString(R.string.gn_ft_bt_result_fail);
+            }
+            //Gionee <niejn><2013-04-19> add for CR00798345 start		
+            if (barcodes != null && barcodes.length >= 47) {
+                if ('P' == barcodes[46])
+                    tdbtResult = getResources().getString(R.string.gn_ft_bt_result_success);
+                else if ('F' == barcodes[46])
+                    tdbtResult = getResources().getString(R.string.gn_ft_bt_result_fail);
+            }
+            if (barcodes != null && barcodes.length >= 48) {
+                if ('P' == barcodes[47])
+                    tdftResult = getResources().getString(R.string.gn_ft_bt_result_success);
+                else if ('F' == barcodes[47])
+                    tdftResult = getResources().getString(R.string.gn_ft_bt_result_fail);
+            }
+            //Gionee <niejn><2013-04-19> add for CR00798345 end	
+            if (barcodes != null && barcodes.length >= 59) {
+                if ('P' == barcodes[58])
+                    wbtResult = getResources().getString(R.string.gn_ft_bt_result_success);
+                else if ('F' == barcodes[58])
+                    wbtResult = getResources().getString(R.string.gn_ft_bt_result_fail);
+            }
+            if (barcodes != null && barcodes.length >= 60) {
+                if ('P' == barcodes[59])
+                    wftResult = getResources().getString(R.string.gn_ft_bt_result_success);
+                else if ('F' == barcodes[59])
+                    wftResult = getResources().getString(R.string.gn_ft_bt_result_fail);
+            }
+
+            if (barcodes != null && barcodes.length >= 62) {
+                if ('1' == barcodes[60] && '0' == barcodes[61]) {
+                    btResult = getResources().getString(R.string.gn_ft_bt_result_success);
+                } else if ('0' == barcodes[60] && '1' == barcodes[61]) {
+                    btResult = getResources().getString(R.string.gn_ft_bt_result_fail);
+                }
+            }
+            if (barcodes != null && barcodes.length >= 63) {
+                if ('P' == barcodes[62]) {
+                    ftResult = getResources().getString(R.string.gn_ft_bt_result_success);
+                } else if ('F' == barcodes[62]) {
+                    ftResult = getResources().getString(R.string.gn_ft_bt_result_fail);
+                }
+            }
+            if (barcodes != null && barcodes.length >= 58) {
+                if ('P' == barcodes[57])
+                    lftTddAntResult = getResources().getString(R.string.gn_ft_bt_result_success);
+                if ('F' == barcodes[57])
+                    lftTddAntResult = getResources().getString(R.string.gn_ft_bt_result_fail);
+            }
+
+            if (sn.length() > 17) {
+                snInfo = snInfo + sn.substring(0, 18);
+            }
+        }
+
+        if (buildTime == null || buildTime.equals("")) {
+            buildTime = getResources().getString(R.string.isnull);
+        }
+
+        if (gnvernumber == null || gnvernumber.equals("")) {
+            gnvernumber = getResources().getString(R.string.isnull);
+        }
+        
+        /*Gionee futao 20150217 modfy for CR01635407 begin*/
+        /*Gionee huangjianqiang 20160419 modify for CR01675381 begin*/
+        String content = "";
+        if (!mCaliInfo) {
+            content += getResources().getString(R.string.internal_version) + ":" + gnvernumber
+                    + "\n" + snInfo;
+
+            content += mMemoryinfo;
+        }
+
+        /*Gionee futao 20160330 modify for CR01663704*/
+        if (FeatureOption.GN_RW_GN_MMI_GSM_SUPPORT) {
+            content += "\nGSM BT: " + btResult + "\nGSM FT: " + ftResult;
+        }
+       /*Gionee futao 20150217 modfy for CR01635407 end*/
+
+        //Gionee zhangke 20151019 add for CR01571097 start 
+        if (FeatureOption.GN_RW_GN_MMI_WCDMA_SUPPORT) {
+            content += "\nWCDMA BT:" + wbtResult + "\nWCDMA FT:" + wftResult;
+        }
+        //Gionee zhangke 20151008 add for CR01562334 start
+        if (FeatureOption.GN_RW_GN_MMI_CDMA_SUPPORT) {
+            content += "\nCDMA BT:" + cdmabtResult + "\nCDMA FT:" + cdmaftResult;
+        }
+        //Gionee zhangke 20151008 add for CR01562334 end
+        //Gionee <niejn><2013-04-19> add for CR00798345 start
+        if (FeatureOption.GN_RW_GN_MMI_TDSCDMA_SUPPORT) {
+            content += "\nTD-SCDMA BT:" + tdbtResult + "\nTD-SCDMA FT:" + tdftResult;
+        }
+        if (FeatureOption.GN_RW_GN_MMI_LTETDD_SUPPORT) {
+            content += "\nLTETDD BT:" + lbtResult + "\nLTETDD FT:" + lftResult;
+        }
+        if (FeatureOption.GN_RW_GN_MMI_LTEFDD_SUPPORT) {
+            content += "\nLTEFDD BT:" + lbtResult1 + "\nLTEFDD FT:" + lftResult1;
+        }
+        //Gionee <Oversea_Bug> <tanbotao> <20161124> for #28369 beign
+        if (FeatureOption.GN_RW_GN_MMI_ANT_SUPPORT) {
+            content += "\nANT :" + lftTddAntResult;
+        }
+        //Gionee <Oversea_Bug> <tanbotao> <20161124> for #28369 end
+        //Gionee <niejn><2013-04-19> add for CR00798345 end
+        if (FeatureOption.GN_RW_GN_MMI_EFUSE_SUPPORT) {
+            content += "\nEFUSE :" + efuse;
+        }
+        //Gionee <Oveasea_Bug> <tanbotao> <20161115> for CR01768588 beign
+        String gpsCoclocResult = getResources().getString(R.string.gn_ft_bt_result_success);
+        if (SystemProperties.getBoolean("gn.mmi.gps.coclock", false)&& mInterVer) {
+            content += "\nGPS COCLock:" +  gpsCoclocResult;
+        }
+        //Gionee <Oveasea_Bug> <tanbotao> <20161115> for CR01768588 end
+
+        //Gionee zhangke 20151019 add for CR01571097 end 
+       /*Gionee futao 20150217 modfy for CR01635407 begin*/
+        if (!mCaliInfo) {
+            if (!mInterVer) {
+                content += "\n" + getResources().getString(R.string.mmi_version_name) + getAppInfo();
+                Log.i(TAG, "mmi version name = " + getAppInfo());
+            } else {
+                String AmigoFrameworkVersion = getAmigoFrameworkVersion();
+                if (!AmigoFrameworkVersion.equals("")) {
+                    content += "\n" + "widget: " + AmigoFrameworkVersion;
+                }
+            }
+        /*Gionee futao 20150217 modfy for CR01635407 end*/
+            content += "\n" + getResources().getString(R.string.buildtime) + ": " + buildTime;
+        }
+
+        /*Gionee huangjianqiang 20160419 modify for CR01675381 end*/
+        mContentTv.setText(content);
+        mRightBtn.setEnabled(true);
+    }
+
+    @Override
+    public void onClick(View v) {
+        // TODO Auto-generated method stub
+        switch (v.getId()) {
+
+            case R.id.right_btn: {
+                mRightBtn.setEnabled(false);
+                mWrongBtn.setEnabled(false);
+                mRestartBtn.setEnabled(false);
+                /* Gionee huangjianqiang 20160125 modify for CR01628438 begin*/
+                if (mInterVer || mCaliInfo) {
+                    this.finish();
+                } else {
+                    TestUtils.rightPress(TAG, this);
+                }
+               /* Gionee huangjianqiang 20160125 modify for CR01628438 end*/
+                break;
+            }
+
+            case R.id.wrong_btn: {
+                mRightBtn.setEnabled(false);
+                mWrongBtn.setEnabled(false);
+                mRestartBtn.setEnabled(false);
+                TestUtils.wrongPress(TAG, this);
+                break;
+            }
+
+            case R.id.restart_btn: {
+                mRightBtn.setEnabled(false);
+                mWrongBtn.setEnabled(false);
+                mRestartBtn.setEnabled(false);
+                TestUtils.restart(this, TAG);
+                break;
+            }
+        }
+
+    }
+
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        return true;
+    }
+
+    //Gionee zhangke 20151008 add for CR01564534 start
+    private String getAppInfo() {
+        try {
+            String pkName = this.getPackageName();
+            String versionName = this.getPackageManager().getPackageInfo(pkName, 0).versionName;
+            return versionName;
+        } catch (Exception e) {
+        }
+        return null;
+    }
+    //Gionee zhangke 20151008 add for CR01564534 end
+
+    /* Gionee huangjianqiang 20160125 add  begin*/
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        if (mInterVer || mCaliInfo) {
+            this.finish();
+        }
+    }
+
+    /* Gionee huangjianqiang 20160125 add  end*/
+     /*Gionee futao 20150217 modfy for CR01635407 begin*/
+    private String getAmigoFrameworkVersion() {
+        String version = "";
+        Class<?> verClass = null;
+
+        try {
+            verClass = Class.forName("amigo.widget.AmigoWidgetVersion");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        try {
+            Method method = verClass.getMethod("getVersion");
+            version = (String) method.invoke(this);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return version;
+    }
+     /*Gionee futao 20150217 modfy for CR01635407 end*/
+}

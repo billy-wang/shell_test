@@ -1,0 +1,5 @@
+<resources>
+    <color name="test_blue">#FF63B8FF</color>
+    <color name="test_blue_press">#FF1C86EE</color>
+    <color name="tp_test_background">#FF8C8C8C</color>
+</resources>
