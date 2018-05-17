@@ -9,24 +9,10 @@ usage()
 		-l  , --listp    : List the available
 		-h,  -help    : Print this message and exit.
 	example:
-		== autommi == 
-		-m dura 	:	听筒测试 
-		-m dyna		:	听筒扫频
-		-m ep2rc	:	耳麦到听筒
-		-m ep2sp	:	耳麦到扬声器
-		-m hs		:	耳机回路
-		-m al		: 	音频回路
-		-m am		:	副麦
-		-m stop		:	退出
+		== autommi ==
+		-m  		:	autommi测试
 		== cpu freq ==
-		-c -g		:	查下CPU支持哪些governor的模式
-		-c -d		:	看CPU支持哪些频率
-		-c -freq	:	当前的频率有哪些
-						当前所选择的频率
-		-c -num		:	查看系统支持多少核数
-		-c -cpu		:	查看当前状态有多少个CPU
-		-s -cpuX	:	开启cpuX 
-
+		-c			:	CPU freq相关
 		== pc info ==
 		-d dmidecode	:	查看主板 内存 信息
 		== ftrace log ==
@@ -56,6 +42,10 @@ usage()
 		-reset code_version 	: 	复位代码流
 		== android build env ==
 		-android  		:	android编译环境
+		== build mtk android ==
+		-build -l  		                :	编译android 项目列表
+		-build -h  		                :	编译android 帮助
+		-build -v user CSW1707A_1201 -n :	全新编译android
 	Actions:
 "
 }
@@ -362,85 +352,146 @@ autommitest()
 	local deviceinfo=`adb devices | sed -n '2p' | awk '{ print $1}'`
 	#echo $deviceinfo
 
-
-	if [ $2 == "stop" ];then
-		echo "***** 退出autommi *****"
-		adb shell am start -a com.gionee.autommi.dumb 
-		sleep 1
-		echo "stop mtklog"
-		#adb shell "am broadcast -a com.mediatek.mtklogger.ADB_CMD -e cmd_name stop --ei cmd_target 1" >/dev/null 2>&1
-		exit 0
-	fi
-
-	if [ $2 == "start" ];then
-		echo "start mtklog and del /sdcard/mtklog folder"
-		adb shell "am broadcast -a com.mediatek.mtklogger.ADB_CMD -e cmd_name stop --ei cmd_target 1" >/dev/null 2>&1
-		sleep 8
-		adb shell "rm -rf /sdcard/mtklog"
-		adb shell "am broadcast -a com.mediatek.mtklogger.ADB_CMD -e cmd_name start --ei cmd_target 1" >/dev/null 2>&1
-		exit 0
-	fi
-
     if [ -n "$deviceinfo" ];then
-	echo "***** volume 100% ******"
-	adb shell am start -a com.gionee.autommi.rc -e dura 3 -e volume 100
+	#echo "***** volume 100% ******"
+	#adb shell am start -a com.gionee.autommi.rc -e dura 3 -e volume 100
 	sleep 1
 	
     	while true 
     	do
-        case "$2" in
-		dura)
+		#if [ -z $2 ];then
+		printf "
+		1 key		: 	按键测试
+		2 spkdura	:	扬声器测试 
+		3 spkdyna	:	扬声器扫频
+		4 dura		:	听筒测试 
+		5 dyna		:	听筒扫频
+		6 ep2rc		:	耳麦到听筒
+		7 ep2sp		:	耳麦到扬声器
+		8 hs		:	耳机回路
+		9 al		: 	音频回路
+		0 am		:	副麦
+		a stop		:	退出	
+		b start		: 	开启mtklog
+		"
+		local input=a
+		read -p "Enter your chose:" input echo $input
+		#fi
+        case "$input" in
+		1|key)
+			echo "***** 按键检测 *****"
+			adb shell am start -a com.gionee.autommi.key
+			echo "input any key stop"
+			read 
+			adb shell am start -a com.gionee.autommi.dumb
+			#exit 0
+			;;
+		2|spkdura)
+			echo "***** 扬声器测试 *****" 
+			adb shell am start -a com.gionee.autommi.sp -e dura
+			echo "input any key stop"
+			read 
+			adb shell am start -a com.gionee.autommi.dumb
+			#exit 0
+			;;
+		3|spkdyna)	
+			echo "***** 扬声器扫频 *****"
+			adb shell am start -a com.gionee.autommi.sp.dyna --ei level 5
+			echo "input any key stop"
+			read 
+			adb shell am start -a com.gionee.autommi.dumb
+			#exit 0
+			;;
+		4|dura)
 			echo "***** 听筒测试 *****" 
 			#adb shell -s $deviceinfo am start -a com.gionee.autommi.rc -e dura 3  
 			adb shell am start -a com.gionee.autommi.rc -e dura 3  
 			echo "input any key stop"
 			read 
 			adb shell am start -a com.gionee.autommi.dumb
-			exit 0
+			#exit 0
 			;;
-		dyna)
+		5|dyna)
 			echo "***** 听筒扫频 *****"
 			adb shell am start -a com.gionee.autommi.rc.dyna --ei level 5
-			exit 0
+			echo "input any key stop"
+			read 
+			adb shell am start -a com.gionee.autommi.dumb
+			#exit 0
 			;;
-		ep2rc)
+		6|ep2rc)
 			echo "***** 关闭主MIC *****"
 			adb shell am start -a com.gionee.autommi.cmr -e state no
 			sleep 1
 			echo "***** 耳麦到听筒 *****"
 			adb shell am start -a com.gionee.autommi.ep2rc --ei level 5 
-			exit 0
+			echo "input any key stop"
+			read 
+			adb shell am start -a com.gionee.autommi.dumb
+			#exit 0
 			;;
-		ep2sp)
+		7|ep2sp)
 			echo "***** 关闭主MIC *****"
 			adb shell am start -a com.gionee.autommi.cmr -e state no
 			sleep 1
 			echo "***** 耳麦到扬声器 *****"
 			adb shell am start -a com.gionee.autommi.ep2sp --ei level 5
-			exit 0
+			echo "input any key stop"
+			read 
+			adb shell am start -a com.gionee.autommi.dumb
+			#exit 0
 			;;
-		hs)
+		8|hs)
 			echo "***** 关闭主MIC *****"
 			adb shell am start -a com.gionee.autommi.cmr -e state no
 			sleep 1
 			echo "***** 耳机回路 *****"
 			adb shell am start -a com.gionee.autommi.hs --ei level 5 
-			exit 0
+			echo "input any key stop"
+			read 
+			adb shell am start -a com.gionee.autommi.dumb
+			#exit 0
 			;;
-		al)
+		9|al)
+			echo "***** 开启主MIC *****"
+			adb shell am start -a com.gionee.autommi.cmr -e state yes
+			sleep 1
 			echo "***** 音频回路 *****"
 			adb shell am start -a com.gionee.autommi.al --ei level 5 
-			exit 0
+			echo "input any key stop"
+			read 
+			adb shell am start -a com.gionee.autommi.dumb
+			#exit 0
 			;;
-		am)
+		0|am)
 			echo "***** 副麦 *****"
 			adb shell am start -a com.gionee.autommi.am --ei level 10 
+			echo "input any key stop"
+			read 
+			adb shell am start -a com.gionee.autommi.dumb
+			#exit 0
+			;;
+		a|stop)
+			echo "***** 退出autommi *****"
+			adb shell am start -a com.gionee.autommi.dumb 
+			sleep 1
+			#echo "stop mtklog"
+			#adb shell "am broadcast -a com.mediatek.mtklogger.ADB_CMD -e cmd_name stop --ei cmd_target 1" >/dev/null 2>&1
 			exit 0
 			;;
-            *)
-                usage
-                exit 1
-                ;;
+		b|start)
+			echo "**** 开启 mtklog *****"
+			echo "start mtklog and del /sdcard/mtklog folder"
+			adb shell "am broadcast -a com.mediatek.mtklogger.ADB_CMD -e cmd_name stop --ei cmd_target 1" >/dev/null 2>&1
+			sleep 8
+			adb shell "rm -rf /sdcard/mtklog"
+			adb shell "am broadcast -a com.mediatek.mtklogger.ADB_CMD -e cmd_name start --ei cmd_target 1" >/dev/null 2>&1
+			#exit 0
+			;;
+		*)
+			usage
+			exit 1
+			;;
         esac
     done
 	else
@@ -455,11 +506,28 @@ cpu_freq()
  	
 	local deviceinfo=`adb devices | sed -n '2p' | awk '{ print $1}'`
 	if [ -n "$deviceinfo" ];then
-	while true 
-    do
-        case "$2" in
-            -g)
-            echo "***** 查下CPU支持哪些governor的模式 *****" 
+		while true 
+		do
+			printf "
+			== cpu freq ==
+			1 -g			:	查下CPU支持哪些governor的模式
+			2 -d			:	看CPU支持哪些频率
+			3 -freq		:	当前的频率有哪些
+								当前所选择的频率
+			4 -num		:	查看系统支持多少核数
+			5 -cpu		:	查看当前状态有多少个CPU
+			6 -performance	:	performance模式,最高频率,不降频
+			7 -cpu0			:	开启cpu0 
+			8 -cpu1			:	开启cpu1
+			9 -cpu2			:	开启cpu2
+			0 -cpu3			:	开启cpu3
+			a stop 			: 	退出
+			"
+			local input=a
+			read -p "Enter your chose:" input echo $input
+        case "$input" in
+		1|-g)
+			echo "***** 查下CPU支持哪些governor的模式 *****" 
 			echo "***	performance	:	最高频率,不降频 ***"
 			echo "***	ondemand	:	动态调节频率,不会因为降频造成性能降低 ***"
 			echo "***	interactive	:	交互模式，直接上最高频率，然后看CPU负荷慢慢降低，比较耗电 ***"
@@ -467,89 +535,66 @@ cpu_freq()
 			echo "***	userspace	:	自定义模式,允许其他用户程序调节CPU频率 ***"
 			#adb shell -s $deviceinfo cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
 			adb shell cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
-            exit 0
+           	#exit 0
             ;;
-			-d)
+		2|-d)
 			echo "***** 看CPU支持哪些频率 *****"
 			adb shell cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
-			exit 0
+			#exit 0
 			;;
-			-freq)
+		3|-freq)
 			echo "	***** 当前的频率有哪些 *****"
 			adb shell cat /proc/cpufreq/cpufreq_ptpod_freq_volt
 			echo "	***** 当前所选择的频率 *****"
 			adb shell cat /proc/cpufreq/cpufreq_oppidx 
-			exit 0
+			#exit 0
 			;;
-			-num)
+		4|-num)
 			echo "***** 查看系统支持多少核数 *****"
 			adb shell cat /sys/devices/system/cpu/present
-			exit 0
+			#exit 0
 			;;
-			-cpu)
+		5|-cpu)
 			echo "***** 查看当前状态有多少个CPU *****"
 			adb shell cat sys/devices/system/cpu/online
-			exit 0
+			#exit 0
 			;;
-            *)
-                usage
-                exit 1
-                ;;
-        esac
-    done
- 	else
-        echo "not inster usb!!"
-    fi
-}
-
-set_cpu_freq()
-{
- 	argv="$@"
-    echo "$0 $1 $2"
- 	
-	local deviceinfo=`adb devices | sed -n '2p' | awk '{ print $1}'`
-	if [ -n "$deviceinfo" ];then
-	while true 
-    do
-        case "$2" in
-            -performance)
-            echo "***** 查下CPU支持哪些governor的模式 *****" 
-			echo "***	performance	:	最高频率,不降频 ***"
-			echo "***	ondemand	:	动态调节频率,不会因为降频造成性能降低 ***"
-			echo "***	interactive	:	交互模式，直接上最高频率，然后看CPU负荷慢慢降低，比较耗电 ***"
-			echo "***	powersave	:	省电模式，通常以最低频率运行 ***"
-			echo "***	userspace	:	自定义模式,允许其他用户程序调节CPU频率 ***"
+        6|-performance)
 			#adb shell -s $deviceinfo cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
 			#adb shell cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
 			adb shell "echo performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"
-            exit 0
+            #exit 0
             ;;
-			-cpu0)
+		7|-cpu0)
 			echo "***** 开启CPU0 *****"
 			adb shell "echo 0 > /proc/hps/enabled"
 			adb shell "echo 1 > /sys/devices/system/cpu/cpu0/online"
-			exit 0
+			#exit 0
 			;;
-			-cpu1)
+		8|-cpu1)
 			echo "***** 开启CPU1 *****"
 			adb shell "echo 0 > /proc/hps/enabled"
 			adb shell "echo 1 > /sys/devices/system/cpu/cpu1/online"
-			exit 0
+			#exit 0
 			;;
-			-cpu2)
+		9|-cpu2)
 			echo "***** 开启CPU2 *****"
 			adb shell "echo 1 > /sys/devices/system/cpu/cpu2/online"
-			exit 0
+			#exit 0
 			;;
-			-cpu3)
+		0|-cpu3)
 			echo "***** 开启CPU3 *****"
 			adb shell "echo 1 > /sys/devices/system/cpu/cpu3/online"
-			exit 0
+			#exit 0
 			;;
-            *)
-                usage
-                exit 1
-                ;;
+		a|stop)
+			echo "***** 退出 *****"
+			exit 0 
+			;;
+        *)
+			usage
+			exit 1
+			;;
         esac
     done
  	else
@@ -729,6 +774,39 @@ change_LF2CRLF()
 	sed -i 's/$/\r/g' $2
 }
 
+build_mtk_android()
+{
+    local_dir=$PWD
+    #echo $local_dir
+    export LC_ALL=C
+    
+    while true 
+    do
+        case "$2" in
+        -l)
+            $local_dir/TmakeChenyee -l
+            exit 0
+            ;;
+        -h)
+            $local_dir/TmakeChenyee -h
+            exit 0
+            ;;
+        *)
+            echo "$@"
+            #ret=`$local_dir/TmakeChenyee $2 $3 $4 $5 $6 $7 >$local_dir/all_build_result 2>$local_dir/build_error`
+            #ret=`$local_dir/TmakeChenyee $2 $3 $4 $5 $6 $7`
+            #echo $ret 
+            cd $local_dir
+            ./TmakeChenyee $2 $3 $4 $5 $6 $7
+            echo $?
+            exit 0
+            ;;
+        esac
+    done
+
+
+}
+
 get_opts()
 {
     argv="$@"
@@ -766,10 +844,6 @@ get_opts()
 				;;
 			-c)
 				cpu_freq "$@"
-				exit 0
-				;;
-			-s)
-				set_cpu_freq "$@"
 				exit 0
 				;;
 			-d)
@@ -822,6 +896,10 @@ get_opts()
 				;;
 			-android)
 				android_8_build_env "$@"
+				exit 0
+				;;
+			-build)
+				build_mtk_android "$@"
 				exit 0
 				;;
             *)
