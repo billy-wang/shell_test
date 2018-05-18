@@ -50,6 +50,8 @@ public class ReceiverTest2 extends BaseActivity implements OnClickListener {
     private Button mRightBtn, mWrongBtn, mRestartBtn;
 
     private AudioManager mAM;
+    private int mAudioMode;
+    private boolean SpeakerphoneOn = false, MusicActive = false, WiredHeadsetOn = false, BluetoothScoOn = false, BluetoothA2dpOn = false, MicrophoneMute = false;
 
     private static final String TAG = "ReceiverTest2_billy";
 
@@ -349,9 +351,24 @@ public class ReceiverTest2 extends BaseActivity implements OnClickListener {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+        
+        mAudioMode = mAM.getMode();
+        DswLog.d(TAG, "getMode " + mAudioMode);
 
         DswLog.d(TAG, "B set mode  = mode normal ");
         mAM.setMode(AudioManager.MODE_NORMAL);
+
+        SpeakerphoneOn = mAM.isSpeakerphoneOn();
+        BluetoothScoOn = mAM.isBluetoothScoOn();
+        BluetoothA2dpOn = mAM.isBluetoothA2dpOn();
+        WiredHeadsetOn = mAM.isWiredHeadsetOn();
+        MusicActive = mAM.isMusicActive();
+        DswLog.d(TAG, "SpeakerphoneOn " + SpeakerphoneOn + " BluetoothScoOn " + BluetoothScoOn + " BluetoothA2dpOn " + BluetoothA2dpOn + " WiredHeadsetOn " + WiredHeadsetOn + " MusicActive " + MusicActive);
+        MicrophoneMute = mAM.isMicrophoneMute(); 
+        DswLog.d(TAG, "MicrophoneMute " + MicrophoneMute);
+
+        //if(!SpeakerphoneOn)
+        //    mAM.setSpeakerphoneOn(true);
     }
 
     void genTone() {
@@ -379,13 +396,29 @@ public class ReceiverTest2 extends BaseActivity implements OnClickListener {
         DswLog.d(TAG, "setMode AudioManager.MODE_IN_CALL");
         mAM.setMode(AudioManager.MODE_IN_CALL);
 
-        DswLog.d(TAG, "new AudioTrack");
+        DswLog.d(TAG, "new AudioTrack STREAM_VOICE_CALL");
         mAudioTrack = new AudioTrack(AudioManager.STREAM_VOICE_CALL, sampleRate, AudioFormat.CHANNEL_CONFIGURATION_MONO,
                 AudioFormat.ENCODING_PCM_16BIT, numSamples, AudioTrack.MODE_STATIC);
         //Gionee <GN_BSP_MMI> <chengq> <20170420> modify for ID 102000 begin
         mAudioTrack.write(generatedSnd, 0, generatedSnd.length);
         try {
             Thread.sleep(50);
+
+            mAudioMode = mAM.getMode();
+            DswLog.d(TAG, "getMode " + mAudioMode);
+
+            SpeakerphoneOn = mAM.isSpeakerphoneOn();
+            BluetoothScoOn = mAM.isBluetoothScoOn();
+            BluetoothA2dpOn = mAM.isBluetoothA2dpOn();
+            WiredHeadsetOn = mAM.isWiredHeadsetOn();
+            MusicActive = mAM.isMusicActive();
+            DswLog.d(TAG, "SpeakerphoneOn " + SpeakerphoneOn + " BluetoothScoOn " + BluetoothScoOn + " BluetoothA2dpOn " + BluetoothA2dpOn + " WiredHeadsetOn " + WiredHeadsetOn + " MusicActive " + MusicActive);
+            MicrophoneMute = mAM.isMicrophoneMute(); 
+            DswLog.d(TAG, "MicrophoneMute " + MicrophoneMute);
+
+            if(SpeakerphoneOn)
+                mAM.setSpeakerphoneOn(false);
+
             DswLog.d(TAG, "play");
             mAudioTrack.play();
         } catch (InterruptedException e) {

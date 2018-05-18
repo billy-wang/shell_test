@@ -43,6 +43,9 @@ public class EarphoneLoopbackTest extends BaseActivity implements OnClickListene
     private int mHifiState;
 
     private AudioManager mAM;
+    private int mAudioMode;
+    private boolean SpeakerphoneOn = false, MusicActive = false, WiredHeadsetOn = false, BluetoothScoOn = false,BluetoothA2dpOn = false, MicrophoneMute = false;
+
     //private RecordThread mRecThread = null;
     //Gionee zhangke 20151012 add for CR01567500 start
     private boolean mRecordThread = true;
@@ -299,6 +302,22 @@ public class EarphoneLoopbackTest extends BaseActivity implements OnClickListene
             TestUtils.openOrcloseHifi(this, true);
         }
 
+       mAudioMode = mAM.getMode();
+       DswLog.d(TAG, "getMode " + mAudioMode);
+
+       SpeakerphoneOn = mAM.isSpeakerphoneOn();
+       BluetoothScoOn = mAM.isBluetoothScoOn();
+       BluetoothA2dpOn = mAM.isBluetoothA2dpOn();
+       WiredHeadsetOn = mAM.isWiredHeadsetOn();
+       MusicActive = mAM.isMusicActive();
+       DswLog.d(TAG, "SpeakerphoneOn " + SpeakerphoneOn + " BluetoothScoOn " + BluetoothScoOn + " BluetoothA2dpOn " + BluetoothA2dpOn + " WiredHeadsetOn " + WiredHeadsetOn + " MusicActive " + MusicActive);
+       MicrophoneMute = mAM.isMicrophoneMute(); 
+       DswLog.d(TAG, "MicrophoneMute " + MicrophoneMute);
+
+       //if(!SpeakerphoneOn)
+       //   mAM.setSpeakerphoneOn(true);
+
+
     }
 
     @Override
@@ -318,6 +337,21 @@ public class EarphoneLoopbackTest extends BaseActivity implements OnClickListene
                         DswLog.w(TAG, "耳机按键，下发参数 :mmi_setParameters --> SET_LOOPBACK_TYPE=22,2,");
                         mAM.setParameters("SET_LOOPBACK_TYPE=22,2");
                     }
+
+                    mAudioMode = mAM.getMode();
+                    DswLog.d(TAG, "getMode " + mAudioMode);
+
+                    SpeakerphoneOn = mAM.isSpeakerphoneOn();
+                    BluetoothScoOn = mAM.isBluetoothScoOn();
+                    BluetoothA2dpOn = mAM.isBluetoothA2dpOn();
+                    WiredHeadsetOn = mAM.isWiredHeadsetOn();
+                    MusicActive = mAM.isMusicActive();
+                    DswLog.d(TAG, "SpeakerphoneOn " + SpeakerphoneOn + " BluetoothScoOn " + BluetoothScoOn + " BluetoothA2dpOn " + BluetoothA2dpOn + " WiredHeadsetOn " + WiredHeadsetOn + " MusicActive " + MusicActive);
+                    MicrophoneMute = mAM.isMicrophoneMute(); 
+                    DswLog.d(TAG, "MicrophoneMute " + MicrophoneMute);
+
+                    if(SpeakerphoneOn)
+                        mAM.setSpeakerphoneOn(false);
 
                     mTitleTv.setText(R.string.headsethook_press);
                     mRightBtn.setEnabled(true);

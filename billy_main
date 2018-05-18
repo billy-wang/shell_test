@@ -361,18 +361,18 @@ autommitest()
     	do
 		#if [ -z $2 ];then
 		printf "
-		1 key		: 	按键测试
-		2 spkdura	:	扬声器测试 
-		3 spkdyna	:	扬声器扫频
-		4 dura		:	听筒测试 
-		5 dyna		:	听筒扫频
-		6 ep2rc		:	耳麦到听筒
-		7 ep2sp		:	耳麦到扬声器
-		8 hs		:	耳机回路
-		9 al		: 	音频回路
-		0 am		:	副麦
-		a stop		:	退出	
-		b start		: 	开启mtklog
+        1 key		:   按键测试
+        2 spkdura	:   扬声器测试 
+        3 spkdyna	:   扬声器扫频
+        4 dura		:   听筒测试 
+        5 dyna		:   听筒扫频
+        6 ep2rc		:   耳麦到听筒
+        7 ep2sp		:   耳麦到扬声器
+        8 hs		:   耳机回路
+        9 al		:   音频回路 (主麦到无麦耳机)
+        0 am		:   副麦
+        a stop		:   退出	
+        b start		:   开启mtklog
 		"
 		local input=a
 		read -p "Enter your chose:" input echo $input
@@ -388,7 +388,7 @@ autommitest()
 			;;
 		2|spkdura)
 			echo "***** 扬声器测试 *****" 
-			adb shell am start -a com.gionee.autommi.sp -e dura
+			adb shell am start -a com.gionee.autommi.sp -e dura 3
 			echo "input any key stop"
 			read 
 			adb shell am start -a com.gionee.autommi.dumb
@@ -456,7 +456,7 @@ autommitest()
 			echo "***** 开启主MIC *****"
 			adb shell am start -a com.gionee.autommi.cmr -e state yes
 			sleep 1
-			echo "***** 音频回路 *****"
+            echo "***** 主麦到无麦耳机 *****"
 			adb shell am start -a com.gionee.autommi.al --ei level 5 
 			echo "input any key stop"
 			read 

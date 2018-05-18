@@ -34,6 +34,7 @@ import android.view.View.OnClickListener;
 
 public class FMTest extends BaseActivity implements OnClickListener {
 
+    private AudioManager mAM;
 
     private String TAG = "FMTest_billy";
     private Button mRightBtn, mWrongBtn, mRestartBtn,mToggleBtn;
@@ -67,9 +68,22 @@ public class FMTest extends BaseActivity implements OnClickListener {
                 ,"com.android.fmradio.FmMainActivity");
         Intent intent = new Intent();
         intent.putExtra("isFromMMI",true);
-        intent.putExtra("defaultHZ",875);
+        //intent.putExtra("defaultHZ",875);
+        intent.putExtra("defaultHZ",918);
         intent.setComponent(name);
         startActivity(intent);
+
+        mAM = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
+        int maxVol = mAM.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        int muscVol = mAM.getStreamVolume(AudioManager.STREAM_MUSIC);
+
+        if (muscVol==0){
+            mAM.setStreamVolume(AudioManager.STREAM_MUSIC, maxVol/2, 0);
+            DswLog.d(TAG, "maxVol = " + maxVol + " setStreamVolume[STREAM_MUSIC] = " + (maxVol/2));
+        }
+
+
     }
 
     @Override

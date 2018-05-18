@@ -194,6 +194,7 @@ public class ToneTest2 extends BaseActivity implements OnClickListener {
     }
 
     void playSound() {
+        DswLog.d(TAG, "new AudioTrack STREAM_MUSIC");
         mAudioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, sampleRate,
                 AudioFormat.CHANNEL_CONFIGURATION_MONO, AudioFormat.ENCODING_PCM_16BIT, numSamples,
                 AudioTrack.MODE_STATIC);//使用music流，默认从喇叭发出

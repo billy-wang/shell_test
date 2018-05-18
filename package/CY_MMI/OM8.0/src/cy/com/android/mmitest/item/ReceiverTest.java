@@ -32,6 +32,8 @@ public class ReceiverTest extends BaseActivity implements OnClickListener {
 
     private AudioManager mAM;
 
+    private int mAudioMode; 
+    private boolean SpeakerphoneOn = false, MusicActive = false, WiredHeadsetOn = false, BluetoothScoOn = false, BluetoothA2dpOn = false, MicrophoneMute = false;
     private static final String TAG = "ReceiverTest_billy";
 
     private boolean mIsToneOn;
@@ -125,7 +127,7 @@ public class ReceiverTest extends BaseActivity implements OnClickListener {
         //mAM.setMode(AudioManager.MODE_IN_COMMUNICATION);
         
 	    mAM.setStreamVolume(AudioManager.STREAM_VOICE_CALL, maxVol - i, 0);
-        DswLog.d(TAG, "maxVol = " + maxVol + " setStreamVolume = " + (maxVol - i));
+        DswLog.d(TAG, "maxVol = " + maxVol + " setStreamVolume[STREAM_VOICE_CALL] = " + (maxVol - i));
 
 
         final Thread thread = new Thread(new Runnable() {
@@ -150,6 +152,9 @@ public class ReceiverTest extends BaseActivity implements OnClickListener {
         //Gionee zhangxiaowei 20130905 modify for CR00880893 start
 
         if (null != mAudioTrack) {
+            MusicActive =mAM.isMusicActive();
+            DswLog.i(TAG, "MusicActive " + MusicActive);
+
             DswLog.i(TAG, "release AutioTrack");
             mAudioTrack.stop();
             mAudioTrack.release();
@@ -161,9 +166,23 @@ public class ReceiverTest extends BaseActivity implements OnClickListener {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+        mAudioMode = mAM.getMode();
+        DswLog.d(TAG, "getMode " + mAudioMode);
 
         DswLog.d(TAG, "A set mode  = mode normal ");
         mAM.setMode(AudioManager.MODE_NORMAL);
+
+        SpeakerphoneOn = mAM.isSpeakerphoneOn();
+        BluetoothScoOn = mAM.isBluetoothScoOn();
+        BluetoothA2dpOn = mAM.isBluetoothA2dpOn();
+        WiredHeadsetOn = mAM.isWiredHeadsetOn();
+        MusicActive = mAM.isMusicActive();
+        DswLog.d(TAG, "SpeakerphoneOn " + SpeakerphoneOn + " BluetoothScoOn " + BluetoothScoOn + " BluetoothA2dpOn " + BluetoothA2dpOn + " WiredHeadsetOn " + WiredHeadsetOn + " MusicActive " + MusicActive);
+        MicrophoneMute = mAM.isMicrophoneMute(); 
+        DswLog.d(TAG, "MicrophoneMute " + MicrophoneMute);
+
+        //if(!SpeakerphoneOn)
+        //    mAM.setSpeakerphoneOn(true);
 
     }
     //Gionee zhangxiaowei 20130905 modify for CR00880893 end
@@ -189,8 +208,13 @@ public class ReceiverTest extends BaseActivity implements OnClickListener {
 
     void playSound() {
         // Gionee xiaolin 20121017 modify for CR00715318 start
-	
+
+        mAudioMode = mAM.getMode();
+        DswLog.d(TAG, "getMode " + mAudioMode);
+
 	    /* add by Billy.Wang */
+        //DswLog.d(TAG, "setMode AudioManager.MODE_IN_COMMUNICATION");
+        //mAM.setMode(AudioManager.MODE_IN_COMMUNICATION);
         DswLog.d(TAG, "setMode AudioManager.MODE_IN_CALL");
         mAM.setMode(AudioManager.MODE_IN_CALL);
 
@@ -203,6 +227,21 @@ public class ReceiverTest extends BaseActivity implements OnClickListener {
         mAudioTrack.write(generatedSnd, 0, generatedSnd.length);
         try {
             Thread.sleep(50);
+            mAudioMode = mAM.getMode();
+            DswLog.d(TAG, "getMode " + mAudioMode);
+ 
+            SpeakerphoneOn = mAM.isSpeakerphoneOn();
+            BluetoothScoOn = mAM.isBluetoothScoOn();
+            BluetoothA2dpOn = mAM.isBluetoothA2dpOn();  
+            WiredHeadsetOn = mAM.isWiredHeadsetOn();   
+            MusicActive = mAM.isMusicActive();
+            DswLog.d(TAG, "SpeakerphoneOn " + SpeakerphoneOn + " BluetoothScoOn " + BluetoothScoOn + " BluetoothA2dpOn " + BluetoothA2dpOn + " WiredHeadsetOn " + WiredHeadsetOn + " MusicActive " + MusicActive);
+            MicrophoneMute = mAM.isMicrophoneMute(); 
+            DswLog.d(TAG, "MicrophoneMute " + MicrophoneMute);
+
+            if(SpeakerphoneOn)
+                mAM.setSpeakerphoneOn(false);
+
             DswLog.i(TAG, "playSound begin");
             mAudioTrack.play();
         } catch (InterruptedException e) {
