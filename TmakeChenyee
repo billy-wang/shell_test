@@ -1,0 +1,874 @@
+#!/bin/bash
+#
+#       DESCRIPTION:    make project 
+#
+#       SCRIPT NAME:    
+#
+#       Usage:   
+#                
+#
+#       Input:  stdin
+#
+#       Output: 
+#
+#       AUTHOR:         Ling Fen
+#
+#       EMAIL:          lingfen@chenyee.com
+#
+#       DATE:           2013-11-49
+#
+#       HISTORY:
+#       REVISOR         DATE                    MODIFICATION
+#       LingFen         2013-11-49              create
+usage(){
+local tools_name=$(basename $0)
+printf "
+Usage : ./${tools_name} [Options] GBW8901A01_A  Actions
+
+    Options:
+      -l, -listp    : List the available project.
+	  -h,  -help    : Print this message and exit.
+	  -t, -tee      : Print log information on the standard-out.
+	  #-q, -quiet    : Don't print log information on the standard-out.
+	  #-j [N], cpu [N]
+	  #              : Allow N jobs to compile at once,you must add a space between Options and [N].
+	  #-m [MODULE]   : Only compile the [MODULE], you must add a space between Options and [MODULE].
+	
+    Actions:
+        -n, --new             : Clean and perform a full build.
+        -r, --remake          : retry perform a build.
+        -a, --android         : do not update-api,only build android image.
+        -c, --copy_target     : copy target to release only.
+        -C, --copy_chenyee     : copy chenyee code to alps dir
+        -s, --sign            : sign image
+    Module:
+        -i, --image  <bootimage|systemimage|userdataimage|update-api|kernel|otapackage>
+            :Specify image to be build/re-build (bootimage|systemimage|userdataimage|recoveryimage).
+            :Specify module to be build/re-build (kernel|otapackage).
+
+    Project:
+        -p, --project  <packages/app/Email/> use mmma commad, check and build other dependency module
+            :Specif Project pathdir to be build
+        -P, --project  <packages/app/Email/> use mmm commad, no dependency module
+            :Specif Project pathdir to be build
+
+    编译rom项目,代码copy 顺序：
+        #编译接口代码存放位置
+        chenyee/alps_build                    #只有builder 才可以上传代码到这里
+
+        #驱动相关代码存放位置
+        chenyee/alps_drv                      #所有项目共用的代码
+        chenyee/project/\${project}           #某个项目共用的代码
+        chenyee/project/\${product}           #某个产品代码
+
+        #rom相关代码存放位置
+        chenyee/alps                          #所有项目共用的代码
+        chenyee/alps_oversea                  #所有海外项目共用的代码
+        chenyee/project/\${project}_alps      #某个项目共用的代码
+        chenyee/project/\${product}_alps      #某个产品代码
+
+    编译cta/platform项目,代码copy 顺序：
+        #编译接口代码存放位置
+        chenyee/alps_build                    #只有builder 才可以上传代码到这里
+
+        #驱动相关代码存放位置
+        chenyee/alps_drv                      #所有项目共用的代码
+        chenyee/project/\${project}           #某个项目共用的代码
+        chenyee/project/\${product}           #某个产品代码
+
+        #cta/platform 相关代码存放位置
+        chenyee/alps_cta or chenyee/alps_platform     #所有项目共用的代码
+        chenyee/project/\${product}_alps      #某个产品代码
+
+    编译stock原生项目,代码copy 顺序：
+        #编译接口代码存放位置
+        chenyee/alps_build                    #只有builder 才可以上传代码到这里
+
+        #驱动相关代码存放位置
+        chenyee/alps_drv                      #所有项目共用的代码
+        chenyee/project/\${project}           #某个项目共用的代码
+        chenyee/project/\${product}           #某个产品代码
+
+        #stock 相关代码存放位置
+        chenyee/alps_oversea_stock            #所有海外原生项目共用的代码
+        chenyee/project/\${project}_alps      #某个项目共用的代码
+        chenyee/project/\${product}_alps      #某个产品代码
+
+    Example:
+	  ./${tools_name} -l
+	                : 列出可编译的产品id
+
+	  ./${tools_name} [-v <user|eng|userdebug>] GBW8901A01_A <-n|--new>
+	                : 编译产品 GBW8901A01_A 的user or eng or userdebug 版本
+
+	  ./${tools_name} GBW8901A01_A -i <bootimage|systemimage|bootimage>
+	                : 编译产品GBW8901A01_A 的bootimage | systemimage | bootimage. 还可以是kernel,otapackage等模块
+
+	  ./${tools_name} GBW8901A01_A -p package/app/Email
+	                : 编译产品GBW8901A01_A的一个apk.还可是以framework.jar等project.
+
+"
+}
+
+error(){
+    local ret="$1";shift
+    local info="$@"
+    if [ "$ret" -ne 0 ];then
+        echo "Error $ret: $info" >&2
+        exit $ret
+    fi
+}
+
+get_opts(){
+
+    argv="$@"
+    #兼容服务器编译
+    local build_variant=$(expr match  "$argv" '-opt=TARGET_BUILD_VARIANT=\(\w*\)')
+    if [ "$build_variant" == "user" -o "$build_variant" == "userdebug" -o  "$build_variant" == "eng" ];then
+        echo "Is server built!"
+        IS_SERVER_BUILD=true
+        TARGET_BUILD_VARIANT=$build_variant
+        shift
+        echo $@
+    fi
+
+    opts=$(getopt -o cChi:kslnp:P:rqatv:S:f:m: --long copy_target,copy_chenyee,help,image:,key,sign,listp,new,project:,PROJECT:,remake,remake_billy,tee,target_build_variant:,clear_ccache,sonar:,file_script:,mp_status:,  -- "$@")     
+    if [ $? -ne 0 ];then
+        echo "***$? ***"
+        usage 
+        exit 1
+    fi
+
+    eval set -- "$opts"
+    while true 
+    do
+        case "$1" in 
+            -c|--copy_target)
+                COPY_TARGET=true
+                shift
+                ;;
+            -C|--copy_chenyee)
+                COPY_CHENYEE=true
+                shift
+                ;;
+            -i|--image)
+                MODULE=$2
+                shift 2
+                ;;
+            -n|--new)
+                ACTION=new
+                shift
+                ;;
+            -p|--project)
+                PROJECT_PATH=$2
+                shift 2
+                ;;
+            -P|--PROJECT)
+                PROJECT_PATH=$2
+                CMD_MMM=true 
+                shift 2
+                ;;
+            -r|--remake)
+                ACTION=remake
+                shift 
+                ;;
+            -q|--remake_billy)
+                ACTION=remake_billy
+                shift 
+                ;;
+            -a|--android)
+                ACTION=android
+                shift 
+                ;;
+            -v|--target_build_variant)
+                TARGET_BUILD_VARIANT=$2
+                shift 2
+                ;;
+            -t|--tee)
+                BUILD_TOOLS+=" --debug"
+                shift 
+                ;;
+            -l|--listp)
+                perl cy_project/listP.pl
+                shift 
+                exit 0
+                ;;
+            --clear_ccache)
+                export CY_CLEAN_CCACHE="true"
+                shift 
+                ;;
+            -k|--key)
+                ACTION=key
+                shift 
+                ;;
+            -s|--sign)
+                ACTION=sign
+                shift 
+                ;;
+            -S|--sonar)
+                ACTION=sonar
+                export CY_SONAR_CHECK_PATH="$2"
+                shift 2
+                ;;
+            -f|--file_script)
+                FILE_SCRIPT="$2"
+                shift 2
+                ;;
+            -m|--mp_status)
+                MP_STATUS="$2"
+                shift 2
+                ;;
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            --)
+                shift
+                break
+                ;;
+            *)
+                usage
+                exit 1
+                ;;
+        esac
+    done
+
+    if [ -z "$ACTION" -a -z "$MODULE" -a -z "$PROJECT_PATH" -a -z "$COPY_TARGET" -a -z "$COPY_CHENYEE" ];then
+        echo "Error 1: Specify action to be build/re-build"
+        usage
+        exit 1
+    fi
+
+    CHENYEEPRODUCTID=$@ 
+    if [ ! -e "cy_project/${CHENYEEPRODUCTID:0:7}/${CHENYEEPRODUCTID}.mk" ];then
+        echo "Error 2: *********** product file not exist! ***********"
+        exit 2
+    fi
+
+    
+    if  [ -n "$PROJECT_PATH" -a ! -d "${PROJECT_PATH%%:*}" ];then
+        echo "Error 3: ***********$PROJECT_PATH not exist ************"
+        exit 3
+    fi
+}
+
+export_variable_from(){
+    local file=$1
+    if [ -e "$file" ];then
+
+        #modify for CR01549696 begin
+        if [ "$TARGET_BUILD_VARIANT" != "user" ];then
+            export MTK_BUILD_ROOT=yes
+        else
+            sed -i '/MTK_BUILD_ROOT\s*=\s*yes/d' "$file"
+        fi
+        #modify for CR01549696 end
+
+        while read line
+        do
+            #去掉空行，'#'开头，含有':=',不含有'='的行
+            [ -z "$line" -o "${line:0:1}" == "#" ] && continue
+            [ -z "$(expr match "$line" '.*\(=\).*')" ] && continue
+            [ -n "$(expr match "$line" '.*\(:=\).*')" ] && continue
+            [ -n "$(expr match "$line" '.*\(+=\).*')" ] && continue
+            local key=$(echo ${line%=*})
+            local value=$(echo ${line#*=})
+            export "$key"="$value"
+        done < $file
+    else
+        echo "$file not exist"
+    fi
+}
+
+create_cy_cflags(){
+    local file="$1"
+    #CY_CFLAGS_CONFIG_FILE 必须绝对路径
+    CY_CFLAGS_CONFIG_FILE=$CY_BUILD_ROOT_DIR/cy_project/.cy_cflags_config
+    export CY_CFLAGS_CONFIG_FILE
+
+    CY_CFLAGS="CY_CFLAGS +="
+    CY_KBUILD_CFLAGS="CY_KBUILD_CFLAGS +="
+    if [ -f "$1" ];then 
+        mkdir -p $(dirname $CY_CFLAGS_CONFIG_FILE)
+        rm -rf $CY_CFLAGS_CONFIG_FILE
+        > $CY_CFLAGS_CONFIG_FILE
+        while read line
+        do
+            [ -z "$line" -o "${line:0:1}" == "#" ] && continue;
+            #约定 CONFIG CY_BSP CY_Q_BSP 开头的宏 为驱动配置宏
+            [ "${line:0:6}" != "CONFIG" -a "${line:0:6}" != "CY_BSP"  -a "${line:0:8}" != "CY_Q_BSP"  ] && continue
+            key=$(echo ${line%=*})
+            value=$(echo ${line#*=})
+            if [ "$value" == "n" -o "$value" == "no" ];then
+                :
+            elif [ "$value" == "y" -o "$value" == "yes" ];then 
+                CY_CFLAGS+=" -D$key" 
+                if [ "${line:0:6}" == "CONFIG" ];then
+                    echo "$key=y" >> $CY_CFLAGS_CONFIG_FILE
+                    CY_KBUILD_CFLAGS+=" -D$key"
+                fi
+            else 
+                CY_CFLAGS+=" -D$key=$value"
+            fi 
+        done < <(env)
+        echo $CY_CFLAGS >> $CY_CFLAGS_CONFIG_FILE
+        echo $CY_KBUILD_CFLAGS>> $CY_CFLAGS_CONFIG_FILE
+    fi 
+}
+
+prebuild(){
+
+    cy_project=$CHENYEEPRODUCTID
+    CHENYEEPROJECTID=${CHENYEEPRODUCTID:0:7}
+    export cy_project CHENYEEPRODUCTID CHENYEEPROJECTID 
+
+#Chenyee <taofapan> <20171110> add for replace img begin
+    CY_CUSTOM_IMG_RELEASED=release/${CHENYEEPROJECTID}_${TARGET_BUILD_VARIANT}_img_released
+    export CY_CUSTOM_IMG_RELEASED
+#Chenyee <taofapan> <20171110> add for replace img end
+
+    #FIXME: not a good way to obtian TARGET_PRODUCT
+    [ "${CHENYEEPRODUCTID:(-8):8}" == "platform" -o "${CHENYEEPRODUCTID:(-3):3}" == "CTA" -o "${CHENYEEPRODUCTID:(-4):4}" == "CMCC" -o "${CHENYEEPRODUCTID:(-2):2}" == "CT" ] && BUILD_OPTIONS="platform" 
+    export BUILD_OPTIONS
+    
+    #export product.mk begin
+    export_variable_from "cy_project/${CHENYEEPROJECTID}/${CHENYEEPROJECTID}_ROM_COMMON.mk"
+    export_variable_from "cy_project/${CHENYEEPROJECTID}/${CHENYEEPRODUCTID}.mk"
+    TARGET_PRODUCT=`grep  -w 'TARGET_PRODUCT' <(env) | sed 's/ //g' | grep '^TARGET_PRODUCT' | awk -F= '{print $2}'`
+    MTK_PLATFORM=`grep  -w 'MTK_PLATFORM' <(env) | sed 's/ //g' | grep '^MTK_PLATFORM' | awk -F= '{print $2}'`
+	 export TARGET_PRODUCT
+    #export product.mk end
+    create_cy_cflags "cy_project/${CHENYEEPROJECTID}/${CHENYEEPRODUCTID}.mk"
+
+    #Chenyee <CY_Builder> <zhouli> <20170924> modify it for 222653 begin
+    #Generation kernel Kconfig
+    echo "*** python cy_project/tools/cy_auto_gen_kconfig.py "cy_project/${CHENYEEPROJECTID}/${CHENYEEPRODUCTID}.mk" $CY_BUILD_ROOT_DIR ***"
+    python cy_project/tools/cy_auto_gen_kconfig.py "cy_project/${CHENYEEPROJECTID}/${CHENYEEPRODUCTID}.mk" $CY_BUILD_ROOT_DIR
+    #Chenyee <CY_Builder> <zhouli> <20170924> modify it for 222653 end
+
+    #export release version begine
+    [ ! -e "cy_project/${CHENYEEPROJECTID}_VerNumber" ] && echo "MINI_VER_NUMBER=T0001;">cy_project/${CHENYEEPROJECTID}_VerNumber
+    if ! $IS_SERVER_BUILD ;then
+        local line=$(head -n 1 cy_project/${CHENYEEPROJECTID}_VerNumber)
+        local number=$(expr  match "$line" "MINI_VER_NUMBER=T\([0-9]\+\)")
+        sed -i "/^MINI_VER_NUMBER/c\MINI_VER_NUMBER=T${number}_LOCAL;"  cy_project/${CHENYEEPROJECTID}_VerNumber
+    fi
+    . cy_project/${CHENYEEPROJECTID}_VerNumber
+    CY_ZNVERNUMBER=${CHENYEEPRODUCTID}_${MINI_VER_NUMBER}
+    export MINI_VER_NUMBER CY_ZNVERNUMBER 
+    #export release version end
+
+    #gn ro 
+    if [ "$CY_RO_PRODUCT_MODEL" == "" ];then
+        CY_RO_PRODUCT_MODEL=${CHENYEEPROJECTID}
+    fi
+    CY_INTERNAL_VER_NUMBER=${CHENYEEPRODUCTID}_V${MINI_VER_NUMBER:1:4}
+    CY_EXTERNAL_VER_NUMBER=${CY_RO_PRODUCT_MODEL}_$(echo ${CY_INTERNAL_VER_NUMBER}|cut -d '_' -f 2,3)
+    echo "CY_INTERNAL_VER_NUMBER=$CY_INTERNAL_VER_NUMBER"
+    echo "CY_EXTERNAL_VER_NUMBER=$CY_EXTERNAL_VER_NUMBER"
+    export  CY_INTERNAL_VER_NUMBER CY_EXTERNAL_VER_NUMBER
+
+
+    mkdir -p $LOGPATH
+}
+
+replece_sign_key(){
+    if [ "${BUILD_OPTIONS}" == "platform" -o "${TARGET_BUILD_VARIANT}" != "user" ];then
+        echo "BUILD_OPTIONS=${BUILD_OPTIONS}"
+        echo "TARGET_BUILD_VARIANT=${TARGET_BUILD_VARIANT}"
+    else
+        CY_SIGN_KEY_FOLDER="$HOME/singkey/cykey"
+        if [ "${CY_CUSTOM_SIGN_KEY}" != "" ];then
+            CY_SIGN_KEY_FOLDER="$HOME/singkey/${CY_CUSTOM_SIGN_KEY}"
+        fi
+        if [ -d "${CY_SIGN_KEY_FOLDER}" ];then
+            cp -f ${CY_SIGN_KEY_FOLDER}/* "build/make/target/product/security"
+            echo "copy $CY_SIGN_KEY_FOLDER to  build/make/target/product/security"
+            cp -f ${CY_SIGN_KEY_FOLDER}/* "device/mediatek/security"
+            echo "copy $CY_SIGN_KEY_FOLDER to  device/mediatek/security"
+        else
+            echo "NO ${CY_SIGN_KEY_FOLDER}"
+        fi 
+    fi
+}
+
+get_chenyee_code(){
+    local vendor=$1
+    local version=$2
+    #copy chenyee dir code to alps 
+    bash cy_project/tools/cy_prebuild.sh $vendor $version
+	replece_sign_key
+
+	#Chenyee sunll 2015-01-21 modify MTK_BUILD_VERNO=${CY_ZNVERNUMBER} begin
+    CY_TARGET_PRODUCT_DIR=$(cat <(env) | grep "^\s*TARGET_PRODUCT\s*=" | sed 's/.*\s*=\s*full_//g')
+    CY_PRODUCT_FILE=device/mediateksample/${CY_TARGET_PRODUCT_DIR}/ProjectConfig.mk    
+    sed -i "s/^\s*MTK_BUILD_VERNO\s*=\s*.*/MTK_BUILD_VERNO=${CY_ZNVERNUMBER}/"  ${CY_PRODUCT_FILE}
+    echo 'MTK_BUILD_VERNO='$(cat ${CY_PRODUCT_FILE} | grep "^\s*MTK_BUILD_VERNO" | sed 's/.*\s*=\s*//g')
+    #Chenyee sunll 2015-01-21 modify MTK_BUILD_VERNO=${CY_ZNVERNUMBER} end
+}
+
+set_kernel_config(){
+    #函数中未定义的变量都来源于export_variable_from中的export
+    if [ "$TARGET_BUILD_VARIANT" == "eng" -a -f "$CY_KERNEL_CFG_FILE_ENG" ];then
+        CY_KERNEL_CFG_FILE=$CY_KERNEL_CFG_FILE_ENG
+    fi
+
+    #Chenyee <BY_BSP_CHG> <zhouli> <20170106> add for CSW1705A-423 begin
+    if [ "$TARGET_BUILD_VARIANT" != "user" ];then
+        export CONFIG_I2C_CHARDEV=yes
+    fi
+    #Chenyee <BY_BSP_CHG> <zhouli> <20170106> add for CSW1705A-423 end
+
+    #echo $CY_KERNEL_CFG_FILE
+
+    if [ -f "$CY_KERNEL_CFG_FILE" ];then
+        echo "*** kernel config file: $CY_KERNEL_CFG_FILE ****"
+        while read line
+        do
+            [ -z "$line" -o "${line:0:1}" == "#" ] && continue
+            local key=$(echo ${line%=*})
+            local value=$(echo ${line#*=})
+            [ -z "$key" -o -z "$value" ] && continue
+
+            if ! `echo "$key" | grep -q "^CONFIG"`;then
+                continue
+            fi
+
+            #echo $line
+
+            if [ "$value" == "n" -o "$value" == "no" ];then
+                if `grep -qw "$key" $CY_KERNEL_CFG_FILE` ;then
+                    sed -i "/\<$key\>/c\# $key is not set" $CY_KERNEL_CFG_FILE
+                else
+                    echo "# $key is not set" >> $CY_KERNEL_CFG_FILE
+                fi
+
+            elif [ "$value" == "y" -o "$value" == "yes" ];then
+                if `grep -qw "$key" $CY_KERNEL_CFG_FILE` ;then
+                    sed -i "/\<$key\>/c\\$key=y" $CY_KERNEL_CFG_FILE
+                else
+                    echo "$key=y" >> $CY_KERNEL_CFG_FILE
+                fi
+
+            else
+                if `grep -qw "$key" $CY_KERNEL_CFG_FILE` ;then
+                    sed -i "/\<$key\>/c\\$key=$value" $CY_KERNEL_CFG_FILE
+                else
+                    echo "$key=$value" >> $CY_KERNEL_CFG_FILE
+                fi
+            fi
+        done < <(env)
+    else
+        echo "kernel config file: $CY_KERNEL_CFG_FILE not exist"
+    fi
+}
+
+get_release_version(){
+    #函数中未定义的变量都来源于export_variable_from中的export
+    CY_RELEASE_DIR="release/$CY_ZNVERNUMBER"
+    CY_RELEASE_OTA_DIR_ROOT=${CY_RELEASE_DIR}_OTA
+    CY_RELEASE_OTA_TMP_DIR=${CY_RELEASE_OTA_DIR_ROOT}/tmp
+    CY_RELEASE_OTA_DIR=${CY_RELEASE_OTA_DIR_ROOT}/ota
+    CY_RELEASE_MODEM_DIR="$CY_RELEASE_DIR/bp_image"
+}
+
+create_product_for_flash_tool(){
+    if [ -e "./cy_project/tools/cy_output_product_info.sh" ];then
+        bash ./cy_project/tools/cy_output_product_info.sh ${CHENYEEPRODUCTID} ${CY_RELEASE_DIR}
+    fi
+}
+
+# Chenyee <CY_BSP_OTA_SECUREBOOT> <goudaqiang> <20170605> add for 151694 begin
+copy_signed_img_to_dir(){
+    echo "CHENYEE Copy_signed_img_to_dir"
+    mkdir -p ./backup_img/
+
+    cp -f release/${CY_ZNVERNUMBER}_noota/sec_boot_sig_dir/boot-verified.img ./backup_img/
+    cp -f release/${CY_ZNVERNUMBER}_noota/sec_boot_sig_dir/recovery-verified.img ./backup_img/
+    cp -f release/${CY_ZNVERNUMBER}_noota/sec_boot_sig_dir/trustzone.bin ./backup_img/
+}
+# Chenyee <CY_BSP_OTA_SECUREBOOT> <goudaqiang> <20170605> add for 151694 end
+
+copy_results_to_release(){
+    [ -d "$CY_RELEASE_DIR" ] && rm -rf $CY_RELEASE_DIR
+    mkdir -p $CY_RELEASE_DIR
+
+    PRODUCT_OUT_ROOT="out/target/product"
+    CY_TARGET_PRODUCT=${TARGET_PRODUCT/full_}
+    TARGET_PRODUCT_OUT_ROOT="$PRODUCT_OUT_ROOT/${CY_TARGET_PRODUCT}"
+
+    #lihuafang modify begin
+    if [ -d "${TARGET_PRODUCT_OUT_ROOT}" ];then
+        cp -f ${TARGET_PRODUCT_OUT_ROOT}/*.img $CY_RELEASE_DIR/;
+        cp -f ${TARGET_PRODUCT_OUT_ROOT}/*.bin $CY_RELEASE_DIR/;
+        cp -f ${TARGET_PRODUCT_OUT_ROOT}/*.mbn $CY_RELEASE_DIR/;
+        cp -f ${TARGET_PRODUCT_OUT_ROOT}/*.txt $CY_RELEASE_DIR/;
+        cp -f ${TARGET_PRODUCT_OUT_ROOT}/EBR1 $CY_RELEASE_DIR/;
+        cp -f ${TARGET_PRODUCT_OUT_ROOT}/EBR2 $CY_RELEASE_DIR/;
+        cp -f ${TARGET_PRODUCT_OUT_ROOT}/MBR $CY_RELEASE_DIR/;
+	 #Chenyee <CY_BSP_EFUSE> <chendonghai> <20180507> add for freeme copy config begin
+        cp -f ${TARGET_PRODUCT_OUT_ROOT}/freeme_build.cfg $CY_RELEASE_DIR/;
+        cp -f ${TARGET_PRODUCT_OUT_ROOT}/system_image_info.txt $CY_RELEASE_DIR/;
+        cp -f ${TARGET_PRODUCT_OUT_ROOT}/*_tiny.zip $CY_RELEASE_DIR/;
+        #Chenyee <CY_BSP_EFUSE> <chendonghai> <20180507> add for freeme copy config end
+        rm $CY_RELEASE_DIR/preloader.bin
+        rm $CY_RELEASE_DIR/preloader.img
+    else
+        echo "Wanning: ${TARGET_PRODUCT_OUT_ROOT} does no exist"
+    fi
+    #lihuafang modify end
+# Chenyee <CY_BSP_OTA_SECUREBOOT> <goudaqiang> <20170605> add for 151694 begin
+    if [ -d "release/${CY_ZNVERNUMBER}_noota" ];then
+        cp -f release/${CY_ZNVERNUMBER}_noota/boot.img $CY_RELEASE_DIR/
+        cp -f release/${CY_ZNVERNUMBER}_noota/recovery.img $CY_RELEASE_DIR/
+        cp -f release/${CY_ZNVERNUMBER}_noota/trustzone.bin $CY_RELEASE_DIR/
+        rm $CY_RELEASE_DIR/boot-verified.img
+        rm $CY_RELEASE_DIR/recovery-verified.img
+        rm -rf ./backup_img/
+	echo "Chenyee rm boot-verified.img and recovery-verified.img"
+    else
+	echo "Chenyee Deafult KEY"
+    fi
+# Chenyee <CY_BSP_OTA_SECUREBOOT> <goudaqiang> <20170605> add for 151694 begin
+    #chenyee, chuqf, for tee raw imgs, begin
+    cp -f ${TARGET_PRODUCT_OUT_ROOT}/trustzone/bin/*pad\.img $CY_RELEASE_DIR/
+    if [ -f $CY_RELEASE_DIR/mt6735_microtrust_release_pad.img ];then
+        cp $CY_RELEASE_DIR/mt6735_microtrust_release_pad.img $CY_RELEASE_DIR/mt6735_tee_microtrust_release_pad.img
+        mkdir $CY_RELEASE_DIR/cy_secure_boot_configs
+	echo "0x1900000" > $CY_RELEASE_DIR/cy_secure_boot_configs/SECURE_DRAM_SIZE_CFG.ini
+    fi
+    if [ -f $CY_RELEASE_DIR/mt6735_microtrust_debug_pad.img ];then
+        cp $CY_RELEASE_DIR/mt6735_microtrust_debug_pad.img $CY_RELEASE_DIR/mt6735_tee_microtrust_release_pad.img
+        mkdir $CY_RELEASE_DIR/cy_secure_boot_configs
+	echo "0x1900000" > $CY_RELEASE_DIR/cy_secure_boot_configs/SECURE_DRAM_SIZE_CFG.ini
+    fi
+    #chenyee, chuqf, for tee raw imgs, end
+
+    #copy DbgInfo file
+    local dbginfo_file=$(find $TARGET_PRODUCT_OUT_ROOT/obj/ETC -type f -name "DbgInfo*" 2>/dev/null )
+    if [ -f "$dbginfo_file"  ];then
+        cp -r $dbginfo_file $CY_RELEASE_DIR/
+    fi
+
+    #copy BPLGUInfo file
+    local bplguinfo_file=$(find $TARGET_PRODUCT_OUT_ROOT/obj/ETC -type f -name "BPLGUInfo*" 2>/dev/null )
+    for eachbplgui in $bplguinfo_file
+    do
+      if [ -f "$eachbplgui"  ];then
+        cp -r $eachbplgui $CY_RELEASE_DIR/
+      fi
+    done
+
+    #copy MDDB file
+    local bpl_file=$(find $TARGET_PRODUCT_OUT_ROOT/obj/ETC -type f -name "MDDB_*" 2>/dev/null )
+    if [ -f "$bpl_file"  ];then
+        cp -r $bpl_file $CY_RELEASE_DIR/
+    fi
+
+    #copy modem files
+    find $TARGET_PRODUCT_OUT_ROOT/obj -type f -name "APDB*" -exec cp \{} $CY_RELEASE_DIR \;
+    find $TARGET_PRODUCT_OUT_ROOT/system/etc/mddb -type f -name "BP*" -exec cp \{} $CY_RELEASE_DIR \;
+
+    #copy symbols to cy_backup
+    if [ -d "$TARGET_PRODUCT_OUT_ROOT/symbols" ];then
+        mkdir -p $PRODUCT_OUT_ROOT/chenyee_backup/
+        rsync -avq "$TARGET_PRODUCT_OUT_ROOT/symbols" "$PRODUCT_OUT_ROOT/chenyee_backup/"
+        find $TARGET_PRODUCT_OUT_ROOT -type f -name "*.elf" |cpio -dup --quiet $PRODUCT_OUT_ROOT/chenyee_backup 
+        find $TARGET_PRODUCT_OUT_ROOT/obj/BOOTLOADER_OBJ -type f -name "lk" | cpio -dup --quiet $PRODUCT_OUT_ROOT/chenyee_backup
+        find $TARGET_PRODUCT_OUT_ROOT/obj -type f -name "System.map" | cpio -dup --quiet $PRODUCT_OUT_ROOT/chenyee_backup 
+
+        #lk 
+        cp -r $TARGET_PRODUCT_OUT_ROOT/obj/BOOTLOADER_OBJ/build-*/lk   "$PRODUCT_OUT_ROOT/chenyee_backup/" 2>/dev/null
+    fi
+    
+    #copy vmlinux for debug
+    if [ -f "$TARGET_PRODUCT_OUT_ROOT/obj/KERNEL_OBJ/vmlinux" ];then
+        cp "$TARGET_PRODUCT_OUT_ROOT/obj/KERNEL_OBJ/vmlinux" "$CY_RELEASE_DIR"
+    fi
+
+    #copy qcn
+    if [ -f "./chenyee/project/${CHENYEEPRODUCTID}/${CHENYEEPRODUCTID}.qcn" ];then
+       cp "./chenyee/project/${CHENYEEPRODUCTID}/${CHENYEEPRODUCTID}.qcn" "$CY_RELEASE_DIR"
+    fi
+
+    #chenyee, chuqf, for fat.img, begin 
+    if [[ -e cy_project/tools/gen_fat.sh ]]; then
+        chmod +x cy_project/tools/gen_fat.sh
+        ./cy_project/tools/gen_fat.sh ${MTK_PLATFORM} ${CHENYEEPRODUCTID} ${CY_TARGET_PRODUCT} ${TARGET_PRODUCT_OUT_ROOT}
+    fi
+    #chenyee, chuqf, for fat.img, end
+
+    create_product_for_flash_tool
+
+    local ota_zip=$(find ${TARGET_PRODUCT_OUT_ROOT}/ -maxdepth 1 -type f -name ${TARGET_PRODUCT}-ota-*.zip | sort -r | head -n 1  2>/dev/null)
+    local ota_tmp_zip=$(find ${TARGET_PRODUCT_OUT_ROOT}/obj/PACKAGING/target_files_intermediates/ \
+        -maxdepth 1 -type f -name ${TARGET_PRODUCT}-target_files-*.zip | sort -r | head -n 1 2>/dev/null)
+    if [ -f "$ota_zip" ];then
+        rm -rf $CY_RELEASE_OTA_DIR_ROOT
+        mkdir -p $CY_RELEASE_OTA_TMP_DIR
+        mkdir -p $CY_RELEASE_OTA_DIR
+        cp -r $ota_zip $CY_RELEASE_OTA_DIR/${CHENYEEPRODUCTID}_update_${CY_RO_BUILD_DISPLAY_ID}_${MINI_VER_NUMBER}.zip
+        local ota_md5=$(md5sum $CY_RELEASE_OTA_DIR/${CHENYEEPRODUCTID}_update_${CY_RO_BUILD_DISPLAY_ID}_${MINI_VER_NUMBER}.zip |awk '{print $1}')
+        echo "${CHENYEEPRODUCTID}_update_${CY_RO_BUILD_DISPLAY_ID}_${MINI_VER_NUMBER}.zip=$ota_md5" > $CY_RELEASE_OTA_DIR/${CHENYEEPRODUCTID}_${MINI_VER_NUMBER}.md5
+        cp -r $ota_tmp_zip $CY_RELEASE_OTA_TMP_DIR/${CHENYEEPRODUCTID}_update_${CY_RO_BUILD_DISPLAY_ID}_${MINI_VER_NUMBER}_tmp.zip
+#Chenyee <CY_3rd> <lucy> <20180306> for CSW1703MX-9 beign
+        if [ "${ADUPS_FOTA_SUPPORT}" == "yes" ];then
+            if [ "${ADUPS_FOTA_SIGINATURE}" == "yes" ];then
+                mkdir -p ${CY_RELEASE_OTA_DIR_ROOT}/3rd
+                cp -f ${TARGET_PRODUCT_OUT_ROOT}/target_files-package.zip ${CY_RELEASE_OTA_DIR_ROOT}/3rd/;
+            else
+                cp -f ${TARGET_PRODUCT_OUT_ROOT}/target_files-package.zip $CY_RELEASE_OTA_DIR/;
+            fi           
+        fi
+#Chenyee <CY_3rd> <lucy> <20180306> for CSW1703MX-9 end
+    fi
+    if [ ! -e "$TARGET_PRODUCT_OUT_ROOT/system.img" ];then
+        echo "你的编译结果不完全，请查看是否编译成功。"
+        error 1 "copy results to release"
+    fi
+
+    if [ -f cy_project/tools/verified_boot_tools/GenEfuseImg.py ];then
+        chmod +x cy_project/tools/verified_boot_tools/GenEfuseImg.py
+	./cy_project/tools/verified_boot_tools/GenEfuseImg.py $CY_RELEASE_DIR
+    fi
+
+#Chenyee <taofapan> <20171110> add for replace img begin
+    if [ "${CY_BUILD_WITH_CHENYEE_RELEASED}" == "yes" ];then
+        rm -rf release/${CHENYEEPROJECTID}_user_img_released
+        rm -rf release/${CHENYEEPROJECTID}_userdebug_img_released
+        rm -rf release/${CHENYEEPROJECTID}_eng_img_released
+    fi
+#Chenyee <taofapan> <20171110> add for replace img end
+}
+
+build_clean(){
+    echo "*** $BUILD_TOOLS --build_variant $TARGET_BUILD_VARIANT --clean_build $TARGET_PRODUCT --log_file $LOGPATH/$TARGET_PRODUCT-clean ***"
+    $BUILD_TOOLS --build_variant $TARGET_BUILD_VARIANT --clean_build $TARGET_PRODUCT --log_file $LOGPATH/$TARGET_PRODUCT-clean
+    error "$?" "*********** build_clean *************"
+}
+
+build_update_api(){
+    echo "*** $BUILD_TOOLS  --build_variant $TARGET_BUILD_VARIANT --update-api $TARGET_PRODUCT --log_file $LOGPATH/$TARGET_PRODUCT-update-api***"
+    $BUILD_TOOLS  --build_variant $TARGET_BUILD_VARIANT --update-api $TARGET_PRODUCT --log_file $LOGPATH/$TARGET_PRODUCT-update-api
+    error "$?" "*********** build_update_api ************"
+}
+
+# Chenyee <CY_BSP_OTA_SECUREBOOT> <goudaqiang> <20170605> add for 151694 begin
+build_module(){
+    local image=$1
+    set_kernel_config
+    if `echo  "systemimage bootimage userdataimage" | grep -qw "$image" `;then
+        $BUILD_TOOLS --build_variant $TARGET_BUILD_VARIANT --image $image  $TARGET_PRODUCT --log_file $LOGPATH/$TARGET_PRODUCT-$image  
+    else
+	if [ "$image" == "otapackage" ];then
+	    if [ -d "release/${CY_ZNVERNUMBER}_noota" ];then
+            	copy_signed_img_to_dir
+	    else
+		echo "Chenyee Deafult OTA KEY"
+	    fi
+        fi
+        $BUILD_TOOLS --build_variant $TARGET_BUILD_VARIANT --module $image  $TARGET_PRODUCT --log_file $LOGPATH/$TARGET_PRODUCT-$image  --debug
+    fi
+    error "$?" "************ build_$image ************"
+}
+# Chenyee <CY_BSP_OTA_SECUREBOOT> <goudaqiang> <20170605> add for 151694 end
+
+build_android(){
+    echo "*** $BUILD_TOOLS --build_variant $TARGET_BUILD_VARIANT --android_build $TARGET_PRODUCT --log_file $LOGPATH/$TARGET_PRODUCT-android"
+    $BUILD_TOOLS --build_variant $TARGET_BUILD_VARIANT --android_build $TARGET_PRODUCT --log_file $LOGPATH/$TARGET_PRODUCT-android
+    error "$?" "************ build_android ************"
+}
+
+config_verified_boot(){
+    echo "set verified boot"
+    chmod +x cy_project/tools/verified_boot_tools/cfg_vb.py
+    ./cy_project/tools/verified_boot_tools/cfg_vb.py "cy_project/${CHENYEEPROJECTID}/${CHENYEEPRODUCTID}.mk"
+    echo "cy_project/${CHENYEEPROJECTID}/${CHENYEEPRODUCTID}.mk"
+}
+
+download_modem(){
+    local cy_modem_config_file="modem_config/${CY_MODEM_CONFIG}"
+    if [ -f "$cy_modem_config_file"  ];then
+        echo "*** python cy_project/tools/lf_download_modem.py $cy_modem_config_file ***"
+        python cy_project/tools/lf_download_modem.py $cy_modem_config_file
+        error "$?" "************ download_modem ************"
+    fi
+}
+
+build_copy_cy_code(){
+    echo "****** build_copy_cy_code ****"
+    get_chenyee_code "mtk" "7.0"
+    download_modem 
+    set_kernel_config
+    #chenyee yangcuntao 2015-05-11 add
+    . cy_project/tools/cy_oversea_locales.sh
+    
+    if [ "${FILE_SCRIPT}" != "" ];then
+        . cy_project/tools/debug/${FILE_SCRIPT}
+    else
+        if [ "${MP_STATUS}" == "dev" -a "${TARGET_BUILD_VARIANT}" == "user" ];then
+            . cy_project/tools/debug/devlog
+        fi
+    fi
+}
+
+build_copy_target(){
+    get_release_version 
+    copy_results_to_release
+    error "$?" "*********** build_copy_target **********"
+}
+
+build_remake(){
+    echo "*** build_remake ***"
+    config_verified_boot
+    build_update_api
+    build_android
+    build_copy_target
+}
+
+build_remake_billy(){
+    #config_verified_boot
+    #build_update_api
+    build_android
+    #build_copy_target
+}
+
+create_check_list(){
+    if $IS_SERVER_BUILD ;then
+        echo "*** create_check_list $IS_SERVER_BUILD ***"
+        echo "python cy_project/tools/cy_create_tags.py -d chenyee/alps/ -P $CHENYEEPRODUCTID -o out "
+        python cy_project/tools/cy_create_tags.py -d chenyee/alps/ -P $CHENYEEPRODUCTID -o out
+    fi
+}
+
+#Chenyee <CY_BSP_SYS> <liuxinhua> <20180504> add for CSW1703KR-63 begin
+release_kernel_binary(){
+    if [ "${CY_BUILD_WITH_CHENYEE_KERNEL_RELEASED}" == "yes" ];then
+        python cy_project/tools/cy_release_kernel_binary.py cy_project/${CHENYEEPROJECTID}/${CHENYEEPRODUCTID}.mk
+    fi
+}
+
+build_new(){
+    build_clean
+    build_copy_cy_code
+    build_remake
+    create_check_list
+    release_kernel_binary
+}
+#Chenyee <CY_BSP_SYSTEM> <liuxinhua> <20180504> add for CSW1703KR-63 end
+
+build_key(){
+    echo "${MTK_PLATFORM} ${CHENYEEPRODUCTID}"
+    ./cy_project/tools/verified_boot_tools/gen_vb_keys.py -o release/
+}
+
+build_sign(){
+    build_copy_target
+    ./cy_project/tools/verified_boot_tools/vb_sign.py -k cy_project/tools/verified_boot_tools/prik/ -c cy_project/tools/verified_boot_tools/configs/ -s $CY_RELEASE_DIR -d release/img_signed/
+}
+
+build_project(){
+    local project_path=$1
+    if [ "$CMD_MMM" = "true" ]; then
+        $BUILD_TOOLS --build_variant $TARGET_BUILD_VARIANT --PROJECT $project_path $TARGET_PRODUCT  --log_file $LOGPATH/$TARGET_PRODUCT-mmm
+    else
+        $BUILD_TOOLS --build_variant $TARGET_BUILD_VARIANT --project $project_path $TARGET_PRODUCT  --log_file $LOGPATH/$TARGET_PRODUCT-mmma
+    fi
+    error "$?" "*********** build_project ************"
+}
+
+build_sonar(){
+    build_project "$CY_SONAR_CHECK_PATH"
+    local apk_sonar=$(find cy_project/tools/ant -maxdepth 1 -mindepth 1 -type d)
+    > $LOGPATH/build_sonar.log
+    for dir in $apk_sonar
+    do
+        if [ -f "$dir/build.xml" ];then
+            ant -buildfile $dir/build.xml sonar | tee -a  $LOGPATH/build_sonar.log
+            error "$?" "*********** sonar check $CY_SONAR_CHECK_PATH ************"
+            rm -rf $dir
+        fi
+    done
+}
+
+check_external_iw_version_sh(){
+    modifyFile=external/iw/version.sh
+    oldmd5="0ceb0c1cd79b2f7f10d12b15ccd066f4"
+    sumvar=`md5sum ${modifyFile}`
+    sumvar=${sumvar%% *}
+    echo $sumvar
+
+    if [[ ${sumvar} == ${oldmd5} ]];then
+        sed -i "6,20d" ${modifyFile}
+        sed -i "6i #Chenyee deleted 6 to 20 line for build" ${modifyFile}
+        echo "`echo $(basename $0)` modify external/iw/version.sh and go to building"
+    else
+        if `grep -qw "#Chenyee deleted 6 to 20 line for build" ${modifyFile}` ;then
+            echo "`echo $(basename $0)` Check external/iw/version.sh PASS, go to building"
+        else
+            echo "`echo $(basename $0)` external/iw/version.sh file changed, you have to update the MD5 value \"$oldmd5\" with $sumvar in this function"
+            exit 0
+        fi
+    fi
+}
+
+main(){
+   get_opts "$@" 
+   prebuild
+
+   #copy chenyee code
+   if [ -n "$COPY_CHENYEE" ];then
+       echo "copy chenyee code"
+       build_copy_cy_code
+   fi
+
+   if [ -n "$ACTION" ];then
+       echo "********* build $ACTION *********"
+       build_$ACTION
+   fi
+
+   if [ -n "$MODULE" ];then
+       echo "********* build $MODULE*********"
+       if [ "$MODULE" != "bootimage" ];then
+           config_verified_boot
+       fi
+       build_module $MODULE
+   fi
+
+   if [ -d "${PROJECT_PATH%%:*}" ];then
+       echo "********* build $PROJECT_PATH *********"
+       build_project $PROJECT_PATH
+   fi
+
+   if [ -n "$COPY_TARGET" -o "$MODULE" == "otapackage" ];then
+       echo "********* build copy target *********"
+       build_copy_target
+   fi
+#Chenyee <CY_BSP_EFUSE> <chendonghai> modify out dir efuse download to false begin
+   PRODUCT_OUT_ROOT="out/target/product"
+   CY_TARGET_PRODUCT=${TARGET_PRODUCT/full_}
+   TARGET_PRODUCT_OUT_ROOT="$PRODUCT_OUT_ROOT/${CY_TARGET_PRODUCT}"
+   if [ -f cy_project/tools/verified_boot_tools/GenEfuseImg.py ];then
+        chmod +x cy_project/tools/verified_boot_tools/GenEfuseImg.py
+	./cy_project/tools/verified_boot_tools/GenEfuseImg.py $TARGET_PRODUCT_OUT_ROOT
+   fi
+#Chenyee <CY_BSP_EFUSE> <chendonghai> modify out dir efuse download to false end
+}
+
+#check external/iw/version.sh before build
+check_external_iw_version_sh
+
+OPTS=""
+MODULE=""
+ACTION=""
+IS_SERVER_BUILD=false
+SHOWLOG=false
+#CY_BUILD_ROOT_DIR=$(cd `dirname $0`; pwd)
+CY_BUILD_ROOT_DIR=$(pwd)
+export CY_BUILD_ROOT_DIR
+GN_BUILD_ROOT_DIR=$CY_BUILD_ROOT_DIR
+export GN_BUILD_ROOT_DIR
+TARGET_BUILD_VARIANT="eng"
+BUILD_TOOLS="$CY_BUILD_ROOT_DIR/build.sh --setup_ccache=true"
+LOGPATH="BUILDING_LOG"
+main "$@"

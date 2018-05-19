@@ -1,0 +1,17 @@
+#<The first way to do not proguard  fpc package>
+#-dontwarn com.gionee.fingerprint.**
+#-keep class com.gionee.fingerprint.** { *;}
+
+
+-dontwarn com.fingerprints.service.*
+-dontwarn com.android.fmradio.IFmRadioService
+-dontwarn com.gionee.autommi.FMTest 
+-dontwarn com.gionee.autommi.composition.MagFmTest
+-dontwarn com.gionee.autommi.WChatKeyTest
+
+-keep class com.fingerprints.service.** { *;}
+-keep class com.android.fmradio.IFmRadioService { *;}
+-keep class com.gionee.autommi.FMTest { *;}
+-keep class com.gionee.autommi.composition.MagFmTest { *;}
+-keep class com.gionee.autommi.WChatKeyTest { *;}
+

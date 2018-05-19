@@ -1,0 +1,16 @@
+#<The first way to do not proguard  fpc package>
+#-dontwarn com.gionee.fingerprint.**
+#-keep class com.gionee.fingerprint.** { *;}
+
+-dontwarn com.caf.fmradio.**
+-dontwarn com.fingerprints.service.*
+-dontwarn com.qualcomm.qcnvitems.QcNvItems.*
+-dontwarn com.qualcomm.qcrilhook.QcRilHookCallback.*
+-dontwarn android.hardware.fingerprint.IGnFingerprintServiceReceiver.*
+
+-keep class com.fingerprints.service.** { *;}
+-keep class com.caf.fmradio.** { *;}
+-keep class gn.com.android.mmitest.item.SoftWareVersion { *;}
+-keep class com.qualcomm.qcnvitems.QcNvItems { *;}  
+-keep class com.qualcomm.qcrilhook.QcRilHookCallback { *;}
+-keep class android.hardware.fingerprint.IGnFingerprintServiceReceiver { *;}

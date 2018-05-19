@@ -373,6 +373,7 @@ autommitest()
         0 am		:   副麦
         a stop		:   退出	
         b start		:   开启mtklog
+        f fm		:   开启FM
 		"
 		local input=a
 		read -p "Enter your chose:" input echo $input
@@ -488,6 +489,14 @@ autommitest()
 			adb shell "am broadcast -a com.mediatek.mtklogger.ADB_CMD -e cmd_name start --ei cmd_target 1" >/dev/null 2>&1
 			#exit 0
 			;;
+        f|fm)
+            echo "**** FM 测试 *****"
+            adb shell am start -a com.gionee.autommi.fm  -e fm 91.8
+                        echo "input any key stop"
+            read
+            adb shell am start -a com.gionee.autommi.dumb
+            #exit 0
+            ;;
 		*)
 			usage
 			exit 1
@@ -778,17 +787,18 @@ build_mtk_android()
 {
     local_dir=$PWD
     #echo $local_dir
+    cd $local_dir
     export LC_ALL=C
     
     while true 
     do
         case "$2" in
         -l)
-            $local_dir/TmakeChenyee -l
+            TmakeChenyee -l
             exit 0
             ;;
         -h)
-            $local_dir/TmakeChenyee -h
+            TmakeChenyee -h
             exit 0
             ;;
         *)
@@ -796,8 +806,7 @@ build_mtk_android()
             #ret=`$local_dir/TmakeChenyee $2 $3 $4 $5 $6 $7 >$local_dir/all_build_result 2>$local_dir/build_error`
             #ret=`$local_dir/TmakeChenyee $2 $3 $4 $5 $6 $7`
             #echo $ret 
-            cd $local_dir
-            ./TmakeChenyee $2 $3 $4 $5 $6 $7
+            TmakeChenyee $2 $3 $4 $5 $6 $7
             echo $?
             exit 0
             ;;

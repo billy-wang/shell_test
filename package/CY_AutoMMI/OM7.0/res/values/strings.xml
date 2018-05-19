@@ -1,0 +1,151 @@
+<resources>
+    <string name="app_name">AutoMMI</string>
+    <string name="title_wifi">WifiTest</string>
+    <string name="title_bluetooth">BlueToothTest</string>
+    <string name="title_SoftwareVersion">SoftwareVersionTest</string> 
+    <string name="title_Vibrator">VibratorTest</string>
+    <string name="title_PSensor">ProximitySensorTest</string>
+    <string name="title_LSensor">LightSensorTest</string>
+    <string name="title_Battery">BatteryTest</string>
+    <string name="title_BackCamera">BackCameraTest</string>
+    <string name="title_FrontCamera">FrontCameraTest</string>
+    <string name="title_FrontCamera2">FrontCameraTest2</string>
+    <string name="Capture">Capture</string>
+    <string name="title_Color">ColorTest</string>
+    <string name="title_TouchPad">TouchPadTest</string>
+     <string name="title_TouchPadPriv">TouchPadPrivTest</string>
+    <string name="title_keyTest">keyTest</string>
+    <string name="title_AudioLoop">AudioLoopTest</string>
+    <string name="title_HeadSetLoop">HeadSetLoopTest</string>
+    <string name="title_fm">FMTest</string>
+    <string name="title_Flash">FlashTest</string>
+   <string name="title_Flash1">FlashTest1</string>
+    <string name="title_Flash2">FlashTest2</string>
+     <string name="fingerentry">指纹录入</string>
+    <string name="screen_brightness">ScreenBrightness</string>
+    <string name="title_Speaker">SpeakerTest</string>
+    <string name="title_LeftSpeaker">LeftSpeakerTest</string>
+    <string name="title_RightSpeaker">RightSpeakerTest</string>
+    <string name="title_Receiver">ReceiverTest</string>
+    <string name="title_AuxiliaryMic">AuxiliaryMicTest</string>
+    <string name="title_MagneticField">MagneticFieldTest</string>
+    <string name="title_Acceleration">AccelerationTest</string>
+    <string name="title_SimCard">SimCardTest</string>
+    <string name="tilte_Call">CallTest</string>
+    <string name="tilte_SdCard">SdCardTest</string>
+    <string name="tilte_AccVib">Acceleration  , Vibrator</string>
+    <string name="title_SdSimTp">sd, sim, touchpad</string>
+    <string name="title_KeysWifi">Keys, Wifi</string>
+    <string name="title_PsRec">Psensor, Receiver</string>
+    <string name="title_BtSpeaker">Bluetooth, Speaker</string>
+    <string name="title_FCamHeadSet">FrontCamera, HeadSet</string>
+    <string name="title_BCamAudio">BackCamera, Audio</string>
+    <string name="title_MagFm">Magnetic,  FM</string>
+    <string name="title_ScrFlashBat">Brightess, Flash, Battery</string>
+    <string name="title_LightReceiver">LightSensor, Receiver</string>
+    <string name="title_Gyro">Gyrosope</string>
+    <string name="title_GPS">GPS</string>
+    <string name="title_Mic_3">Mic_3 Test</string>
+    <string name="title_Pressure">Pressure</string>
+    <string name="test_right_nfc">"--------测试通过"</string>
+    <string name="nfc">nfc</string>
+    <string name="info">扫描中。。。</string>
+    <string name="nfc_test_title">"NFC功能已打开，请将卡片靠近手机以便读取卡片内容"</string>
+    <string name="tilte_NetWorkSpeedOnWifi5G">"NetWorkSpeedOnWifi5G"</string>
+    <string name="title_Ir">"红外接收发送"</string>
+    <string name="title_memory">存储测试</string>
+    <string name="storage">手机存储：</string>
+    <string name="memory">手机内存：</string>
+    <!--Gionee zhangke 20151027 add for CR01565388 start-->
+    <string name="fingediscern">指纹识别</string>
+    <string name="result_fingerentry">指纹录入结果：</string>
+    <string name="result_fingediscern">指纹识别结果：</string>
+    <string name="success">成功</string>
+    <string name="fail">失败</string>
+    <!--Gionee zhangke 20151027 add for CR01565388 end-->
+    <!--Gionee zhangke 20151027 add for start-->
+    <string name="scanning_bluetooth_device">开始搜索蓝牙设备</string>
+    <string name="find_bluetooth_device_num">"搜索到蓝牙设备数量：%1$s"</string>
+    <string name="search_success">发现设备</string>
+    <string name="search_fail">未发现设备</string>
+    <!--Gionee zhangke 20151027 add for end-->
+    <!--Gionee zhangke 20151118 add for CR01592938 start-->
+    <string name="title_dual_antenna">双天线切换</string>
+    <string name="to_main_antenna">切换到主天线：</string>
+    <string name="to_branch_antenna">切换到分集天线：</string>
+    <string name="to_normal_status">切换到正常状态：</string>
+    <string name="query_antenna_status">查询结果：</string>
+    <string name="current_status">当前状态为：</string>
+    <string name="main_antenna">主天线</string>
+    <string name="branch_antenna">分集天线</string>
+    <string name="normal_status">正常状态</string>
+    <string name="error_status">查询结果异常</string>
+    <!--Gionee zhangke 20151118 add for CR01592938 end-->
+    <!--Gionee zhangke 20151130 add for CR01588796 start-->
+    <string name="title_laser">激光校准</string>
+    <string name="laser_pcb_testing">正在进行板级激光校准...</string>
+    <string name="laser_offset_testing">正在进行激光Offset校准...</string>
+    <string name="laser_crosstalk_testing">正在进行激光Crosstalk校准...</string>
+    <string name="laser_distance_testing">正在进行激光测距...</string>
+    <string name="title_laser_pcb">板级激光校准：</string>
+    <string name="title_laser_offset">激光Offset校准：</string>
+    <string name="title_laser_crosstalk">激光Crosstalk校准：</string>
+    <string name="title_laser_distance">激光测距：</string>
+    <string name="laser_offset">Offset：</string>
+    <string name="laser_crosstalk">Crosstalk：</string>
+    <string name="laser_distance">距离：</string>
+    <string name="laser_offset_no">未进行Offset校准</string>
+    <string name="laser_crosstalk_no">未进行Crosstalk校准</string>
+    <string name="laser_distance_error">测距偏差过大</string>
+    <!--Gionee zhangke 20151130 add for CR01588796 end-->
+
+    <!--Gionee zhangke 20151208 add for CR01606118 start-->
+    <string name="finger_deadpixel_test">指纹坏点检测</string>
+    <string name="result_deadpixel_test">指纹坏点检测结果：</string>
+    <string name="sensortest_deadpixel_test_success">坏点测试通过！</string>
+    <string name="sensortest_deadpixel_test_fail">器件存在坏点，个数：！</string>
+    <string name="sensortest_deadpixel_test_exception">坏点测试异常！</string>
+    <string name="sensortest_exception">未知测试异常！</string>
+    <!--Gionee zhangke 20151208 add for CR01606118 end-->
+    <!--Gionee zhangke 20160126 add for CR01631675 start-->
+    <string name="at_cmd">AT命令</string>
+    <!--Gionee zhangke 20160126 add for CR01631675 end-->
+    <!--Gionee zhangke 20160201 add for CR01634616 start-->
+    <string name="wchat_soter">微信Soter</string>
+    <!--Gionee zhangke 20160201 add for CR01634616 end-->
+    <!--Gionee zhangke 20160516 add for CR01664372 start-->
+    <string name="earphone_to_receiver">耳麦到听筒</string>
+    <string name="earphone_to_speaker">耳麦到扬声器</string>
+    <!--Gionee zhangke 20160516 add for CR01664372 end-->
+    <!--Gionee zhangke 20160525 add for CR01706554 start-->
+    <string name="write_ifaa_key">写入Ifaa Key</string>
+    <string name="read_ifaa_key">读出Ifaa Key</string>
+    <!--Gionee zhangke 20160525 add for CR01706554 end-->
+    <string name="image_file_name_format" translatable="false">"'IMG'_yyyyMMdd_HHmmss"</string>
+    <!--Gionee zhangke 20160816 add for CR01747494 start--> 
+    <string name="sensors_cal_title">Sensors校准</string>
+    <string name="sensor_p_cal_result">距离感应校准结果：</string>
+    <string name="sensor_g_cal_result">加速仪校准结果：</string>
+    <string name="sensor_gyro_cal_result">陀螺仪校准结果：</string>
+    <string name="sensor_m_cal_result">地磁感应校准结果：</string>
+    <string name="not_support">不支持</string>
+    <!--Gionee zhangke 20160816 add for CR01747494 start-->
+    <!--Gionee zhangke 20160830 add for CR01755116 start--> 
+    <string name="title_front_flashlight">前闪光灯</string>
+    <!--Gionee zhangke 20160830 add for CR01755116 end--> 
+    <!--Gionee zhangke 20160830 add for CR01755116 start--> 
+    <string name="title_BackCamera2">后摄像头2</string>
+    <!--Gionee zhangke 20160830 add for CR01755116 end--> 
+    <!--Gionee zhangke 20160830 add for CR01755116 start--> 
+    <string name="title_Back_flashlight_cal">后闪光灯校准</string>
+    <!--Gionee zhangke 20160830 add for CR01755116 end--> 
+    <!--Gionee zhangke 20161104 add for ID18696 begin-->
+    <string name="title_get_device_id">获取DEVICE ID</string>
+    <!--Gionee zhangke 20161104 add for ID18696 end-->
+    <string name="ir_send">发送:</string>
+    <string name="ir_receive">接收:</string>
+    <string name="ir_frequency">频率:</string>
+    <string name="ir_data">数据:</string>
+    <string name="ir_receiveing">接收中</string>
+    <string name="ir_send_data">"红外发送数据完成"</string>
+</resources>
