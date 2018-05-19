@@ -43,6 +43,7 @@ usage()
 		== android build env ==
 		-android  		:	android编译环境
 		== build mtk android ==
+		-build -fix		                :	修复编译sort排序错误
 		-build -l  		                :	编译android 项目列表
 		-build -h  		                :	编译android 帮助
 		-build -v user CSW1707A_1201 -n :	全新编译android
@@ -789,10 +790,26 @@ build_mtk_android()
     #echo $local_dir
     cd $local_dir
     export LC_ALL=C
+    MK=vendor/mediatek/proprietary/hardware/interfaces/Android.mk
     
     while true 
     do
         case "$2" in
+        -fix)
+            linenum=`sed -n '/touch/=' $MK`
+            num=`echo ${linenum:0:3}`
+            #echo $num
+            s=`sed -n ''"$[num+1]"'p' $MK`
+            if [ -z "$s" ];then
+                #输入制表符TAB方法 ctrl+v ctrl+i
+                sed -e ''"$num"'a\	@mv \$@ \$@_' -i $MK
+                sed -e ''"$[num+1]"'a\	@sort \$@_ > $@' -i $MK
+                sed -e ''"$[num+2]"'a\	@rm -f \$@_' -i $MK
+            else
+                echo "已经修复，不需要修改"
+            fi
+            exit 0
+            ;;
         -l)
             TmakeChenyee -l
             exit 0
