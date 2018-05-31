@@ -189,7 +189,7 @@ get_opts(){
                 shift 
                 ;;
             -l|--listp)
-                perl cy_project/listP.pl
+                perl cy_project/tools/listP.pl
                 shift 
                 exit 0
                 ;;
@@ -254,6 +254,7 @@ get_opts(){
 
 export_variable_from(){
     local file=$1
+    echo "export variable from: $file"
     if [ -e "$file" ];then
 
         #modify for CR01549696 begin
@@ -274,6 +275,7 @@ export_variable_from(){
             local key=$(echo ${line%=*})
             local value=$(echo ${line#*=})
             export "$key"="$value"
+            echo "$key=$value" >> $CY_FEATURE_CONFIG_FILE_TMP
         done < $file
     else
         echo "$file not exist"
@@ -317,38 +319,60 @@ create_cy_cflags(){
 }
 
 prebuild(){
+    mkdir -p $LOGPATH
 
-    cy_project=$CHENYEEPRODUCTID
+    #cy_project=$CHENYEEPRODUCTID
     CHENYEEPROJECTID=${CHENYEEPRODUCTID:0:7}
-    export cy_project CHENYEEPRODUCTID CHENYEEPROJECTID 
+    export CHENYEEPRODUCTID CHENYEEPROJECTID
 
-#Chenyee <taofapan> <20171110> add for replace img begin
+    #Chenyee <taofapan> <20171110> add for replace img begin
     CY_CUSTOM_IMG_RELEASED=release/${CHENYEEPROJECTID}_${TARGET_BUILD_VARIANT}_img_released
     export CY_CUSTOM_IMG_RELEASED
-#Chenyee <taofapan> <20171110> add for replace img end
+    #Chenyee <taofapan> <20171110> add for replace img end
 
-    #FIXME: not a good way to obtian TARGET_PRODUCT
+    #FIXME: not a good way to obtain TARGET_PRODUCT
     [ "${CHENYEEPRODUCTID:(-8):8}" == "platform" -o "${CHENYEEPRODUCTID:(-3):3}" == "CTA" -o "${CHENYEEPRODUCTID:(-4):4}" == "CMCC" -o "${CHENYEEPRODUCTID:(-2):2}" == "CT" ] && BUILD_OPTIONS="platform" 
     export BUILD_OPTIONS
     
     #export product.mk begin
-    export_variable_from "cy_project/${CHENYEEPROJECTID}/${CHENYEEPROJECTID}_ROM_COMMON.mk"
+
+    CY_FEATURE_CONFIG_FILE=$CY_BUILD_ROOT_DIR/cy_project/.cy_feature_config
+    CY_FEATURE_CONFIG_FILE_TMP=$CY_BUILD_ROOT_DIR/cy_project/.cy_feature_config.tmp
+    export CY_FEATURE_CONFIG_FILE
+    export CY_FEATURE_CONFIG_FILE_TMP
+    [ -e "$CY_FEATURE_CONFIG_FILE_TMP" ] && rm $CY_FEATURE_CONFIG_FILE_TMP
+
+    #TODO: need to confirm whether the *_COMMON_ROM.mk file should be included in platform build?
+    export_variable_from "cy_project/${CHENYEEPROJECTID}/${CHENYEEPROJECTID}_COMMON_BSP.mk"
+    if [ "${BUILD_OPTIONS}" != "platform" ];then
+        export_variable_from "cy_project/${CHENYEEPROJECTID}/${CHENYEEPROJECTID}_COMMON_ROM.mk"
+    fi
     export_variable_from "cy_project/${CHENYEEPROJECTID}/${CHENYEEPRODUCTID}.mk"
+    
+    # only generate $CY_FEATURE_CONFIG_FILE when its contents has been modified, this can speedup the remake build.
+    diff <(sort $CY_FEATURE_CONFIG_FILE) <(sort $CY_FEATURE_CONFIG_FILE_TMP)
+    if [ $? -ne 0 ]; then
+        echo "[BUILD_DEBUG] Feature Config has been modified, regenerate the new feature config file."
+        cp $CY_FEATURE_CONFIG_FILE_TMP $CY_FEATURE_CONFIG_FILE
+    fi
+
+
     TARGET_PRODUCT=`grep  -w 'TARGET_PRODUCT' <(env) | sed 's/ //g' | grep '^TARGET_PRODUCT' | awk -F= '{print $2}'`
     MTK_PLATFORM=`grep  -w 'MTK_PLATFORM' <(env) | sed 's/ //g' | grep '^MTK_PLATFORM' | awk -F= '{print $2}'`
-	 export TARGET_PRODUCT
+    export TARGET_PRODUCT
     #export product.mk end
+
     create_cy_cflags "cy_project/${CHENYEEPROJECTID}/${CHENYEEPRODUCTID}.mk"
 
     #Chenyee <CY_Builder> <zhouli> <20170924> modify it for 222653 begin
     #Generation kernel Kconfig
-    echo "*** python cy_project/tools/cy_auto_gen_kconfig.py "cy_project/${CHENYEEPROJECTID}/${CHENYEEPRODUCTID}.mk" $CY_BUILD_ROOT_DIR ***"
-    python cy_project/tools/cy_auto_gen_kconfig.py "cy_project/${CHENYEEPROJECTID}/${CHENYEEPRODUCTID}.mk" $CY_BUILD_ROOT_DIR
+    python cy_project/tools/cy_auto_gen_kconfig.py $CY_FEATURE_CONFIG_FILE $CY_BUILD_ROOT_DIR
+    #python cy_project/tools/cy_auto_gen_kconfig.py "cy_project/${CHENYEEPROJECTID}/${CHENYEEPRODUCTID}.mk" $CY_BUILD_ROOT_DIR
     #Chenyee <CY_Builder> <zhouli> <20170924> modify it for 222653 end
 
-    #export release version begine
+    #export release version begin
     [ ! -e "cy_project/${CHENYEEPROJECTID}_VerNumber" ] && echo "MINI_VER_NUMBER=T0001;">cy_project/${CHENYEEPROJECTID}_VerNumber
-    if ! $IS_SERVER_BUILD ;then
+    if ! $IS_SERVER_BUILD; then
         local line=$(head -n 1 cy_project/${CHENYEEPROJECTID}_VerNumber)
         local number=$(expr  match "$line" "MINI_VER_NUMBER=T\([0-9]\+\)")
         sed -i "/^MINI_VER_NUMBER/c\MINI_VER_NUMBER=T${number}_LOCAL;"  cy_project/${CHENYEEPROJECTID}_VerNumber
@@ -367,12 +391,9 @@ prebuild(){
     echo "CY_INTERNAL_VER_NUMBER=$CY_INTERNAL_VER_NUMBER"
     echo "CY_EXTERNAL_VER_NUMBER=$CY_EXTERNAL_VER_NUMBER"
     export  CY_INTERNAL_VER_NUMBER CY_EXTERNAL_VER_NUMBER
-
-
-    mkdir -p $LOGPATH
 }
 
-replece_sign_key(){
+replace_sign_key(){
     if [ "${BUILD_OPTIONS}" == "platform" -o "${TARGET_BUILD_VARIANT}" != "user" ];then
         echo "BUILD_OPTIONS=${BUILD_OPTIONS}"
         echo "TARGET_BUILD_VARIANT=${TARGET_BUILD_VARIANT}"
@@ -397,9 +418,9 @@ get_chenyee_code(){
     local version=$2
     #copy chenyee dir code to alps 
     bash cy_project/tools/cy_prebuild.sh $vendor $version
-	replece_sign_key
+    replace_sign_key
 
-	#Chenyee sunll 2015-01-21 modify MTK_BUILD_VERNO=${CY_ZNVERNUMBER} begin
+    #Chenyee sunll 2015-01-21 modify MTK_BUILD_VERNO=${CY_ZNVERNUMBER} begin
     CY_TARGET_PRODUCT_DIR=$(cat <(env) | grep "^\s*TARGET_PRODUCT\s*=" | sed 's/.*\s*=\s*full_//g')
     CY_PRODUCT_FILE=device/mediateksample/${CY_TARGET_PRODUCT_DIR}/ProjectConfig.mk    
     sed -i "s/^\s*MTK_BUILD_VERNO\s*=\s*.*/MTK_BUILD_VERNO=${CY_ZNVERNUMBER}/"  ${CY_PRODUCT_FILE}
@@ -506,11 +527,6 @@ copy_results_to_release(){
         cp -f ${TARGET_PRODUCT_OUT_ROOT}/EBR1 $CY_RELEASE_DIR/;
         cp -f ${TARGET_PRODUCT_OUT_ROOT}/EBR2 $CY_RELEASE_DIR/;
         cp -f ${TARGET_PRODUCT_OUT_ROOT}/MBR $CY_RELEASE_DIR/;
-	 #Chenyee <CY_BSP_EFUSE> <chendonghai> <20180507> add for freeme copy config begin
-        cp -f ${TARGET_PRODUCT_OUT_ROOT}/freeme_build.cfg $CY_RELEASE_DIR/;
-        cp -f ${TARGET_PRODUCT_OUT_ROOT}/system_image_info.txt $CY_RELEASE_DIR/;
-        cp -f ${TARGET_PRODUCT_OUT_ROOT}/*_tiny.zip $CY_RELEASE_DIR/;
-        #Chenyee <CY_BSP_EFUSE> <chendonghai> <20180507> add for freeme copy config end
         rm $CY_RELEASE_DIR/preloader.bin
         rm $CY_RELEASE_DIR/preloader.img
     else
@@ -741,13 +757,6 @@ create_check_list(){
     fi
 }
 
-#Chenyee <CY_BSP_SYS> <liuxinhua> <20180504> add for CSW1703KR-63 begin
-release_kernel_binary(){
-    if [ "${CY_BUILD_WITH_CHENYEE_KERNEL_RELEASED}" == "yes" ];then
-        python cy_project/tools/cy_release_kernel_binary.py cy_project/${CHENYEEPROJECTID}/${CHENYEEPRODUCTID}.mk
-    fi
-}
-
 fix_build_err()
 {
     MK=$CY_BUILD_ROOT_DIR/vendor/mediatek/proprietary/hardware/interfaces/Android.mk
@@ -777,9 +786,7 @@ build_new(){
     build_copy_cy_code
     build_remake
     create_check_list
-    release_kernel_binary
 }
-#Chenyee <CY_BSP_SYSTEM> <liuxinhua> <20180504> add for CSW1703KR-63 end
 
 build_key(){
     echo "${MTK_PLATFORM} ${CHENYEEPRODUCTID}"
@@ -837,8 +844,14 @@ check_external_iw_version_sh(){
 }
 
 main(){
+   # get_opts should be the first function call.
    get_opts "$@" 
+
+   #check external/iw/version.sh before build
+   check_external_iw_version_sh
+
    prebuild
+   env | sort > $LOGPATH/.cy_product_debug.config
 
    #copy chenyee code
    if [ -n "$COPY_CHENYEE" ];then
@@ -879,8 +892,6 @@ main(){
 #Chenyee <CY_BSP_EFUSE> <chendonghai> modify out dir efuse download to false end
 }
 
-#check external/iw/version.sh before build
-check_external_iw_version_sh
 
 OPTS=""
 MODULE=""

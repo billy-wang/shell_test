@@ -43,6 +43,7 @@ usage()
 		== android build env ==
 		-android  		:	android编译环境
 		== build mtk android ==
+		-build -enabledebug		        :	开启audioParamParser debug模式
 		-build -fix		                :	修复编译sort排序错误
 		-build -l  		                :	编译android 项目列表
 		-build -h  		                :	编译android 帮助
@@ -791,10 +792,21 @@ build_mtk_android()
     cd $local_dir
     export LC_ALL=C
     MK=vendor/mediatek/proprietary/hardware/interfaces/Android.mk
-    
+    AudPar=vendor/mediatek/proprietary/external/AudioParamParser/AudioParamParser.h
+	CYO1MP6=cy_project/CSW1707
+	if [ -d "$CYO1MP6" ];then
+		TmakeChenyee=TmakeChenyee_mp6
+	else
+		TmakeChenyee=TmakeChenyee
+	fi
+
     while true 
     do
         case "$2" in
+        -enabledebug)
+            sed -i 's/\/\/\#define FORCE_DEBUG_LEVEL/\#define FORCE_DEBUG_LEVEL/g' $AudPar
+            exit 0
+            ;;
         -fix)
             linenum=`sed -n '/touch/=' $MK`
             num=`echo ${linenum:0:3}`
@@ -811,19 +823,21 @@ build_mtk_android()
             exit 0
             ;;
         -l)
-            TmakeChenyee -l
+            $TmakeChenyee -l
             exit 0
             ;;
         -h)
-            TmakeChenyee -h
+            $TmakeChenyee -h
             exit 0
             ;;
         *)
             echo "$@"
+            echo "你的内存在使用到100-10=90%的时候，就开始出现有交换分区的使用"
+            sudo sysctl vm.swappiness=10
             #ret=`$local_dir/TmakeChenyee $2 $3 $4 $5 $6 $7 >$local_dir/all_build_result 2>$local_dir/build_error`
             #ret=`$local_dir/TmakeChenyee $2 $3 $4 $5 $6 $7`
             #echo $ret 
-            TmakeChenyee $2 $3 $4 $5 $6 $7
+            $TmakeChenyee $2 $3 $4 $5 $6 $7
             echo $?
             exit 0
             ;;
