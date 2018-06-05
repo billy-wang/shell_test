@@ -1,0 +1,33 @@
+一. 安装
+sudo apt install stardict
+
+二. 下载词典
+http://download.huzheng.org/
+
+for f in stardict*.tar.bz2; do sudo tar -jxvf $f -C /usr/share/stardict/dic; done
+
+这是利用循环解压多个文件，因为tar一次只能解压一个文件，这样就可以避免
+
+很多重复的操作，启动软件会自动加载dic目录下的词典
+
+三.  安装真人发声语音包
+
+1. 卸载默认安装的很差劲的发音包：
+
+终端：sudo apt-get remove stardict-plugin-espeak stardict-plugin-festival
+
+2. 安装 WyabdcRealPeopleTTS：
+
+下载地址：https://stardict-3.googlecode.com/files/WyabdcRealPeopleTTS.tar.bz2
+
+解压：sudo tar -jxvf WyabdcRealPeopleTTS.tar.bz2 -C /usr/share
+
+四、 添加开机启动
+
+1.  拷贝启动项
+
+终端：sudo cp /usr/share/applications/stardict.desktop   ~/.config/autostart/
+
+2. 改用户和组
+
+终端：sudo chown tecn:tecn ~/.config/autostart/stardict.desktop

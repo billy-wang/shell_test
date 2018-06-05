@@ -745,6 +745,8 @@ build_remake(){
 build_remake_billy(){
     #config_verified_boot
     #build_update_api
+    fix_build_err
+    enable_AudPar
     build_android
     #build_copy_target
 }
