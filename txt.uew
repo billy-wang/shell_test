@@ -12,6 +12,8 @@
 # 橘黄色
 /C1
 
+Hook_switch
+
 headsetState
 KEY_PLAYPAUSE
 Headset_mic Headset_no_mic
@@ -185,6 +187,8 @@ ToneTest2
 
 input
 
+Headset_plug_in
+
 connected
 CONNECT_AUDIO
 
@@ -233,6 +237,9 @@ INCALL
 
 NO_DEVICE
 plug-out
+Plug_out
+mic_vinp_mv
+accdet_get_auxadc
 
 disconnected
 
