@@ -29,12 +29,12 @@ usage()
 		== (Window) CRLF <-> LF (Linux) ===
 		-win file 		:  转换window回车符
 		-lin file		:　转换linux 回车符
+		== UltralEdit_crack ==
+		-uex			: 	UltralEdit试用
 		== down code ==
 		-down project	:  下载项目源代码
 		== grep audio log ==
-		-grep main file		: 	过滤 audio log
-		-grep kernel file	: 	过滤 kernel audio log
-		-grep sys file		: 	过滤 sys log
+		-grep			: 	过滤 kernel main sys audio log
 		== kernel_log_converter ==
 		-converter -i file	: 	转换kernel log android 时间
 		-converter -h		: 	转换kernel log android 时间帮助
@@ -89,6 +89,13 @@ sudo service udev restart
 git config --global user.name "Billy.Wang"
 git config --global user.email "wangbb@chenyee.com"
 #echo "export LC_ALL=C" >> ~/.bashrc
+}
+
+UltralEdit_crack()
+{
+    rm ~/.idm -rf
+    rm /tmp/*.spl -rf
+    ln -s ~/bin/shell_test/txt.uew ~/.idm/uex/wordfiles
 }
 
 reset_code()
@@ -982,6 +989,10 @@ get_opts()
 				build_mtk_android "$@"
 				exit 0
 				;;
+            -uex)
+                UltralEdit_crack "$@"
+                exit 0
+                ;;
             *)
                 usage
                 exit 1
