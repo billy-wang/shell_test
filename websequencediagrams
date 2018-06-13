@@ -1,0 +1,171 @@
+
+打开www.websequencediagrams.com网址，直接粘贴进去即可。
+
+Title Start流程
+
+participant NuPlayerDriver
+participant NuPlayer
+participant DecoderBase
+participant Decoder
+participant MediaCodec
+participant ACodec
+participant BaseState
+participant UninitializedState
+participant LoadedState
+participant LoadedToIdleState
+participant IdleToExecutingState
+participant ExecutingState
+participant OMX
+
+
+opt Start
+    NuPlayerDriver->+NuPlayer: start()
+        NuPlayer-->NuPlayer: kWhatStart
+    NuPlayer-->-NuPlayerDriver:
+
+    NuPlayer->+NuPlayer: onStart()
+            NuPlayer->+DecoderBase: setRenderer()
+            DecoderBase-->DecoderBase: kWhatSetRenderer
+            DecoderBase-->-NuPlayer:
+        NuPlayer->NuPlayer: postScanSources()
+    NuPlayer-->-NuPlayer: kWhatScanSources
+end
+
+
+opt Polling InputBuffer
+    DecoderBase->+Decoder: onSetRenderer()
+        loop
+        Decoder->DecoderBase: onRequestInputBuffers()
+        DecoderBase->Decoder: doRequestBuffers()
+        Decoder->Decoder: fetchInputData()
+        Decoder->Decoder: onInputBufferFetched()
+        Decoder-->DecoderBase: kWhatRequestInputBuffers
+        end
+    Decoder-->-DecoderBase:
+end
+
+
+opt ConfigDecoder
+    NuPlayer->+NuPlayer: instantiateDecoder()
+        NuPlayer->+DecoderBase: init()
+        DecoderBase-->-NuPlayer:
+
+        NuPlayer->+DecoderBase: configure()
+        DecoderBase-->DecoderBase: kWhatConfigure
+        DecoderBase-->-NuPlayer:
+    NuPlayer-->-NuPlayer:
+
+    DecoderBase->+Decoder: onConfigure()
+        Decoder->+MediaCodec: CreateByType()
+            MediaCodec->MediaCodec: init()
+            MediaCodec-->MediaCodec: kWhatInit
+        MediaCodec-->-Decoder:
+
+        MediaCodec->+ACodec: initiateAllocateComponent
+            ACodec-->ACodec:kWhatAllocateComponent
+        ACodec-->-MediaCodec:
+
+        ACodec->+UninitializedState: onAllocateComponent()
+            UninitializedState->+OMX: allocateNode()
+            OMX-->-UninitializedState:
+            UninitializedState->+LoadedState: stateEntered()
+            LoadedState-->-UninitializedState:
+        UninitializedState-->-ACodec:
+
+        Decoder->+MediaCodec: configure()
+            MediaCodec-->MediaCodec: kWhatConfigure
+        MediaCodec-->-Decoder:
+
+        MediaCodec->+ACodec:initiateConfigureComponent()
+            ACodec-->ACodec: kWhatConfigureComponent
+        ACodec-->-MediaCodec:
+
+        ACodec->+LoadedState: onConfigureComponent()
+        LoadedState->-ACodec: configureCodec()
+
+        Decoder->+MediaCodec: setCallback()
+        MediaCodec-->-Decoder:
+
+        Decoder->+MediaCodec: start()
+            MediaCodec-->MediaCodec: kWhatStart
+            MediaCodec->+ACodec: initiateStart()
+                ACodec-->ACodec: kWhatStart
+            ACodec-->-MediaCodec:
+        MediaCodec-->-Decoder:
+    Decoder-->-DecoderBase:
+
+    ACodec->+LoadedState: onStart()
+        LoadedState-->OMX: sendCommand(OMX_StateIdle)
+        LoadedState->+LoadedToIdleState: stateEntered()
+            LoadedToIdleState->LoadedToIdleState: allocateBuffers()
+            LoadedToIdleState->+ACodec: allocateBuffersOnPort()
+            ACodec-->-LoadedToIdleState:
+        LoadedToIdleState-->-LoadedState:
+    LoadedState-->-ACodec:
+
+    OMX-->+LoadedToIdleState: OMX_EventCmdComplete
+        LoadedToIdleState-->OMX: sendCommand(OMX_StateExecuting)
+        LoadedToIdleState->+IdleToExecutingState: stateEntered()
+        IdleToExecutingState-->-LoadedToIdleState:
+    LoadedToIdleState-->-OMX:
+
+    OMX-->+IdleToExecutingState: OMX_EventCmdComplete
+        IdleToExecutingState->+ExecutingState: resume()
+            ExecutingState->ExecutingState: submitOutputBuffers()
+            ExecutingState->ExecutingState: submitRegularOutputBuffers
+            ExecutingState-->OMX: fillBuffer()
+            ExecutingState-->BaseState: postFillThisBuffer()
+            IdleToExecutingState->ExecutingState: stateEntered()
+        ExecutingState-->-IdleToExecutingState:
+    IdleToExecutingState-->-OMX:
+end
+
+
+loop InputBuffer
+    OMX-->+BaseState: omx_message::EMPTY_BUFFER_DONE
+        BaseState->BaseState: onOMXEmptyBufferDone()
+        BaseState->BaseState: postFillThisBuffer()
+        BaseState-->MediaCodec: CodecBase::kWhatFillThisBuffer
+    BaseState-->-OMX:
+
+    MediaCodec->+MediaCodec: onInputBufferAvailable()
+    MediaCodec-->-Decoder: MediaCodec::CB_INPUT_AVAILABLE
+
+    Decoder->+Decoder: handleAnInputBuffer()
+        Decoder->Decoder: onInputBufferFetched()
+        Decoder->+MediaCodec: queueInputBuffer()
+            MediaCodec-->MediaCodec: kWhatQueueInputBuffer
+        MediaCodec-->-Decoder:
+    Decoder-->-DecoderBase: onRequestInputBuffers()
+
+    MediaCodec->+MediaCodec: onQueueInputBuffer()
+    MediaCodec-->-BaseState: kWhatInputBufferFilled
+
+    BaseState->+BaseState: onInputBufferFilled()
+    BaseState-->-OMX: emptyBuffer()
+end
+
+
+loop OutputBuffer
+    OMX-->+BaseState: omx_message::FILL_BUFFER_DONE
+        BaseState->BaseState: onOMXEmptyBufferDone()
+        BaseState-->MediaCodec: CodecBase::kWhatDrainThisBuffer
+    BaseState-->-OMX:
+
+    MediaCodec->+MediaCodec:updateBuffers
+    MediaCodec->MediaCodec: onOutputBufferAvailable()
+    MediaCodec-->-Decoder: MediaCodec::CB_OUTPUT_AVAILABLE
+
+    Decoder->+Decoder: handleAnOutputBuffer()
+    Decoder->Decoder: onRenderBuffer()
+    Decoder->-MediaCodec: renderOutputBufferAndRelease()
+    MediaCodec-->MediaCodec: kWhatReleaseOutputBuffer
+
+
+    MediaCodec->+MediaCodec: onReleaseOutputBuffer()
+    MediaCodec-->-BaseState: kWhatOutputBufferDrained
+
+    BaseState->+BaseState: onOutputBufferDrained()
+    BaseState-->-OMX: fillBuffer()
+end
+
