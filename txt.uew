@@ -82,6 +82,7 @@ mOutputDevices
 accdet
 AudioALSAPlaybackHandlerNormal
 AudioALSACaptureHandlerNormal
+AudioALSADeviceConfigManager
 
 checkDeviceMuteStrategies
 
@@ -184,7 +185,7 @@ ToneTest2
 
 # 绿色
 /C5
-
+ApplyDeviceTurnonSequenceByName
 input
 
 Headset_plug_in
@@ -234,6 +235,8 @@ INCALL
 
 # 粉红色
 /C6
+
+ApplyDeviceTurnoffSequenceByName
 
 NO_DEVICE
 plug-out
