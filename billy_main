@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# gg(:0) : 快速跳转到开头
+# G (:$) : 快速跳转到末尾
+
 usage()
 {
 	local tools_name=$(basename $0)
@@ -48,6 +51,8 @@ usage()
 		-build -l  		                :	编译android 项目列表
 		-build -h  		                :	编译android 帮助
 		-build -v user CSW1707A_1201 -n :	全新编译android
+		== logcat all log ==
+        -adb                            :   抓取所有log
 	Actions:
 "
 }
@@ -894,6 +899,15 @@ build_mtk_android()
 
 }
 
+adblogcat_all()
+{
+	echo $@
+	echo "logcat -all"
+    adb logcat -c 
+    adb logcat -b kernel -b main -b system -b radio -v events -v time > ~/tmp/all.log
+}
+
+
 get_opts()
 {
     argv="$@"
@@ -991,6 +1005,10 @@ get_opts()
 				;;
             -uex)
                 UltralEdit_crack "$@"
+                exit 0
+                ;;
+            -adb)
+                adblogcat_all "$@"
                 exit 0
                 ;;
             *)
