@@ -115,10 +115,10 @@ get_opts(){
         echo $@
     fi
 
-    opts=$(getopt -o cChi:kslnp:P:ratv:S:f:m: \
+    opts=$(getopt -o cChi:kslnp:P:rqatv:S:f:m: \
                   --long history, \
                   --long copy_target,copy_chenyee,help,image:,key,sign,listp,new,project:, \
-                  --long PROJECT:,remake,tee,target_build_variant:,clear_ccache,sonar:,file_script:,mp_status:,  -- "$@")
+                  --long PROJECT:,remake,remake_billy,tee,target_build_variant:,clear_ccache,sonar:,file_script:,mp_status:,  -- "$@")
     if [ $? -ne 0 ];then
         usage 
         error 1 "INVALID OPTIONS!"
@@ -150,6 +150,10 @@ get_opts(){
             -r|--remake)
                 ACTION=remake
                 shift ;;
+            -q|--remake_billy)
+                ACTION=remake_billy
+                shift 
+                ;;
             -a|--android)
                 ACTION=android
                 shift ;;
@@ -407,6 +411,7 @@ set_kernel_config(){
     #echo $CY_KERNEL_CFG_FILE
 
     if [ -f "$CY_KERNEL_CFG_FILE" ];then
+        echo "*** kernel config file: $CY_KERNEL_CFG_FILE ****"
         while read line
         do
             [ -z "$line" -o "${line:0:1}" == "#" ] && continue
@@ -699,19 +704,55 @@ build_copy_target(){
 }
 
 build_remake(){
+    echo "*** build_remake ***"
     config_verified_boot
     build_update_api
     build_android
     build_copy_target
 }
 
+build_remake_billy(){
+    #config_verified_boot
+    #build_update_api
+    fix_build_err
+    enable_AudPar
+    build_android
+    #build_copy_target
+}
+
 create_check_list(){
     if $IS_SERVER_BUILD ;then
+        echo "*** create_check_list $IS_SERVER_BUILD ***"
+        echo "python /cy_cy_toolscreate_tags.py -d chenyee/alps/ -P $CHENYEEPRODUCTID -o out "
         python cy_tools/cy_create_tags.py -d chenyee/alps/ -P $CHENYEEPRODUCTID -o out
     fi
 }
 
+fix_build_err()
+{
+    MK=$CY_BUILD_ROOT_DIR/vendor/mediatek/proprietary/hardware/interfaces/Android.mk
+    linenum=`sed -n '/touch/=' $MK`
+    num=`echo ${linenum:0:3}`
+    #echo $num
+    s=`sed -n ''"$[num+1]"'p' $MK`
+    if [ -z "$s" ];then
+        #输入制表符TAB方法 ctrl+v ctrl+i
+        sed -e ''"$num"'a\	@mv \$@ \$@_' -i $MK
+        sed -e ''"$[num+1]"'a\	@sort \$@_ > $@' -i $MK
+        sed -e ''"$[num+2]"'a\	@rm -f \$@_' -i $MK
+    else
+        echo "已经修复，不需要修改"
+    fi
+
+}
+enable_AudPar(){
+    AudPar=$CY_BUILD_ROOT_DIR/vendor/mediatek/proprietary/external/AudioParamParser/AudioParamParser.h
+    sed -i 's/\/\/\#define FORCE_DEBUG_LEVEL/\#define FORCE_DEBUG_LEVEL/g' $AudPar
+}
+
 build_new(){
+    fix_build_err
+    enable_AudPar
     build_clean
     build_copy_cy_code
     build_remake
@@ -855,7 +896,8 @@ ACTION=""
 IS_SERVER_BUILD=false
 TARGET_BUILD_VARIANT="eng"
 
-CY_BUILD_ROOT_DIR=$(cd `dirname $0`; pwd)
+#CY_BUILD_ROOT_DIR=$(cd `dirname $0`; pwd)
+CY_BUILD_ROOT_DIR=$(pwd)
 SPEEDUP_PATH="$CY_BUILD_ROOT_DIR/.speedup"
 BUILD_TOOLS="$CY_BUILD_ROOT_DIR/build.sh --setup_ccache=true"
 LOGPATH="BUILDING_LOG"

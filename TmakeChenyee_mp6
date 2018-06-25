@@ -132,10 +132,10 @@ get_opts(){
         echo $@
     fi
 
-    opts=$(getopt -o cChi:kslnp:P:ratv:S:f:m: \
+    opts=$(getopt -o cChi:kslnp:P:rqatv:S:f:m: \
                   --long history, \
                   --long copy_target,copy_chenyee,help,image:,key,sign,listp,new,project:, \
-                  --long PROJECT:,remake,tee,target_build_variant:,clear_ccache,sonar:,file_script:,mp_status:,  -- "$@")
+                  --long PROJECT:,remake,remake_billy,tee,target_build_variant:,clear_ccache,sonar:,file_script:,mp_status:,  -- "$@")
     if [ $? -ne 0 ];then
         echo "***$? ***"
 	error 1 "INVALID OPTIONS!"
