@@ -77,7 +77,7 @@ Usage : ./${tools_name} [Options] GBW8901A01_A  Actions
         chenyee/project/\${product}           #某个产品代码
 
         #cta/platform 相关代码存放位置
-        chenyee/alps_cta or chenyee/alps_platform     #所有项目共用的代码
+        chenyee/alps_cta | chenyee/alps_platform     #所有项目共用的代码
         chenyee/project/\${product}_alps      #某个产品代码
 
     编译stock原生项目,代码copy 顺序：
@@ -132,9 +132,13 @@ get_opts(){
         echo $@
     fi
 
-    opts=$(getopt -o cChi:kslnp:P:rqatv:S:f:m: --long copy_target,copy_chenyee,help,image:,key,sign,listp,new,project:,PROJECT:,remake,remake_billy,tee,target_build_variant:,clear_ccache,sonar:,file_script:,mp_status:,  -- "$@")     
+    opts=$(getopt -o cChi:kslnp:P:ratv:S:f:m: \
+                  --long history, \
+                  --long copy_target,copy_chenyee,help,image:,key,sign,listp,new,project:, \
+                  --long PROJECT:,remake,tee,target_build_variant:,clear_ccache,sonar:,file_script:,mp_status:,  -- "$@")
     if [ $? -ne 0 ];then
         echo "***$? ***"
+	error 1 "INVALID OPTIONS!"
         usage 
         exit 1
     fi
@@ -189,7 +193,7 @@ get_opts(){
                 shift 
                 ;;
             -l|--listp)
-                perl cy_project/tools/listP.pl
+                perl cy_tools/listP.pl
                 shift 
                 exit 0
                 ;;
@@ -228,6 +232,7 @@ get_opts(){
                 ;;
             *)
                 usage
+		        error 1 "UNKNOWN ARGUMENTS!"
                 exit 1
                 ;;
         esac
@@ -342,7 +347,6 @@ prebuild(){
     export CY_FEATURE_CONFIG_FILE_TMP
     [ -e "$CY_FEATURE_CONFIG_FILE_TMP" ] && rm $CY_FEATURE_CONFIG_FILE_TMP
 
-    #TODO: need to confirm whether the *_COMMON_ROM.mk file should be included in platform build?
     export_variable_from "cy_project/${CHENYEEPROJECTID}/${CHENYEEPROJECTID}_COMMON_BSP.mk"
     if [ "${BUILD_OPTIONS}" != "platform" ];then
         export_variable_from "cy_project/${CHENYEEPROJECTID}/${CHENYEEPROJECTID}_COMMON_ROM.mk"
@@ -366,18 +370,16 @@ prebuild(){
 
     #Chenyee <CY_Builder> <zhouli> <20170924> modify it for 222653 begin
     #Generation kernel Kconfig
-    python cy_project/tools/cy_auto_gen_kconfig.py $CY_FEATURE_CONFIG_FILE $CY_BUILD_ROOT_DIR
-    #python cy_project/tools/cy_auto_gen_kconfig.py "cy_project/${CHENYEEPROJECTID}/${CHENYEEPRODUCTID}.mk" $CY_BUILD_ROOT_DIR
+    python cy_tools/cy_auto_gen_kconfig.py $CY_FEATURE_CONFIG_FILE $CY_BUILD_ROOT_DIR
+    #python cy_tools/cy_auto_gen_kconfig.py "cy_project/${CHENYEEPROJECTID}/${CHENYEEPRODUCTID}.mk" $CY_BUILD_ROOT_DIR
     #Chenyee <CY_Builder> <zhouli> <20170924> modify it for 222653 end
 
     #export release version begin
     [ ! -e "cy_project/${CHENYEEPROJECTID}_VerNumber" ] && echo "MINI_VER_NUMBER=T0001;">cy_project/${CHENYEEPROJECTID}_VerNumber
-    if ! $IS_SERVER_BUILD; then
-        local line=$(head -n 1 cy_project/${CHENYEEPROJECTID}_VerNumber)
-        local number=$(expr  match "$line" "MINI_VER_NUMBER=T\([0-9]\+\)")
-        sed -i "/^MINI_VER_NUMBER/c\MINI_VER_NUMBER=T${number}_LOCAL;"  cy_project/${CHENYEEPROJECTID}_VerNumber
-    fi
     . cy_project/${CHENYEEPROJECTID}_VerNumber
+
+    [ ! $IS_SERVER_BUILD ] && MINI_VER_NUMBER=$MINI_VER_NUMBER"_LOCAL"
+
     CY_ZNVERNUMBER=${CHENYEEPRODUCTID}_${MINI_VER_NUMBER}
     export MINI_VER_NUMBER CY_ZNVERNUMBER 
     #export release version end
@@ -417,7 +419,7 @@ get_chenyee_code(){
     local vendor=$1
     local version=$2
     #copy chenyee dir code to alps 
-    bash cy_project/tools/cy_prebuild.sh $vendor $version
+    bash cy_tools/cy_prebuild.sh $vendor $version
     replace_sign_key
 
     #Chenyee sunll 2015-01-21 modify MTK_BUILD_VERNO=${CY_ZNVERNUMBER} begin
@@ -494,8 +496,8 @@ get_release_version(){
 }
 
 create_product_for_flash_tool(){
-    if [ -e "./cy_project/tools/cy_output_product_info.sh" ];then
-        bash ./cy_project/tools/cy_output_product_info.sh ${CHENYEEPRODUCTID} ${CY_RELEASE_DIR}
+    if [ -e "./cy_tools/cy_output_product_info.sh" ];then
+        bash ./cy_tools/cy_output_product_info.sh ${CHENYEEPRODUCTID} ${CY_RELEASE_DIR}
     fi
 }
 
@@ -608,9 +610,9 @@ copy_results_to_release(){
     fi
 
     #chenyee, chuqf, for fat.img, begin 
-    if [[ -e cy_project/tools/gen_fat.sh ]]; then
-        chmod +x cy_project/tools/gen_fat.sh
-        ./cy_project/tools/gen_fat.sh ${MTK_PLATFORM} ${CHENYEEPRODUCTID} ${CY_TARGET_PRODUCT} ${TARGET_PRODUCT_OUT_ROOT}
+    if [[ -e cy_tools/gen_fat.sh ]]; then
+        chmod +x cy_tools/gen_fat.sh
+        ./cy_tools/gen_fat.sh ${MTK_PLATFORM} ${CHENYEEPRODUCTID} ${CY_TARGET_PRODUCT} ${TARGET_PRODUCT_OUT_ROOT}
     fi
     #chenyee, chuqf, for fat.img, end
 
@@ -643,9 +645,9 @@ copy_results_to_release(){
         error 1 "copy results to release"
     fi
 
-    if [ -f cy_project/tools/verified_boot_tools/GenEfuseImg.py ];then
-        chmod +x cy_project/tools/verified_boot_tools/GenEfuseImg.py
-	./cy_project/tools/verified_boot_tools/GenEfuseImg.py $CY_RELEASE_DIR
+    if [ -f cy_tools/verified_boot_tools/GenEfuseImg.py ];then
+        chmod +x cy_tools/verified_boot_tools/GenEfuseImg.py
+	./cy_tools/verified_boot_tools/GenEfuseImg.py $CY_RELEASE_DIR
     fi
 
 #Chenyee <taofapan> <20171110> add for replace img begin
@@ -697,16 +699,16 @@ build_android(){
 
 config_verified_boot(){
     echo "set verified boot"
-    chmod +x cy_project/tools/verified_boot_tools/cfg_vb.py
-    ./cy_project/tools/verified_boot_tools/cfg_vb.py "cy_project/${CHENYEEPROJECTID}/${CHENYEEPRODUCTID}.mk"
+    chmod +x cy_tools/verified_boot_tools/cfg_vb.py
+    ./cy_tools/verified_boot_tools/cfg_vb.py "cy_project/${CHENYEEPROJECTID}/${CHENYEEPRODUCTID}.mk"
     echo "cy_project/${CHENYEEPROJECTID}/${CHENYEEPRODUCTID}.mk"
 }
 
 download_modem(){
     local cy_modem_config_file="modem_config/${CY_MODEM_CONFIG}"
     if [ -f "$cy_modem_config_file"  ];then
-        echo "*** python cy_project/tools/lf_download_modem.py $cy_modem_config_file ***"
-        python cy_project/tools/lf_download_modem.py $cy_modem_config_file
+        echo "*** python cy_tools/tools/lf_download_modem.py $cy_modem_config_file ***"
+        python cy_tools/lf_download_modem.py $cy_modem_config_file
         error "$?" "************ download_modem ************"
     fi
 }
@@ -717,13 +719,13 @@ build_copy_cy_code(){
     download_modem 
     set_kernel_config
     #chenyee yangcuntao 2015-05-11 add
-    . cy_project/tools/cy_oversea_locales.sh
+    . cy_tools/cy_oversea_locales.sh
     
     if [ "${FILE_SCRIPT}" != "" ];then
-        . cy_project/tools/debug/${FILE_SCRIPT}
+        . cy_tools/debug/${FILE_SCRIPT}
     else
         if [ "${MP_STATUS}" == "dev" -a "${TARGET_BUILD_VARIANT}" == "user" ];then
-            . cy_project/tools/debug/devlog
+            . cy_tools/debug/devlog
         fi
     fi
 }
@@ -754,8 +756,8 @@ build_remake_billy(){
 create_check_list(){
     if $IS_SERVER_BUILD ;then
         echo "*** create_check_list $IS_SERVER_BUILD ***"
-        echo "python cy_project/tools/cy_create_tags.py -d chenyee/alps/ -P $CHENYEEPRODUCTID -o out "
-        python cy_project/tools/cy_create_tags.py -d chenyee/alps/ -P $CHENYEEPRODUCTID -o out
+        echo "python /cy_cy_toolscreate_tags.py -d chenyee/alps/ -P $CHENYEEPRODUCTID -o out "
+        python cy_tools/cy_create_tags.py -d chenyee/alps/ -P $CHENYEEPRODUCTID -o out
     fi
 }
 
@@ -792,12 +794,12 @@ build_new(){
 
 build_key(){
     echo "${MTK_PLATFORM} ${CHENYEEPRODUCTID}"
-    ./cy_project/tools/verified_boot_tools/gen_vb_keys.py -o release/
+    ./cy_tools/verified_boot_tools/gen_vb_keys.py -o release/
 }
 
 build_sign(){
     build_copy_target
-    ./cy_project/tools/verified_boot_tools/vb_sign.py -k cy_project/tools/verified_boot_tools/prik/ -c cy_project/tools/verified_boot_tools/configs/ -s $CY_RELEASE_DIR -d release/img_signed/
+    ./cy_tools/verified_boot_tools/vb_sign.py -k cy_tools/verified_boot_tools/prik/ -c cy_project/tools/verified_boot_tools/configs/ -s $CY_RELEASE_DIR -d release/img_signed/
 }
 
 build_project(){
@@ -812,7 +814,7 @@ build_project(){
 
 build_sonar(){
     build_project "$CY_SONAR_CHECK_PATH"
-    local apk_sonar=$(find cy_project/tools/ant -maxdepth 1 -mindepth 1 -type d)
+    local apk_sonar=$(find cy_tools/ant -maxdepth 1 -mindepth 1 -type d)
     > $LOGPATH/build_sonar.log
     for dir in $apk_sonar
     do
@@ -845,9 +847,34 @@ check_external_iw_version_sh(){
     fi
 }
 
+setup_speedup(){
+    [ ! -e $SPEEDUP_PATH ] && mkdir -p $SPEEDUP_PATH
+}
+
+store_build_history(){
+    local dline="==========================="
+    local record=`date +"%Y.%m.%d-%H:%M:%S"`"    $@"
+
+    [ ! -e $SPEEDUP_PATH/.history ] && echo "$dline END $dline" > $SPEEDUP_PATH/.history
+    sed -i "1i\\$record" $SPEEDUP_PATH/.history
+}
+
+show_build_history(){
+    [ ! -e $SPEEDUP_PATH/.history ] && error 1 "NO BUILD HISTORY!"
+    local dline="========================="
+    echo -e "\033[1mThe Last Command:"
+    echo -e "./$tools_name $(head -n 1 $SPEEDUP_PATH/.history | cut -b 24-)\033[0m\n"
+    echo "$dline"" HISTORY ""$dline"
+    cat $SPEEDUP_PATH/.history
+}
+
+# DO NOT write hard code in main func, use function to wrap it.
 main(){
    # get_opts should be the first function call.
-   get_opts "$@" 
+    get_opts "$@" 
+
+    setup_speedup
+    store_build_history "$@"
 
    #check external/iw/version.sh before build
    check_external_iw_version_sh
@@ -887,25 +914,27 @@ main(){
    PRODUCT_OUT_ROOT="out/target/product"
    CY_TARGET_PRODUCT=${TARGET_PRODUCT/full_}
    TARGET_PRODUCT_OUT_ROOT="$PRODUCT_OUT_ROOT/${CY_TARGET_PRODUCT}"
-   if [ -f cy_project/tools/verified_boot_tools/GenEfuseImg.py ];then
-        chmod +x cy_project/tools/verified_boot_tools/GenEfuseImg.py
-	./cy_project/tools/verified_boot_tools/GenEfuseImg.py $TARGET_PRODUCT_OUT_ROOT
+    if [ -f cy_tools/verified_boot_tools/GenEfuseImg.py ];then
+         chmod +x cy_tools/verified_boot_tools/GenEfuseImg.py
+         ./cy_tools/verified_boot_tools/GenEfuseImg.py $TARGET_PRODUCT_OUT_ROOT
    fi
 #Chenyee <CY_BSP_EFUSE> <chendonghai> modify out dir efuse download to false end
 }
 
 
-OPTS=""
+tools_name=$(basename $0)
+
 MODULE=""
 ACTION=""
 IS_SERVER_BUILD=false
-SHOWLOG=false
+TARGET_BUILD_VARIANT="eng"
+
 #CY_BUILD_ROOT_DIR=$(cd `dirname $0`; pwd)
 CY_BUILD_ROOT_DIR=$(pwd)
-export CY_BUILD_ROOT_DIR
-GN_BUILD_ROOT_DIR=$CY_BUILD_ROOT_DIR
-export GN_BUILD_ROOT_DIR
-TARGET_BUILD_VARIANT="eng"
+SPEEDUP_PATH="$CY_BUILD_ROOT_DIR/.speedup"
 BUILD_TOOLS="$CY_BUILD_ROOT_DIR/build.sh --setup_ccache=true"
 LOGPATH="BUILDING_LOG"
+
+export CY_BUILD_ROOT_DIR
+
 main "$@"

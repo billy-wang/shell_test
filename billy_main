@@ -122,6 +122,7 @@ grep_audio_log()
     local audio_kernel_tag='audio|Aud|AUD|Lineout_|writer|keycode|stream|speech_|mtk_pcm_|accdet|Headset|mtk_voice|pmic_thread|modem_|PMIC_INT|pmic_auxadc|mt_get_auxadc_value|mic_vinp_mv'
     local audio_main_tag="audio|Audio|SpeechDriver|onScreenTurned|music_app|MediaPlayer|PhoneWindow|WindowManager|FmService|FMLIB|FMText|AudioHeadSetMessager|MMITest|Media|Bluetooth|bt_|BtGatt|MtkOmx|OMX|GainTableParamParser|NVRAM|SRS_|audiofocus|aurisys|InCall|setForceUse|Dialer|Ringtone|Extractor|NuPlayer|GenericSource|Event|pause|ACodec|MPEG4Writer"
     local audio_sys_tag="EarphoneLoopbackTest|WiredAccessoryManager|Telecom"
+    local audio_volume_tag="setVolume|AudioFocus|writeEvent|volumeIndex|applyDeviceVolumemStreamType|volumeDevice|setVoiceVolume|keyCode|mAudioMode|setMicMute|setDataSource|createTrack_l|AudioMTKGainController|SpeechDriverNormal|AudioTrack: set()"
 
     for file in `ls`
     do
@@ -145,6 +146,7 @@ grep_audio_log()
       i=$[i+1]
       #echo $mainfile $i
       grep -E "$audio_main_tag" $mainfile > main_audio_$i.log
+      grep -E "$audio_volume_tag" $mainfile > main_audio_volume_$i.log
     done
 
     i=0
@@ -210,6 +212,8 @@ down_mtk_code()
 		code_origin=cy_o1.mp6
 	elif [ "$PROJECT" == "SW17W16" ];then
 		code_origin=cy_o0.mp1
+	elif [ "$PROJECT" == "CSW1705_P" ];then
+		code_origin=cy_p0.mp2
 	else
 		code_origin=cy_o1.mp1
 	fi
@@ -232,8 +236,13 @@ down_mtk_code()
 	cd /home/billy/work/${PROJECT}/chenyee_rom_apk
 
 
-	repo init -u ssh://wangbb@18.8.3.13:29418/151/manifest -b chenyee_rom_apk -m ${PROJECT}_oversea_master.xml --no-repo-verify
-	repo sync --no-tags
+	if [ "$PROJECT" == "CSW1705_P" ];then
+	    repo init -u ssh://wangbb@18.8.3.13:29418/P/manifest -b chenyee_rom_apk -m ${PROJECT}_master.xml --no-repo-verify
+    else
+	    repo init -u ssh://wangbb@18.8.3.13:29418/151/manifest -b chenyee_rom_apk -m ${PROJECT}_oversea_master.xml --no-repo-verify
+    fi
+
+    repo sync --no-tags
 	repo start master --all
 
 	echo "build "
