@@ -122,7 +122,7 @@ grep_audio_log()
     local audio_kernel_tag='audio|Aud|AUD|Lineout_|writer|keycode|stream|speech_|mtk_pcm_|accdet|Headset|mtk_voice|pmic_thread|modem_|PMIC_INT|pmic_auxadc|mt_get_auxadc_value|mic_vinp_mv'
     local audio_main_tag="audio|Audio|SpeechDriver|onScreenTurned|music_app|MediaPlayer|PhoneWindow|WindowManager|FmService|FMLIB|FMText|AudioHeadSetMessager|MMITest|Media|Bluetooth|bt_|BtGatt|MtkOmx|OMX|GainTableParamParser|NVRAM|SRS_|audiofocus|aurisys|InCall|setForceUse|Dialer|Ringtone|Extractor|NuPlayer|GenericSource|Event|pause|ACodec|MPEG4Writer"
     local audio_sys_tag="EarphoneLoopbackTest|WiredAccessoryManager|Telecom"
-    local audio_volume_tag="setVolume|AudioFocus|writeEvent|volumeIndex|applyDeviceVolumemStreamType|volumeDevice|setVoiceVolume|keyCode|mAudioMode|setMicMute|setDataSource|createTrack_l|AudioMTKGainController|SpeechDriverNormal|AudioTrack: set()"
+    local audio_volume_tag="setParameters|adjustSuggestedStreamVolume|setStreamVolumeIndex|setVolume|AudioFocus|writeEvent|volumeIndex|applyDeviceVolumemStreamType|AudioALSAVolumeController|volumeDevice|setVoiceVolume|keyCode|mAudioMode|setMicMute|setDataSource|createTrack_l|AudioMTKGainController|SpeechDriverNormal|AudioTrack: set()"
 
     for file in `ls`
     do
@@ -237,7 +237,7 @@ down_mtk_code()
 
 
 	if [ "$PROJECT" == "CSW1705_P" ];then
-	    repo init -u ssh://wangbb@18.8.3.13:29418/P/manifest -b chenyee_rom_apk -m ${PROJECT}_master.xml --no-repo-verify
+	    repo init -u ssh://wangbb@18.8.3.13:29418/P/manifest -b chenyee_rom_apk -m CSW1705_master.xml --no-repo-verify
     else
 	    repo init -u ssh://wangbb@18.8.3.13:29418/151/manifest -b chenyee_rom_apk -m ${PROJECT}_oversea_master.xml --no-repo-verify
     fi
@@ -854,9 +854,14 @@ build_mtk_android()
     export LC_ALL=C
     MK=vendor/mediatek/proprietary/hardware/interfaces/Android.mk
     AudPar=vendor/mediatek/proprietary/external/AudioParamParser/AudioParamParser.h
-	CYO1MP6=cy_project/CSW1707
+
+    CYO1MP6=$(pwd | grep cy_o1.mp6)
+    CYp0MP2=$(pwd | grep cy_p0.mp2)
+    echo "** $CYO1MP6 $CYp0MP2 **"
 	if [ -d "$CYO1MP6" ];then
 		TmakeChenyee=TmakeChenyee_mp6
+    elif [ -d "$CYp0MP2" ];then
+		TmakeChenyee=TmakeChenyee_P
 	else
 		TmakeChenyee=TmakeChenyee
 	fi

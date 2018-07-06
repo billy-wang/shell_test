@@ -749,6 +749,7 @@ build_remake_billy(){
     #build_update_api
     fix_build_err
     enable_AudPar
+    dump_stack
     build_android
     #build_copy_target
 }
@@ -783,11 +784,35 @@ enable_AudPar(){
     sed -i 's/\/\/\#define FORCE_DEBUG_LEVEL/\#define FORCE_DEBUG_LEVEL/g' $AudPar
 }
 
+dump_stack()
+{
+    AudioALSAStreamManager=$CY_BUILD_ROOT_DIR/vendor/mediatek/proprietary/hardware/audio/common/V3/aud_drv/AudioALSAStreamManager.cpp
+    grep "#include <utils/CallStack.h>" $AudioALSAStreamManager > /dev/null
+    if [ $? -eq 0 ]; then
+            echo "已经修改过，不用修改"
+    else
+
+        sed -i '2i #include <utils/CallStack.h> //billy' $AudioALSAStreamManager
+        sed -i '\mMicMute = state;\a/CallStack\(\"Billy\"\);' $AudioALSAStreamManager
+        sed -i 's/return pPlaybackHandler;/\tCallStack\(\"billy\"\);\n\t&/' $AudioALSAStreamManager
+        sed -i 's/return pAudioALSAStreamOut;/\tCallStack\(\"billy\"\);\n\t&/' $AudioALSAStreamManager
+    fi
+    AudioPolicyManager=$CY_BUILD_ROOT_DIR/frameworks/av/services/audiopolicy/managerdefault/AudioPolicyManager.cpp
+    grep "#include <utils/CallStack.h>" $AudioPolicyManager > /dev/null
+    if [ $? -eq 0 ]; then
+            echo "已经修改过，不用修改"
+    else
+        sed -i '47i #include <utils/CallStack.h> //billy' $AudioPolicyManager
+        sed -i 's/ALOGV(\"setStreamVolumeIndex()/CallStack(\"billy\");\n\t&/' $AudioPolicyManager
+    fi
+}
+
 build_new(){
-    fix_build_err
-    enable_AudPar
     build_clean
     build_copy_cy_code
+    build_err
+    enable_AudPar
+    dump_stack
     build_remake
     create_check_list
 }

@@ -28,6 +28,8 @@ fmt
 overflow output
 
 setStreamVolume setFmVolume
+setVoiceVolume
+setStreamVolumeIndex
 setVoiceBufferGain
 setSpeakerGain 
 SetSpeakerGain
@@ -39,6 +41,7 @@ trackPlayer
 
 MediaRouter
 
+mode
 audio_mode
 start startOutput stop
 playTone
@@ -186,6 +189,7 @@ ToneTest2
 # 绿色
 /C5
 ApplyDeviceTurnonSequenceByName
+adjustSuggestedStreamVolume
 input
 
 Headset_plug_in
@@ -237,6 +241,7 @@ INCALL
 /C6
 
 ApplyDeviceTurnoffSequenceByName
+billy
 
 NO_DEVICE
 plug-out
@@ -356,6 +361,7 @@ btif_dm_cancel_discovery
 
 /C9
 streamType stream
+mStreamType
 close
 +close
 -close
