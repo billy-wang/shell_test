@@ -731,7 +731,7 @@ build_remake_billy(){
     #build_update_api
     fix_build_err
     enable_AudPar
-    dump_stack
+    #dump_stack
     build_android
     #build_copy_target
 }
@@ -801,7 +801,7 @@ build_new(){
     build_copy_cy_code
     build_err
     enable_AudPar
-    dump_stack
+    #dump_stack
     build_remake
     create_check_list
     release_kernel_binary
