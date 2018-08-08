@@ -862,6 +862,9 @@ scandir()
 
 enable_audio_debug()
 {
+    local cur_dir
+    cur_dir=$(pwd)
+    echo "**** curdir $(pwd) *******"
     echo "********* enable audio debug LOG_NDEBUG 0 **********"
     AudioJniDir=$CY_BUILD_ROOT_DIR/frameworks/base/core/jni
     AudioFlinger=$CY_BUILD_ROOT_DIR/frameworks/av/services/audioflinger
@@ -869,6 +872,7 @@ enable_audio_debug()
     scandir $AudioJniDir
     scandir $AudioFlinger
     scandir $AudioPolicy
+    cd $cur_dir
 }
 
 build_new(){
