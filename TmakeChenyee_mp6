@@ -1,51 +1,32 @@
 #!/bin/bash
-#
 #       DESCRIPTION:    make project 
-#
-#       SCRIPT NAME:    
-#
-#       Usage:   
-#                
-#
-#       Input:  stdin
-#
-#       Output: 
-#
+#       SCRIPT NAME:    TmakeChenyee
+#       USAGE:          build Android project.
 #       AUTHOR:         Ling Fen
-#
 #       EMAIL:          lingfen@chenyee.com
-#
-#       DATE:           2013-11-49
-#
+#       DATE:           2013-11-19
 #       HISTORY:
-#       REVISOR         DATE                    MODIFICATION
-#       LingFen         2013-11-49              create
-usage(){
-local tools_name=$(basename $0)
-printf "
-Usage : ./${tools_name} [Options] GBW8901A01_A  Actions
+#           REVISION ------ DATE ------------------ MODIFICATION
+#           LingFen         2013-11-19              create
 
+usage(){
+printf "\
+Usage : ./${tools_name} [Options] GBW8901A01_A  Actions
     Options:
-      -l, -listp    : List the available project.
-	  -h,  -help    : Print this message and exit.
-	  -t, -tee      : Print log information on the standard-out.
-	  #-q, -quiet    : Don't print log information on the standard-out.
-	  #-j [N], cpu [N]
-	  #              : Allow N jobs to compile at once,you must add a space between Options and [N].
-	  #-m [MODULE]   : Only compile the [MODULE], you must add a space between Options and [MODULE].
-	
+        -l, -listp            : List the available project.
+	-h, -help             : Print this message and exit.
+	-t, -tee              : Print log information on the standard-out.
     Actions:
         -n, --new             : Clean and perform a full build.
         -r, --remake          : retry perform a build.
         -a, --android         : do not update-api,only build android image.
         -c, --copy_target     : copy target to release only.
-        -C, --copy_chenyee     : copy chenyee code to alps dir
+        -C, --copy_chenyee    : copy chenyee code to alps dir
         -s, --sign            : sign image
     Module:
         -i, --image  <bootimage|systemimage|userdataimage|update-api|kernel|otapackage>
             :Specify image to be build/re-build (bootimage|systemimage|userdataimage|recoveryimage).
             :Specify module to be build/re-build (kernel|otapackage).
-
     Project:
         -p, --project  <packages/app/Email/> use mmma commad, check and build other dependency module
             :Specif Project pathdir to be build
@@ -54,74 +35,71 @@ Usage : ./${tools_name} [Options] GBW8901A01_A  Actions
 
     编译rom项目,代码copy 顺序：
         #编译接口代码存放位置
-        chenyee/alps_build                    #只有builder 才可以上传代码到这里
+        chenyee/alps_build                       #只有builder 才可以上传代码到这里
 
         #驱动相关代码存放位置
-        chenyee/alps_drv                      #所有项目共用的代码
-        chenyee/project/\${project}           #某个项目共用的代码
-        chenyee/project/\${product}           #某个产品代码
+        chenyee/alps_drv                         #所有项目共用的代码
+        chenyee/project/\${project}               #某个项目共用的代码
+        chenyee/project/\${product}               #某个产品代码
 
         #rom相关代码存放位置
-        chenyee/alps                          #所有项目共用的代码
-        chenyee/alps_oversea                  #所有海外项目共用的代码
-        chenyee/project/\${project}_alps      #某个项目共用的代码
-        chenyee/project/\${product}_alps      #某个产品代码
+        chenyee/alps                             #所有项目共用的代码
+        chenyee/alps_oversea                     #所有海外项目共用的代码
+        chenyee/project/\${project}_alps          #某个项目共用的代码
+        chenyee/project/\${product}_alps          #某个产品代码
 
     编译cta/platform项目,代码copy 顺序：
         #编译接口代码存放位置
-        chenyee/alps_build                    #只有builder 才可以上传代码到这里
+        chenyee/alps_build                       #只有builder 才可以上传代码到这里
 
         #驱动相关代码存放位置
-        chenyee/alps_drv                      #所有项目共用的代码
-        chenyee/project/\${project}           #某个项目共用的代码
-        chenyee/project/\${product}           #某个产品代码
+        chenyee/alps_drv                         #所有项目共用的代码
+        chenyee/project/\${project}               #某个项目共用的代码
+        chenyee/project/\${product}               #某个产品代码
 
         #cta/platform 相关代码存放位置
-        chenyee/alps_cta | chenyee/alps_platform     #所有项目共用的代码
-        chenyee/project/\${product}_alps      #某个产品代码
+        chenyee/alps_cta|chenyee/alps_platform   #所有项目共用的代码
+        chenyee/project/\${product}_alps          #某个产品代码
 
     编译stock原生项目,代码copy 顺序：
         #编译接口代码存放位置
-        chenyee/alps_build                    #只有builder 才可以上传代码到这里
+        chenyee/alps_build                       #只有builder 才可以上传代码到这里
 
         #驱动相关代码存放位置
-        chenyee/alps_drv                      #所有项目共用的代码
-        chenyee/project/\${project}           #某个项目共用的代码
-        chenyee/project/\${product}           #某个产品代码
+        chenyee/alps_drv                         #所有项目共用的代码
+        chenyee/project/\${project}               #某个项目共用的代码
+        chenyee/project/\${product}               #某个产品代码
 
         #stock 相关代码存放位置
-        chenyee/alps_oversea_stock            #所有海外原生项目共用的代码
-        chenyee/project/\${project}_alps      #某个项目共用的代码
-        chenyee/project/\${product}_alps      #某个产品代码
+        chenyee/alps_oversea_stock               #所有海外原生项目共用的代码
+        chenyee/project/\${project}_alps          #某个项目共用的代码
+        chenyee/project/\${product}_alps          #某个产品代码
 
     Example:
 	  ./${tools_name} -l
-	                : 列出可编译的产品id
-
+	      : 列出可编译的产品id
 	  ./${tools_name} [-v <user|eng|userdebug>] GBW8901A01_A <-n|--new>
-	                : 编译产品 GBW8901A01_A 的user or eng or userdebug 版本
-
+	      : 编译产品 GBW8901A01_A 的user or eng or userdebug 版本
 	  ./${tools_name} GBW8901A01_A -i <bootimage|systemimage|bootimage>
-	                : 编译产品GBW8901A01_A 的bootimage | systemimage | bootimage. 还可以是kernel,otapackage等模块
-
+	      : 编译产品GBW8901A01_A 的bootimage | systemimage | bootimage. 还可以是kernel,otapackage等模块
 	  ./${tools_name} GBW8901A01_A -p package/app/Email
-	                : 编译产品GBW8901A01_A的一个apk.还可是以framework.jar等project.
-
+	      : 编译产品GBW8901A01_A的一个apk.还可是以framework.jar等project.\n
 "
 }
 
+# call this function for error processing, so the build server can recognize the failed job.
 error(){
     local ret="$1";shift
     local info="$@"
     if [ "$ret" -ne 0 ];then
-        echo "Error $ret: $info" >&2
+        echo -e "\033[31m[${FUNCNAME[1]}: "`caller 0 | cut -d " " -f 1`"] Error $ret: $info\033[0m" >&2
         exit $ret
     fi
 }
 
 get_opts(){
-
     argv="$@"
+
     #兼容服务器编译
     local build_variant=$(expr match  "$argv" '-opt=TARGET_BUILD_VARIANT=\(\w*\)')
     if [ "$build_variant" == "user" -o "$build_variant" == "userdebug" -o  "$build_variant" == "eng" ];then
@@ -199,8 +177,10 @@ get_opts(){
                 ;;
             --clear_ccache)
                 export CY_CLEAN_CCACHE="true"
-                shift 
-                ;;
+                shift ;;
+            --history)
+                show_build_history
+                exit 0 ;;
             -k|--key)
                 ACTION=key
                 shift 
@@ -378,7 +358,7 @@ prebuild(){
     [ ! -e "cy_project/${CHENYEEPROJECTID}_VerNumber" ] && echo "MINI_VER_NUMBER=T0001;">cy_project/${CHENYEEPROJECTID}_VerNumber
     . cy_project/${CHENYEEPROJECTID}_VerNumber
 
-    [ ! $IS_SERVER_BUILD ] && MINI_VER_NUMBER=$MINI_VER_NUMBER"_LOCAL"
+    [ $IS_SERVER_BUILD == "false" ] && MINI_VER_NUMBER=$MINI_VER_NUMBER"_LOCAL"
 
     CY_ZNVERNUMBER=${CHENYEEPRODUCTID}_${MINI_VER_NUMBER}
     export MINI_VER_NUMBER CY_ZNVERNUMBER 
@@ -629,16 +609,16 @@ copy_results_to_release(){
         local ota_md5=$(md5sum $CY_RELEASE_OTA_DIR/${CHENYEEPRODUCTID}_update_${CY_RO_BUILD_DISPLAY_ID}_${MINI_VER_NUMBER}.zip |awk '{print $1}')
         echo "${CHENYEEPRODUCTID}_update_${CY_RO_BUILD_DISPLAY_ID}_${MINI_VER_NUMBER}.zip=$ota_md5" > $CY_RELEASE_OTA_DIR/${CHENYEEPRODUCTID}_${MINI_VER_NUMBER}.md5
         cp -r $ota_tmp_zip $CY_RELEASE_OTA_TMP_DIR/${CHENYEEPRODUCTID}_update_${CY_RO_BUILD_DISPLAY_ID}_${MINI_VER_NUMBER}_tmp.zip
-#Chenyee <CY_3rd> <lucy> <20180306> for CSW1703MX-9 beign
+        #Chenyee <CY_3rd> <lucy> <20180706> for CSW1707BA-94 beign
         if [ "${ADUPS_FOTA_SUPPORT}" == "yes" ];then
-            if [ "${ADUPS_FOTA_SIGINATURE}" == "yes" ];then
+            #if [ "${ADUPS_FOTA_SIGINATURE}" == "yes" ];then
                 mkdir -p ${CY_RELEASE_OTA_DIR_ROOT}/3rd
                 cp -f ${TARGET_PRODUCT_OUT_ROOT}/target_files-package.zip ${CY_RELEASE_OTA_DIR_ROOT}/3rd/;
-            else
-                cp -f ${TARGET_PRODUCT_OUT_ROOT}/target_files-package.zip $CY_RELEASE_OTA_DIR/;
-            fi           
+            #else
+            #    cp -f ${TARGET_PRODUCT_OUT_ROOT}/target_files-package.zip $CY_RELEASE_OTA_DIR/;
+            #fi           
         fi
-#Chenyee <CY_3rd> <lucy> <20180306> for CSW1703MX-9 end
+        #Chenyee <CY_3rd> <lucy> <20180706> for CSW1707BA-94 end
     fi
     if [ ! -e "$TARGET_PRODUCT_OUT_ROOT/system.img" ];then
         echo "你的编译结果不完全，请查看是否编译成功。"
@@ -673,6 +653,7 @@ build_update_api(){
 
 # Chenyee <CY_BSP_OTA_SECUREBOOT> <goudaqiang> <20170605> add for 151694 begin
 build_module(){
+    speedup_set_state "modified"
     local image=$1
     set_kernel_config
     if `echo  "systemimage bootimage userdataimage" | grep -qw "$image" `;then
@@ -714,7 +695,12 @@ download_modem(){
 }
 
 build_copy_cy_code(){
-    echo "****** build_copy_cy_code ****"
+    if [ $(is_speedup_support) == "false" ]; then
+        echo "It's not support speedup building on this build."
+    elif [ $(speedup_get_state) != "origin" ]; then
+        error 1 "You should clean your code before copy from chenyee dir!\nTry: \"repo clean\" or \"use -r to build\""
+    fi
+
     get_chenyee_code "mtk" "7.0"
     download_modem 
     set_kernel_config
@@ -728,6 +714,25 @@ build_copy_cy_code(){
             . cy_tools/debug/devlog
         fi
     fi
+
+    if [ $(is_speedup_support) == "false" ]; then
+        echo "It's not support speedup building on this build."
+    elif [ $(speedup_get_state) == "origin" ]; then
+        ignores="out release BUILDING_LOG"
+        for i in $(ls); do
+            if [[ $ignores =~ $i ]]; then
+                echo "IGNORE:" $i
+            elif [ -L $i -o -f $i ]; then
+                echo "Link/File:" $i
+            else
+                echo "DIR:" $i
+                git add -Af $i/
+            fi
+        done
+        git commit -m "copied from chenyee."
+        git tag "copied_code"
+        speedup_set_state "copied"
+    fi
 }
 
 build_copy_target(){
@@ -738,8 +743,11 @@ build_copy_target(){
 
 build_remake(){
     echo "*** build_remake ***"
+    speedup_set_state "modified"
     config_verified_boot
     build_update_api
+    fix_build_err
+    enable_AudPar
     build_android
     build_copy_target
 }
@@ -749,6 +757,7 @@ build_remake_billy(){
     #build_update_api
     fix_build_err
     enable_AudPar
+    enable_audio_debug
     #dump_stack
     build_android
     #build_copy_target
@@ -782,6 +791,14 @@ fix_build_err()
 enable_AudPar(){
     AudPar=$CY_BUILD_ROOT_DIR/vendor/mediatek/proprietary/external/AudioParamParser/AudioParamParser.h
     sed -i 's/\/\/\#define FORCE_DEBUG_LEVEL/\#define FORCE_DEBUG_LEVEL/g' $AudPar
+    PhoneWindowManager=$CY_BUILD_ROOT_DIR/frameworks/base/services/core/java/com/android/server/policy/PhoneWindowManager.java
+    sed -i 's/DEBUG = false;/DEBUG = true;/g' $PhoneWindowManager
+    sed -i 's/localLOGV = false;/localLOGV = true;/g' $PhoneWindowManager
+    sed -i 's/DEBUG_INPUT = false;/DEBUG_INPUT = true;/g' $PhoneWindowManager
+    sed -i 's/DEBUG_KEYGUARD = false;/DEBUG_KEYGUARD = true;/g' $PhoneWindowManager
+    sed -i 's/DEBUG_LAYOUT = false;/DEBUG_LAYOUT = true;/g' $PhoneWindowManager
+    sed -i 's/DEBUG_SPLASH_SCREEN = false;/DEBUG_SPLASH_SCREEN = true;/g' $PhoneWindowManager
+    sed -i 's/DEBUG_WAKEUP = false;/DEBUG_WAKEUP = true;/g' $PhoneWindowManager
 }
 
 dump_stack()
@@ -807,11 +824,47 @@ dump_stack()
     fi
 }
 
+scandir()
+{
+    local cur_dir parent_dir workdir
+    workdir=$1
+    cd ${workdir}
+    if [ ${workdir} = "/" ]
+    then
+        cur_dir=""
+    else
+        cur_dir=$(pwd)
+    fi
+
+    for dirlist in $(ls ${cur_dir})
+    do
+        if test -d ${dirlist};then
+            cd ${dirlist}
+            scandir ${cur_dir}/${dirlist}
+            cd ..
+        else
+            sed -i 's/\/\/#define LOG_NDEBUG 0/#define LOG_NDEBUG 0 \/\/billy/g' $dirlist
+        fi
+    done
+}
+
+enable_audio_debug()
+{
+    echo "********* enable audio debug LOG_NDEBUG 0 **********"
+    AudioJniDir=$CY_BUILD_ROOT_DIR/frameworks/base/core/jni
+    AudioFlinger=$CY_BUILD_ROOT_DIR/frameworks/av/services/audioflinger
+    AudioPolicy=$CY_BUILD_ROOT_DIR/frameworks/av/services/audiopolicy
+    scandir $AudioJniDir
+    scandir $AudioFlinger
+    scandir $AudioPolicy
+}
+
 build_new(){
     build_clean
     build_copy_cy_code
     build_err
     enable_AudPar
+    enable_audio_debug
     #dump_stack
     build_remake
     create_check_list
@@ -828,6 +881,7 @@ build_sign(){
 }
 
 build_project(){
+    speedup_set_state "modified"
     local project_path=$1
     if [ "$CMD_MMM" = "true" ]; then
         $BUILD_TOOLS --build_variant $TARGET_BUILD_VARIANT --PROJECT $project_path $TARGET_PRODUCT  --log_file $LOGPATH/$TARGET_PRODUCT-mmm
@@ -876,6 +930,45 @@ setup_speedup(){
     [ ! -e $SPEEDUP_PATH ] && mkdir -p $SPEEDUP_PATH
 }
 
+is_speedup_support(){
+    # DO NOT enable this feature on build server.
+    if $IS_SERVER_BUILD; then
+        echo false; return 1
+    fi
+
+    # DO NOT enable this feature if repo's version is not matching the shell script.
+    if [ ! -f $CY_BUILD_ROOT_DIR/.repo/repo/subcmds/state.py ]; then
+        echo false; return 1
+    fi
+
+    # DO NOT enable this feature on old brunch.
+    if [ -f $CY_BUILD_ROOT_DIR/cy_tools/cy_speedup_flag ]; then
+        echo true;  return 0
+    else
+        echo false; return 1
+    fi
+}
+
+speedup_get_state(){
+    if [ $(is_speedup_support) == "false" ]; then
+        echo false; return 1 
+    fi
+
+    if [ x"$1" == x"block" ]; then
+        { flock -e 7; cat $SPEEDUP_STATE; flock -u 7; } 7<>"$SPEEDUP_STATE"
+    else
+        cat $SPEEDUP_STATE
+    fi
+}
+
+speedup_set_state(){
+    if [ $(is_speedup_support) == "false" ]; then
+        echo false; return 1
+    else
+        { flock -e 7; echo $1 > $SPEEDUP_STATE; flock -u 7; } 7<>"$SPEEDUP_STATE"
+    fi
+}
+
 store_build_history(){
     local dline="==========================="
     local record=`date +"%Y.%m.%d-%H:%M:%S"`"    $@"
@@ -888,7 +981,7 @@ show_build_history(){
     [ ! -e $SPEEDUP_PATH/.history ] && error 1 "NO BUILD HISTORY!"
     local dline="========================="
     echo -e "\033[1mThe Last Command:"
-    echo -e "./$tools_name $(head -n 1 $SPEEDUP_PATH/.history | cut -b 24-)\033[0m\n"
+    echo -e "$(head -n 1 $SPEEDUP_PATH/.history | cut -b 24-)\033[0m\n"
     echo "$dline"" HISTORY ""$dline"
     cat $SPEEDUP_PATH/.history
 }
@@ -899,7 +992,7 @@ main(){
     get_opts "$@" 
 
     setup_speedup
-    store_build_history "$@"
+    store_build_history "$0 $@"
 
    #check external/iw/version.sh before build
    check_external_iw_version_sh
@@ -957,6 +1050,7 @@ TARGET_BUILD_VARIANT="eng"
 #CY_BUILD_ROOT_DIR=$(cd `dirname $0`; pwd)
 CY_BUILD_ROOT_DIR=$(pwd)
 SPEEDUP_PATH="$CY_BUILD_ROOT_DIR/.speedup"
+SPEEDUP_STATE="$SPEEDUP_PATH/state"
 BUILD_TOOLS="$CY_BUILD_ROOT_DIR/build.sh --setup_ccache=true"
 LOGPATH="BUILDING_LOG"
 

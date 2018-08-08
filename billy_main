@@ -106,11 +106,14 @@ UltralEdit_crack()
 reset_code()
 {
 	if [ -n "$2" ];then
-		echo "repo forall -c 'git clean -df' && repo forall -c 'git reset --hard origin/$2' && repo forall -c 'git remote update' && repo sync #&& rm -rf out/"
-		repo forall -c 'git clean -df' && repo forall -c 'git reset --hard origin/$2' && repo forall -c 'git remote update' && repo sync --no-tags #&& rm -rf out/
+		echo "repo forall -c 'git clean -d -f' && repo forall -c 'git reset --hard origin/$2' && repo forall -c 'git remote update' && repo sync #&& rm -rf out/"
+		#repo forall -c 'git clean -d -f' && repo forall -c 'git reset --hard origin/$2' && repo forall -c 'git remote update' && repo sync --no-tags #&& rm -rf out/
+		repo forall -c 'git reset --hard origin/$2' && repo forall -c 'git reset clean -f -d -x' && repo sync --no-tags #&& rm -rf out/
 	else
 		echo "not select code origin patch example cy_o1.mp1"
 		echo "usage: $0 $1 cy_01.mp1 "
+		echo "repo forall -c 'git reset --hard' && repo forall -c 'git reset clean -f -d -x' && repo sync --no-tags #&& rm -rf out/"
+		repo forall -c 'git reset --hard' && repo forall -c 'git reset clean -f -d -x' && repo sync --no-tags #&& rm -rf out/
 		exit 2
 	fi
 
@@ -210,12 +213,20 @@ down_mtk_code()
 	
 	if [ "$PROJECT" == "CSW1707" ];then
 		code_origin=cy_o1.mp6
+        code_dev=_V1.25_1707_T0413_dev
+        package_dev=mp
 	elif [ "$PROJECT" == "SW17W16" ];then
 		code_origin=cy_o0.mp1
+        code_dev=
+        package_dev=
 	elif [ "$PROJECT" == "CSW1705_P" ];then
 		code_origin=cy_p0.mp2
+        code_dev=
+        package_dev=
 	else
 		code_origin=cy_o1.mp1
+        code_dev=
+        package_dev=-V1.54
 	fi
 
 	echo $code_origin
@@ -223,7 +234,7 @@ down_mtk_code()
 	mkdir -p /home/billy/work/${PROJECT}/alps/${code_origin}
 	cd /home/billy/work/${PROJECT}/alps/${code_origin}
 
-	repo init -u ssh://wangbb@18.8.3.13:29418/mtk/manifest -b ${code_origin} -m ${code_origin}.xml --no-repo-verify
+	repo init -u ssh://wangbb@18.8.3.13:29418/mtk/manifest -b ${code_origin} -m ${code_origin}${code_dev}.xml --no-repo-verify
 	repo sync --no-tags
 	#repo start master --all
 	repo start ${code_origin} --all
@@ -231,6 +242,7 @@ down_mtk_code()
 	cd /home/billy/work/${PROJECT}/alps/${code_origin}
 	repo forall -c "scp -p -P 29418 wangbb@18.8.3.13:hooks/commit-msg .git/hooks/"
 
+if false;then
 	echo "down packages"
 	mkdir -p /home/billy/work/${PROJECT}/chenyee_rom_apk
 	cd /home/billy/work/${PROJECT}/chenyee_rom_apk
@@ -239,15 +251,17 @@ down_mtk_code()
 	if [ "$PROJECT" == "CSW1705_P" ];then
 	    repo init -u ssh://wangbb@18.8.3.13:29418/P/manifest -b chenyee_rom_apk -m CSW1705_master.xml --no-repo-verify
     else
-	    repo init -u ssh://wangbb@18.8.3.13:29418/151/manifest -b chenyee_rom_apk -m ${PROJECT}_oversea_master.xml --no-repo-verify
+	    repo init -u ssh://wangbb@18.8.3.13:29418/151/manifest -b chenyee_rom_apk -m ${PROJECT}_oversea_${package_dev}.xml --no-repo-verify
     fi
 
     repo sync --no-tags
 	repo start master --all
+fi
 
 	echo "build "
 	cd /home/billy/work/${PROJECT}/alps/${code_origin}
 	#./TmakeChenyee -v userdebug CSW1705TL_1301 -n
+	#./TmakeChenyee -v userdebug CSW1803A_1291 -n
 	#./TmakeChenyee -v userdebug CSW1707A_1201_TEST -n
 }
 
@@ -324,6 +338,7 @@ echo "stop mtklog"
 adb shell "am broadcast -a com.mediatek.mtklogger.ADB_CMD -e cmd_name stop --ei cmd_target 1" >/dev/null 2>&1
 adb shell "rm -rf /sdcard/mtklog"
 adb shell "am broadcast -a com.mediatek.mtklogger.ADB_CMD -e cmd_name start --ei cmd_target 1" >/dev/null 2>&1
+#adb shell "am start com.mediatek.mtklogger/.MainActivity" >/dev/null 2>&1
 
 echo press any key to start capturing...
 read
@@ -918,7 +933,8 @@ adblogcat_all()
 	echo $@
 	echo "logcat -all"
     adb logcat -c 
-    adb logcat -b kernel -b main -b system -b radio -v events -v time > ~/tmp/all.log
+    #adb logcat -b kernel -b main -b system -b radio -v events -v time > ~/tmp/all.log
+    adb logcat -b kernel -b main -b system -v events -v time > ~/tmp/all.log
 }
 
 

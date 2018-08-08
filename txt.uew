@@ -201,6 +201,7 @@ setAudioRoute
 
 mPhoneState
 setForceUse
+setMDVolumeIndex
 
 requestAudioFocus
 
@@ -211,6 +212,7 @@ setNormalVolume setOutputDevice
 ApplyAudioGain
 
 getNewOutputDevice
+GetReceiverGain
 
 pid piid
 uid
@@ -267,6 +269,8 @@ Failure
 abandonAudioFocus
 setMode
 setMute
+setMicMute
+
 died
 trumedia_enable
 setPhoneState

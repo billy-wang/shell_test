@@ -373,21 +373,33 @@ prebuild(){
 }
 
 replece_sign_key(){
-    if [ "${BUILD_OPTIONS}" == "platform" -o "${TARGET_BUILD_VARIANT}" != "user" ];then
-        echo "BUILD_OPTIONS=${BUILD_OPTIONS}"
-        echo "TARGET_BUILD_VARIANT=${TARGET_BUILD_VARIANT}"
-    else
-        CY_SIGN_KEY_FOLDER="$HOME/singkey/cykey"
-        if [ "${CY_CUSTOM_SIGN_KEY}" != "" ];then
-            CY_SIGN_KEY_FOLDER="$HOME/singkey/${CY_CUSTOM_SIGN_KEY}"
-        fi
-        if [ -d "${CY_SIGN_KEY_FOLDER}" ];then
-            cp -f ${CY_SIGN_KEY_FOLDER}/* "build/make/target/product/security"
-            echo "copy $CY_SIGN_KEY_FOLDER to  build/make/target/product/security"
-            cp -f ${CY_SIGN_KEY_FOLDER}/* "device/mediatek/security"
-            echo "copy $CY_SIGN_KEY_FOLDER to  device/mediatek/security"
+    if [ -z "${CY_WITH_CUSTOM_SIGNKEY}" -o "${CY_WITH_CUSTOM_SIGNKEY}" == "" -o "${CY_WITH_CUSTOM_SIGNKEY}" == "null" ];then
+        if [ "${BUILD_OPTIONS}" == "platform" -o "${TARGET_BUILD_VARIANT}" != "user" ];then
+            echo "BUILD_OPTIONS=${BUILD_OPTIONS}"
+            echo "TARGET_BUILD_VARIANT=${TARGET_BUILD_VARIANT}"
         else
-            echo "NO ${CY_SIGN_KEY_FOLDER}"
+            CY_SIGN_KEY_FOLDER="$HOME/singkey/cykey"
+            if [ "${CY_CUSTOM_SIGN_KEY}" != "" ];then
+                CY_SIGN_KEY_FOLDER="$HOME/singkey/${CY_CUSTOM_SIGN_KEY}"
+            fi
+            if [ -d "${CY_SIGN_KEY_FOLDER}" ];then
+                cp -f ${CY_SIGN_KEY_FOLDER}/* "build/make/target/product/security"
+                echo "copy $CY_SIGN_KEY_FOLDER to  build/make/target/product/security"
+                cp -f ${CY_SIGN_KEY_FOLDER}/* "device/mediatek/security"
+                echo "copy $CY_SIGN_KEY_FOLDER to  device/mediatek/security"
+            else
+                echo "NO ${CY_SIGN_KEY_FOLDER}"
+            fi 
+        fi
+    else
+        CY_CUSTOM_SIGN_KEY_FOLDER="$CY_BUILD_ROOT_DIR/cy_project/tools/singkey/$CY_WITH_CUSTOM_SIGNKEY"
+        if [ -d "${CY_CUSTOM_SIGN_KEY_FOLDER}" ];then
+            cp -f ${CY_CUSTOM_SIGN_KEY_FOLDER}/* "build/make/target/product/security"
+            echo "copy $CY_CUSTOM_SIGN_KEY_FOLDER to  build/make/target/product/security"
+            cp -f ${CY_CUSTOM_SIGN_KEY_FOLDER}/* "device/mediatek/security"
+            echo "copy $CY_CUSTOM_SIGN_KEY_FOLDER to  device/mediatek/security"
+        else
+            echo "NO ${CY_CUSTOM_SIGN_KEY_FOLDER}"
         fi 
     fi
 }
@@ -474,7 +486,11 @@ get_release_version(){
 
 create_product_for_flash_tool(){
     if [ -e "./cy_project/tools/cy_output_product_info.sh" ];then
-        bash ./cy_project/tools/cy_output_product_info.sh ${CHENYEEPRODUCTID} ${CY_RELEASE_DIR}
+        if [ "${CHENYEEPROJECTID}" == "SW17W13" ];then
+            bash ./cy_project/tools/gn_output_product_info.sh ${CHENYEEPRODUCTID} ${CY_RELEASE_DIR}
+        else
+            bash ./cy_project/tools/cy_output_product_info.sh ${CHENYEEPRODUCTID} ${CY_RELEASE_DIR}
+        fi
     fi
 }
 
@@ -607,11 +623,13 @@ copy_results_to_release(){
         rm -rf $CY_RELEASE_OTA_DIR_ROOT
         mkdir -p $CY_RELEASE_OTA_TMP_DIR
         mkdir -p $CY_RELEASE_OTA_DIR
-        cp -r $ota_zip $CY_RELEASE_OTA_DIR/${CHENYEEPRODUCTID}_update_${CY_RO_BUILD_DISPLAY_ID}_${MINI_VER_NUMBER}.zip
-        local ota_md5=$(md5sum $CY_RELEASE_OTA_DIR/${CHENYEEPRODUCTID}_update_${CY_RO_BUILD_DISPLAY_ID}_${MINI_VER_NUMBER}.zip |awk '{print $1}')
-        echo "${CHENYEEPRODUCTID}_update_${CY_RO_BUILD_DISPLAY_ID}_${MINI_VER_NUMBER}.zip=$ota_md5" > $CY_RELEASE_OTA_DIR/${CHENYEEPRODUCTID}_${MINI_VER_NUMBER}.md5
-        cp -r $ota_tmp_zip $CY_RELEASE_OTA_TMP_DIR/${CHENYEEPRODUCTID}_update_${CY_RO_BUILD_DISPLAY_ID}_${MINI_VER_NUMBER}_tmp.zip
-#Chenyee <CY_3rd> <lucy> <20180306> for CSW1703MX-9 beign
+        CY_RO_BUILD_DISPLAY_ID_TMP=$(echo ${CY_RO_BUILD_DISPLAY_ID})
+        CY_RO_BUILD_DISPLAY_ID_TMP=`echo ${CY_RO_BUILD_DISPLAY_ID_TMP} | sed 's/ /_/'`
+        cp -r $ota_zip $CY_RELEASE_OTA_DIR/${CHENYEEPRODUCTID}_update_${CY_RO_BUILD_DISPLAY_ID_TMP}_${MINI_VER_NUMBER}.zip
+        local ota_md5=$(md5sum $CY_RELEASE_OTA_DIR/${CHENYEEPRODUCTID}_update_${CY_RO_BUILD_DISPLAY_ID_TMP}_${MINI_VER_NUMBER}.zip |awk '{print $1}')
+        echo "${CHENYEEPRODUCTID}_update_${CY_RO_BUILD_DISPLAY_ID_TMP}_${MINI_VER_NUMBER}.zip=$ota_md5" > $CY_RELEASE_OTA_DIR/${CHENYEEPRODUCTID}_${MINI_VER_NUMBER}.md5
+        cp -r $ota_tmp_zip $CY_RELEASE_OTA_TMP_DIR/${CHENYEEPRODUCTID}_update_${CY_RO_BUILD_DISPLAY_ID_TMP}_${MINI_VER_NUMBER}_tmp.zip
+        #Chenyee <CY_3rd> <lucy> <20180306> for CSW1703MX-9 beign
         if [ "${ADUPS_FOTA_SUPPORT}" == "yes" ];then
             if [ "${ADUPS_FOTA_SIGINATURE}" == "yes" ];then
                 mkdir -p ${CY_RELEASE_OTA_DIR_ROOT}/3rd
@@ -722,6 +740,8 @@ build_remake(){
     echo "*** build_remake ***"
     config_verified_boot
     build_update_api
+    fix_build_err
+    enable_AudPar
     build_android
     build_copy_target
 }
@@ -731,6 +751,7 @@ build_remake_billy(){
     #build_update_api
     fix_build_err
     enable_AudPar
+    enable_audio_debug
     #dump_stack
     build_android
     #build_copy_target
@@ -771,6 +792,17 @@ fix_build_err()
 enable_AudPar(){
     AudPar=$CY_BUILD_ROOT_DIR/vendor/mediatek/proprietary/external/AudioParamParser/AudioParamParser.h
     sed -i 's/\/\/\#define FORCE_DEBUG_LEVEL/\#define FORCE_DEBUG_LEVEL/g' $AudPar
+
+if false;then
+    PhoneWindowManager=$CY_BUILD_ROOT_DIR/frameworks/base/services/core/java/com/android/server/policy/PhoneWindowManager.java
+    sed -i 's/DEBUG = false;/DEBUG = true;/g' $PhoneWindowManager
+    sed -i 's/localLOGV = false;/localLOGV = true;/g' $PhoneWindowManager
+    sed -i 's/DEBUG_INPUT = false;/DEBUG_INPUT = true;/g' $PhoneWindowManager
+    sed -i 's/DEBUG_KEYGUARD = false;/DEBUG_KEYGUARD = true;/g' $PhoneWindowManager
+    sed -i 's/DEBUG_LAYOUT = false;/DEBUG_LAYOUT = true;/g' $PhoneWindowManager
+    sed -i 's/DEBUG_SPLASH_SCREEN = false;/DEBUG_SPLASH_SCREEN = true;/g' $PhoneWindowManager
+    sed -i 's/DEBUG_WAKEUP = false;/DEBUG_WAKEUP = true;/g' $PhoneWindowManager
+fi
 }
 
 dump_stack()
@@ -794,6 +826,49 @@ dump_stack()
         sed -i '47i #include <utils/CallStack.h> //billy' $AudioPolicyManager
         sed -i 's/ALOGV(\"setStreamVolumeIndex()/CallStack(\"billy\");\n\t&/' $AudioPolicyManager
     fi
+    AudioService=$CY_BUILD_ROOT_DIR/frameworks/base/services/core/java/com/android/server/audio/AudioService.java 
+    grep "RuntimeException re = new RuntimeException()" $AudioService > /dev/null
+    if [ $? -eq 0 ]; then
+            echo "已经修改过，不用修改"
+    else
+        sed -i 's/ensureValidDirection(direction);/Log.e(TAG, "billy:" + Log.getStackTraceString(new Throwable()));\n\\t\t&/' $AudioService
+        sed -i 's/ensureValidDirection(direction);/RuntimeException re = new RuntimeException();\n\t\t\t\tre.fillInStackTrace();\n\t\t\t\tLog.d(TAG, "billy", re);\n\t\t&/' $AudioService
+    fi
+}
+
+scandir()
+{
+    local cur_dir parent_dir workdir
+    workdir=$1
+    cd ${workdir}
+    if [ ${workdir} = "/" ]
+    then
+        cur_dir=""
+    else
+        cur_dir=$(pwd)
+    fi
+
+    for dirlist in $(ls ${cur_dir})
+    do
+        if test -d ${dirlist};then
+            cd ${dirlist}
+            scandir ${cur_dir}/${dirlist}
+            cd ..
+        else
+            sed -i 's/\/\/#define LOG_NDEBUG 0/#define LOG_NDEBUG 0 \/\/billy/g' $dirlist
+        fi
+    done
+}
+
+enable_audio_debug()
+{
+    echo "********* enable audio debug LOG_NDEBUG 0 **********"
+    AudioJniDir=$CY_BUILD_ROOT_DIR/frameworks/base/core/jni
+    AudioFlinger=$CY_BUILD_ROOT_DIR/frameworks/av/services/audioflinger
+    AudioPolicy=$CY_BUILD_ROOT_DIR/frameworks/av/services/audiopolicy
+    scandir $AudioJniDir
+    scandir $AudioFlinger
+    scandir $AudioPolicy
 }
 
 build_new(){
@@ -801,6 +876,7 @@ build_new(){
     build_copy_cy_code
     build_err
     enable_AudPar
+    enable_audio_debug
     #dump_stack
     build_remake
     create_check_list
