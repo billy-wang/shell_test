@@ -2,3 +2,8 @@
 wget http://download.boll.me/securecrt_linux_crack.pl
 
 sudo perl securecrt_linux_crack.pl /usr/bin/SecureCRT
+
+菜单栏显示修改
+.vandyke/SecureCRT/Config/Global.ini
+D:"Show Menu Bar"=00000001
+
