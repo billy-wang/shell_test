@@ -7,3 +7,5 @@ sudo perl securecrt_linux_crack.pl /usr/bin/SecureCRT
 .vandyke/SecureCRT/Config/Global.ini
 D:"Show Menu Bar"=00000001
 
+保存log，不要勾选Raw log,否则会添加一些shell grep 过滤关键字色彩
+
