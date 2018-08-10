@@ -862,6 +862,10 @@ enable_audio_debug()
     AudioStreamInternal=$Media/libaaudio/src/client/AudioStreamInternal.cpp
     AudioStreamInternalCapture=$Media/libaaudio/src/client/AudioStreamInternalCapture.cpp
     AudioStreamInternalPlay=$Media/libaaudio/src/client/AudioStreamInternalPlay.cpp
+    MonoPipeReader=$Media/frameworks/av/media/libnbaio/MonoPipeReader.cpp
+    MonoPipe=$Media/frameworks/av/media/libnbaio/MonoPipe.cpp
+    Pipe=$Media/frameworks/av/media/libnbaio/Pipe.cpp
+    PipeReader=$Media/frameworks/av/media/libnbaio/PipeReader.cpp
 
     AudioMixer=$CY_BUILD_ROOT_DIR/frameworks/av/media/libaudioprocessing/AudioMixer.cpp
 
@@ -878,6 +882,10 @@ enable_audio_debug()
         sed -i 's/#define LOG_NDEBUG 0 \/\/billy/\/\/#define LOG_NDEBUG 0 \/\/billy/g' $AudioStreamInternal
         sed -i 's/#define LOG_NDEBUG 0 \/\/billy/\/\/#define LOG_NDEBUG 0 \/\/billy/g' $AudioStreamInternalCapture
         sed -i 's/#define LOG_NDEBUG 0 \/\/billy/\/\/#define LOG_NDEBUG 0 \/\/billy/g' $AudioStreamInternalPlay
+        sed -i 's/#define LOG_NDEBUG 0 \/\/billy/\/\/#define LOG_NDEBUG 0 \/\/billy/g' $MonoPipeReader
+        sed -i 's/#define LOG_NDEBUG 0 \/\/billy/\/\/#define LOG_NDEBUG 0 \/\/billy/g' $MonoPipe
+        sed -i 's/#define LOG_NDEBUG 0 \/\/billy/\/\/#define LOG_NDEBUG 0 \/\/billy/g' $Pipe
+        sed -i 's/#define LOG_NDEBUG 0 \/\/billy/\/\/#define LOG_NDEBUG 0 \/\/billy/g' $PipeReader
 
         cd $cur_dir
     fi
