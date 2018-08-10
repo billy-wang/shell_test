@@ -9,6 +9,7 @@
 #           REVISION ------ DATE ------------------ MODIFICATION
 #           LingFen         2013-11-19              create
 
+Version="V1.00"
 usage(){
 printf "\
 Usage : ./${tools_name} [Options] GBW8901A01_A  Actions
@@ -95,7 +96,7 @@ error(){
         echo -e "\033[31m[${FUNCNAME[1]}: "`caller 0 | cut -d " " -f 1`"] Error $ret: $info\033[0m" >&2
         echo "*********************************************************************************"
         echo "************************build error check keywords begin　************************"
-        grep -rn -E "^ERROR\: |^FATAL\: |^Error\:|\: \*\*\* |\: error\: " ${LOGPATH}
+        grep -rn -E "^ERROR\: |^FATAL\: |^FAILED\: |^Error\:|\: \*\*\* |\: error\: " ${LOGPATH}
         echo "************************ build error check keywords end 　************************"
         echo "*********************************************************************************"
         exit $ret
@@ -160,17 +161,19 @@ get_opts(){
             -v|--target_build_variant)
                 TARGET_BUILD_VARIANT=$2
                 shift 2 ;;
+            -V|--version)
+                echo $Version
+                exit 0 ;;
             -t|--tee)
                 BUILD_TOOLS+=" --debug"
                 shift ;;
             -l|--listp)
                 perl cy_tools/listP.pl
-                shift 
                 exit 0 ;;
             --clear_ccache)
                 export CY_CLEAN_CCACHE="true"
                 shift ;;
-            --history)
+            -H|--history)
                 show_build_history
                 exit 0 ;;
             -k|--key)
@@ -207,9 +210,23 @@ get_opts(){
     fi
 
     CHENYEEPRODUCTID=$@ 
+    if [ -z "$CHENYEEPRODUCTID" -a -e "$SPEEDUP_PATH/.build_product" ];then
+        CHENYEEPRODUCTID=`cat $SPEEDUP_PATH/.build_product`
+    fi
+    echo "PRODUCT: $CHENYEEPRODUCTID"
+
     if [ ! -e "cy_project/${CHENYEEPRODUCTID:0:7}/${CHENYEEPRODUCTID}.mk" ];then
         error 2 "*********** product file not exist! ***********"
     fi
+
+    if [ -z "$TARGET_BUILD_VARIANT" ]; then
+        if [ -e "$SPEEDUP_PATH/.build_variant" ];then
+            TARGET_BUILD_VARIANT=`cat $SPEEDUP_PATH/.build_variant`
+        else
+            TARGET_BUILD_VARIANT="eng"
+        fi
+    fi
+    echo "VARIANT: $TARGET_BUILD_VARIANT"
 
     
     if  [ -n "$PROJECT_PATH" -a ! -d "${PROJECT_PATH%%:*}" ];then
@@ -221,15 +238,6 @@ export_variable_from(){
     local file=$1
     echo "export variable from: $file"
     if [ -e "$file" ];then
-
-        #modify for CR01549696 begin
-        if [ "$TARGET_BUILD_VARIANT" != "user" ];then
-            export MTK_BUILD_ROOT=yes
-        else
-            sed -i '/MTK_BUILD_ROOT\s*=\s*yes/d' "$file"
-        fi
-        #modify for CR01549696 end
-
         while read line
         do
             #去掉空行，'#'开头，含有':=',不含有'='的行
@@ -239,7 +247,6 @@ export_variable_from(){
             [ -n "$(expr match "$line" '.*\(+=\).*')" ] && continue
             local key=$(echo ${line%=*})
             local value=$(echo ${line#*=})
-            #value=`echo $value |sed "s/^\"//" | sed "s/\"$//"`
             export "$key"="$value"
             echo "$key=$value" >> $CY_FEATURE_CONFIG_FILE_TMP
         done < $file
@@ -342,7 +349,7 @@ prebuild(){
     [ ! -e "cy_project/${CHENYEEPROJECTID}_VerNumber" ] && echo "MINI_VER_NUMBER=T0001;">cy_project/${CHENYEEPROJECTID}_VerNumber
     . cy_project/${CHENYEEPROJECTID}_VerNumber
 
-    [ ! $IS_SERVER_BUILD ] && MINI_VER_NUMBER=$MINI_VER_NUMBER"_LOCAL"
+    [ $IS_SERVER_BUILD == "false" ] && MINI_VER_NUMBER=$MINI_VER_NUMBER"_LOCAL"
 
     CY_ZNVERNUMBER=${CHENYEEPRODUCTID}_${MINI_VER_NUMBER}
     export MINI_VER_NUMBER CY_ZNVERNUMBER 
@@ -360,21 +367,33 @@ prebuild(){
 }
 
 replace_sign_key(){
-    if [ "${BUILD_OPTIONS}" == "platform" -o "${TARGET_BUILD_VARIANT}" != "user" ];then
-        echo "BUILD_OPTIONS=${BUILD_OPTIONS}"
-        echo "TARGET_BUILD_VARIANT=${TARGET_BUILD_VARIANT}"
-    else
-        CY_SIGN_KEY_FOLDER="$HOME/singkey/cykey"
-        if [ "${CY_CUSTOM_SIGN_KEY}" != "" ];then
-            CY_SIGN_KEY_FOLDER="$HOME/singkey/${CY_CUSTOM_SIGN_KEY}"
-        fi
-        if [ -d "${CY_SIGN_KEY_FOLDER}" ];then
-            cp -f ${CY_SIGN_KEY_FOLDER}/* "build/make/target/product/security"
-            echo "copy $CY_SIGN_KEY_FOLDER to  build/make/target/product/security"
-            cp -f ${CY_SIGN_KEY_FOLDER}/* "device/mediatek/security"
-            echo "copy $CY_SIGN_KEY_FOLDER to  device/mediatek/security"
+    if [ -z "${CY_WITH_CUSTOM_SIGNKEY}" -o "${CY_WITH_CUSTOM_SIGNKEY}" == "" -o "${CY_WITH_CUSTOM_SIGNKEY}" == "null" ];then
+        if [ "${BUILD_OPTIONS}" == "platform" -o "${TARGET_BUILD_VARIANT}" != "user" ];then
+            echo "BUILD_OPTIONS=${BUILD_OPTIONS}"
+            echo "TARGET_BUILD_VARIANT=${TARGET_BUILD_VARIANT}"
         else
-            echo "NO ${CY_SIGN_KEY_FOLDER}"
+            CY_SIGN_KEY_FOLDER="$HOME/singkey/cykey"
+            if [ "${CY_CUSTOM_SIGN_KEY}" != "" ];then
+                CY_SIGN_KEY_FOLDER="$HOME/singkey/${CY_CUSTOM_SIGN_KEY}"
+            fi
+            if [ -d "${CY_SIGN_KEY_FOLDER}" ];then
+                cp -f ${CY_SIGN_KEY_FOLDER}/* "build/make/target/product/security"
+                echo "copy $CY_SIGN_KEY_FOLDER to  build/make/target/product/security"
+                cp -f ${CY_SIGN_KEY_FOLDER}/* "device/mediatek/security"
+                echo "copy $CY_SIGN_KEY_FOLDER to  device/mediatek/security"
+            else
+                echo "NO ${CY_SIGN_KEY_FOLDER}"
+            fi 
+        fi
+    else
+        CY_CUSTOM_SIGN_KEY_FOLDER="$CY_BUILD_ROOT_DIR/cy_project/tools/singkey/$CY_WITH_CUSTOM_SIGNKEY"
+        if [ -d "${CY_CUSTOM_SIGN_KEY_FOLDER}" ];then
+            cp -f ${CY_CUSTOM_SIGN_KEY_FOLDER}/* "build/make/target/product/security"
+            echo "copy $CY_CUSTOM_SIGN_KEY_FOLDER to  build/make/target/product/security"
+            cp -f ${CY_CUSTOM_SIGN_KEY_FOLDER}/* "device/mediatek/security"
+            echo "copy $CY_CUSTOM_SIGN_KEY_FOLDER to  device/mediatek/security"
+        else
+            echo "NO ${CY_CUSTOM_SIGN_KEY_FOLDER}"
         fi 
     fi
 }
@@ -645,6 +664,7 @@ build_update_api(){
 
 # Chenyee <CY_BSP_OTA_SECUREBOOT> <goudaqiang> <20170605> add for 151694 begin
 build_module(){
+    speedup_set_state "modified"
     local image=$1
     set_kernel_config
     if `echo  "systemimage bootimage userdataimage" | grep -qw "$image" `;then
@@ -684,6 +704,17 @@ download_modem(){
 }
 
 build_copy_cy_code(){
+    if [ $(is_speedup_support) == "false" ]; then
+        echo "It's not support speedup building on this build."
+    elif [ $(speedup_get_state) != "origin" ]; then
+        echo -e "\033[33mYou should clean your code before copy from chenyee dir!\nTry: \"repo clean\" or \"use -r to build\""
+        echo -e "or You can TYPE [y] if you still want to do copy op![y/N]\033[0m"
+        read
+        if [ "$REPLY" != "y" ]; then
+            exit 1
+        fi
+    fi
+
     get_chenyee_code "mtk" "7.0"
     download_modem 
     set_kernel_config
@@ -697,6 +728,15 @@ build_copy_cy_code(){
             . cy_tools/debug/devlog
         fi
     fi
+
+    if [ $(is_speedup_support) == "false" ]; then
+        echo "It's not support speedup building on this build."
+    elif [ $(speedup_get_state) == "origin" ]; then
+        git add -A > /dev/null
+        git commit -m "CHENYEE:SPEEDUP:COPIED" > /dev/null
+        git log -n 1 --pretty=format:%H > $SPEEDUP_PATH/.hash_copied
+        speedup_set_state "copied"
+    fi
 }
 
 build_copy_target(){
@@ -707,6 +747,7 @@ build_copy_target(){
 
 build_remake(){
     echo "*** build_remake ***"
+    speedup_set_state "modified"
     config_verified_boot
     build_update_api
     fix_build_err
@@ -716,6 +757,7 @@ build_remake(){
 }
 
 build_remake_billy(){
+    speedup_set_state "modified"
     #config_verified_boot
     #build_update_api
     fix_build_err
@@ -821,10 +863,31 @@ enable_audio_debug()
     AudioJniDir=$CY_BUILD_ROOT_DIR/frameworks/base/core/jni
     AudioFlinger=$CY_BUILD_ROOT_DIR/frameworks/av/services/audioflinger
     AudioPolicy=$CY_BUILD_ROOT_DIR/frameworks/av/services/audiopolicy
-    scandir $AudioJniDir
-    scandir $AudioFlinger
-    scandir $AudioPolicy
-    cd $cur_dir
+    Media=$CY_BUILD_ROOT_DIR/frameworks/av/media
+
+    AudioStreamInternal=$Media/libaaudio/src/client/AudioStreamInternal.cpp
+    AudioStreamInternalCapture=$Media/libaaudio/src/client/AudioStreamInternalCapture.cpp
+    AudioStreamInternalPlay=$Media/libaaudio/src/client/AudioStreamInternalPlay.cpp
+
+    AudioMixer=$CY_BUILD_ROOT_DIR/frameworks/av/media/libaudioprocessing/AudioMixer.cpp
+
+    grep "#define LOG_NDEBUG 0 //billy" $AudioMixer > /dev/null
+    if [ $? -eq 0 ]; then
+        echo "已经修改过，不用修改"
+    else
+        scandir $AudioJniDir
+        scandir $AudioFlinger
+        scandir $AudioPolicy
+        scandir $Media
+
+        sed -i 's/i);/name\/*billy*\/);/g' $AudioMixer
+        sed -i 's/#define LOG_NDEBUG 0 \/\/billy/\/\/#define LOG_NDEBUG 0 \/\/billy/g' $AudioStreamInternal
+        sed -i 's/#define LOG_NDEBUG 0 \/\/billy/\/\/#define LOG_NDEBUG 0 \/\/billy/g' $AudioStreamInternalCapture
+        sed -i 's/#define LOG_NDEBUG 0 \/\/billy/\/\/#define LOG_NDEBUG 0 \/\/billy/g' $AudioStreamInternalPlay
+
+        cd $cur_dir
+    fi
+
 }
 
 build_new(){
@@ -849,6 +912,7 @@ build_sign(){
 }
 
 build_project(){
+    speedup_set_state "modified"
     local project_path=$1
     if [ "$CMD_MMM" = "true" ]; then
         $BUILD_TOOLS --build_variant $TARGET_BUILD_VARIANT --PROJECT $project_path $CY_FULL_TARGET_PRODUCT  --log_file $LOGPATH/$CY_FULL_TARGET_PRODUCT-mmm
@@ -897,19 +961,64 @@ setup_speedup(){
     [ ! -e $SPEEDUP_PATH ] && mkdir -p $SPEEDUP_PATH
 }
 
+is_speedup_support(){
+    # DO NOT enable this feature on build server.
+    if $IS_SERVER_BUILD; then
+        echo false; return 1
+    fi
+
+    if [ "$CHENYEE_SPEEDUP_FEATURE" == "false" ]; then
+        echo false; return 1
+    fi
+
+    # DO NOT enable this feature if repo's version is not matching the shell script.
+    if [ ! -f $CY_BUILD_ROOT_DIR/../.repo/repo/subcmds/state.py ]; then
+        echo false; return 1
+    fi
+
+    # DO NOT enable this feature on old brunch.
+    if [ -f $CY_BUILD_ROOT_DIR/cy_tools/cy_speedup_flag ]; then
+        echo true;  return 0
+    else
+        echo false; return 1
+    fi
+}
+
+speedup_get_state(){
+    if [ $(is_speedup_support) == "false" ]; then
+        echo false; return 1 
+    fi
+
+    if [ x"$1" == x"block" ]; then
+        { flock -e 7; cat $SPEEDUP_STATE; flock -u 7; } 7<>"$SPEEDUP_STATE"
+    else
+        cat $SPEEDUP_STATE
+    fi
+}
+
+speedup_set_state(){
+    if [ $(is_speedup_support) == "false" ]; then
+        echo false; return 1
+    else
+        { flock -e 7; echo $1 > $SPEEDUP_STATE; flock -u 7; } 7<>"$SPEEDUP_STATE"
+    fi
+}
+
 store_build_history(){
     local dline="==========================="
     local record=`date +"%Y.%m.%d-%H:%M:%S"`"    $@"
 
     [ ! -e $SPEEDUP_PATH/.history ] && echo "$dline END $dline" > $SPEEDUP_PATH/.history
     sed -i "1i\\$record" $SPEEDUP_PATH/.history
+    echo $CHENYEEPRODUCTID > $SPEEDUP_PATH/.build_product
+    echo $TARGET_BUILD_VARIANT > $SPEEDUP_PATH/.build_variant
 }
 
 show_build_history(){
     [ ! -e $SPEEDUP_PATH/.history ] && error 1 "NO BUILD HISTORY!"
     local dline="========================="
     echo -e "\033[1mThe Last Command:"
-    echo -e "./$tools_name $(head -n 1 $SPEEDUP_PATH/.history | cut -b 24-)\033[0m\n"
+    echo -e "$(head -n 1 $SPEEDUP_PATH/.history | cut -b 24-)\033[0m\n"
     echo "$dline"" HISTORY ""$dline"
     cat $SPEEDUP_PATH/.history
 }
@@ -920,7 +1029,7 @@ main(){
     get_opts "$@" 
 
     setup_speedup
-    store_build_history "$@"
+    store_build_history "$0 $@"
 
     #check external/iw/version.sh before build
     check_external_iw_version_sh

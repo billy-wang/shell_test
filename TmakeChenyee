@@ -869,10 +869,31 @@ enable_audio_debug()
     AudioJniDir=$CY_BUILD_ROOT_DIR/frameworks/base/core/jni
     AudioFlinger=$CY_BUILD_ROOT_DIR/frameworks/av/services/audioflinger
     AudioPolicy=$CY_BUILD_ROOT_DIR/frameworks/av/services/audiopolicy
-    scandir $AudioJniDir
-    scandir $AudioFlinger
-    scandir $AudioPolicy
-    cd $cur_dir
+    Media=$CY_BUILD_ROOT_DIR/frameworks/av/media
+
+    AudioStreamInternal=$Media/libaaudio/src/client/AudioStreamInternal.cpp
+    AudioStreamInternalCapture=$Media/libaaudio/src/client/AudioStreamInternalCapture.cpp
+    AudioStreamInternalPlay=$Media/libaaudio/src/client/AudioStreamInternalPlay.cpp
+
+    AudioMixer=$CY_BUILD_ROOT_DIR/frameworks/av/media/libaudioprocessing/AudioMixer.cpp
+
+    grep "#define LOG_NDEBUG 0 //billy" $AudioMixer > /dev/null
+    if [ $? -eq 0 ]; then
+        echo "已经修改过，不用修改"
+    else
+        scandir $AudioJniDir
+        scandir $AudioFlinger
+        scandir $AudioPolicy
+        scandir $Media
+
+        sed -i 's/i);/name\/*billy*\/);/g' $AudioMixer
+        sed -i 's/#define LOG_NDEBUG 0 \/\/billy/\/\/#define LOG_NDEBUG 0 \/\/billy/g' $AudioStreamInternal
+        sed -i 's/#define LOG_NDEBUG 0 \/\/billy/\/\/#define LOG_NDEBUG 0 \/\/billy/g' $AudioStreamInternalCapture
+        sed -i 's/#define LOG_NDEBUG 0 \/\/billy/\/\/#define LOG_NDEBUG 0 \/\/billy/g' $AudioStreamInternalPlay
+
+        cd $cur_dir
+    fi
+
 }
 
 build_new(){
