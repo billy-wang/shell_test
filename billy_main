@@ -108,12 +108,12 @@ reset_code()
 	if [ -n "$2" ];then
 		echo "repo forall -c 'git clean -d -f' && repo forall -c 'git reset --hard origin/$2' && repo forall -c 'git remote update' && repo sync #&& rm -rf out/"
 		#repo forall -c 'git clean -d -f' && repo forall -c 'git reset --hard origin/$2' && repo forall -c 'git remote update' && repo sync --no-tags #&& rm -rf out/
-		repo forall -c 'git reset --hard origin/$2' && repo forall -c 'git reset clean -f -d -x' && repo sync --no-tags #&& rm -rf out/
+		repo forall -c 'git reset --hard origin/$2' && repo forall -c 'git clean -f -d -x' && repo sync --no-tags #&& rm -rf out/
 	else
 		echo "not select code origin patch example cy_o1.mp1"
 		echo "usage: $0 $1 cy_01.mp1 "
 		echo "repo forall -c 'git reset --hard' && repo forall -c 'git reset clean -f -d -x' && repo sync --no-tags #&& rm -rf out/"
-		repo forall -c 'git reset --hard' && repo forall -c 'git reset clean -f -d -x' && repo sync --no-tags #&& rm -rf out/
+		repo forall -c 'git reset --hard' && repo forall -c 'git clean -f -d -x' && repo sync --no-tags #&& rm -rf out/
 		exit 2
 	fi
 
@@ -234,15 +234,29 @@ down_mtk_code()
 	mkdir -p /home/billy/work/${PROJECT}/alps/${code_origin}
 	cd /home/billy/work/${PROJECT}/alps/${code_origin}
 
-	repo init -u ssh://wangbb@18.8.3.13:29418/mtk/manifest -b ${code_origin} -m ${code_origin}${code_dev}.xml --no-repo-verify
-	repo sync --no-tags
+	if [ "$PROJECT" == "CSW1705_P" ];then
+	    repo init -u ssh://wangbb@18.8.3.13:29418/P/manifest -b ${code_origin} -m ${code_origin}${code_dev}.xml --no-repo-verify
+    else
+        repo init -u ssh://wangbb@18.8.3.13:29418/mtk/manifest -b ${code_origin} -m ${code_origin}${code_dev}.xml --no-repo-verify
+    fi
+    repo sync --no-tags
 	#repo start master --all
 	repo start ${code_origin} --all
 
 	cd /home/billy/work/${PROJECT}/alps/${code_origin}
 	repo forall -c "scp -p -P 29418 wangbb@18.8.3.13:hooks/commit-msg .git/hooks/"
 
-if false;then
+	if [ "$PROJECT" == "CSW1705_P" ];then
+        mv ~/work/${PROJECT}/alps/${code_origin} ~/work/${PROJECT}/alps/${code_origin}_
+        mkdir -p ~/work/${PROJECT}/alps/${code_origin}
+
+        mv ~/work/${PROJECT}/alps/${code_origin}_/android_mtk_p0_mp2/* ~/work/${PROJECT}/alps/${code_origin}
+        #mv ~/work/${PROJECT}/alps/${code_origin}_/.repo ~/home/billy/work/${PROJECT}/alps
+        #rm -rf ~/work/${PROJECT}/alps/${code_origin}_
+    fi
+
+#if false;then
+if true;then
 	echo "down packages"
 	mkdir -p /home/billy/work/${PROJECT}/chenyee_rom_apk
 	cd /home/billy/work/${PROJECT}/chenyee_rom_apk
