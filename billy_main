@@ -107,13 +107,29 @@ reset_code()
 {
 	if [ -n "$2" ];then
 		echo "repo forall -c 'git clean -d -f' && repo forall -c 'git reset --hard origin/$2' && repo forall -c 'git remote update' && repo sync #&& rm -rf out/"
-		#repo forall -c 'git clean -d -f' && repo forall -c 'git reset --hard origin/$2' && repo forall -c 'git remote update' && repo sync --no-tags #&& rm -rf out/
-		repo forall -c 'git reset --hard origin/$2' && repo forall -c 'git clean -f -d -x' && repo sync --no-tags #&& rm -rf out/
+		#repo forall -c 'git clean -d -f' && repo forall -c 'git reset --hard origin/$2' && repo forall -c 'git remote update' && repo sync --force-sync --no-tags #&& rm -rf out/
+		repo forall -c 'git reset --hard origin/$2' && repo forall -c 'git clean -f -d -x' && repo sync --force-sync --no-tags #&& rm -rf out/
 	else
 		echo "not select code origin patch example cy_o1.mp1"
 		echo "usage: $0 $1 cy_01.mp1 "
 		echo "repo forall -c 'git reset --hard' && repo forall -c 'git reset clean -f -d -x' && repo sync --no-tags #&& rm -rf out/"
-		repo forall -c 'git reset --hard' && repo forall -c 'git clean -f -d -x' && repo sync --no-tags #&& rm -rf out/
+        
+        if [ -d ../.repo/manifests ];then
+            echo "***$?***"
+            cd ../.repo/manifests
+        else
+            echo kk
+            cd .repo/manifests
+        fi
+        git stash
+        git clean -dxf
+        cd -
+        repo forall -c 'git merge --abort'
+        #repo forall -c 'git reset --hard' 
+        repo forall -c 'git clean -fdx' 
+        repo sync --force-sync --no-tags 
+        #rm -rf out/
+        repo forall -c 'git branch' 
 		exit 2
 	fi
 
@@ -212,15 +228,17 @@ down_mtk_code()
 	fi
 	
 	if [ "$PROJECT" == "CSW1707" ];then
+		#code_origin=cy_o1.mp6
+        #code_dev=_V1.25_1707_T0413_dev
 		code_origin=cy_o1.mp6
-        code_dev=_V1.25_1707_T0413_dev
-        package_dev=mp
+        code_dev=-V1.15
+        package_dev=_mp
 	elif [ "$PROJECT" == "SW17W16" ];then
 		code_origin=cy_o0.mp1
         code_dev=
         package_dev=
-	elif [ "$PROJECT" == "CSW1705_P" ];then
-		code_origin=cy_p0.mp2
+	elif [[ "$PROJECT" == "CSW1705_P" ]] || [[ "$PROJECT" == "CSW1805" ]] || [[ "$PROJECT" == "CSW1809" ]];then
+		code_origin=cy_p0.mp1
         code_dev=
         package_dev=
 	else
@@ -231,12 +249,16 @@ down_mtk_code()
 
 	echo $code_origin
 	echo "down load $PROJECT android"
-	mkdir -p /home/billy/work/${PROJECT}/alps/${code_origin}
-	cd /home/billy/work/${PROJECT}/alps/${code_origin}
 
-	if [ "$PROJECT" == "CSW1705_P" ];then
+	if [[ "$PROJECT" == "CSW1705_P" ]] || [[ "$PROJECT" == "CSW1805" ]]  || [[ "$PROJECT" == "CSW1809" ]];then
+	    mkdir -p /home/billy/work/${PROJECT}/alps
+	    cd /home/billy/work/${PROJECT}/alps
+	    echo "repo init -u ssh://wangbb@18.8.3.13:29418/P/manifest -b ${code_origin} -m ${code_origin}${code_dev}.xml --no-repo-verify"
 	    repo init -u ssh://wangbb@18.8.3.13:29418/P/manifest -b ${code_origin} -m ${code_origin}${code_dev}.xml --no-repo-verify
     else
+	    mkdir -p /home/billy/work/${PROJECT}/alps/${code_origin}
+	    cd /home/billy/work/${PROJECT}/alps
+        echo "repo init -u ssh://wangbb@18.8.3.13:29418/mtk/manifest -b ${code_origin} -m ${code_origin}${code_dev}.xml --no-repo-verify"
         repo init -u ssh://wangbb@18.8.3.13:29418/mtk/manifest -b ${code_origin} -m ${code_origin}${code_dev}.xml --no-repo-verify
     fi
     repo sync --no-tags
@@ -246,6 +268,7 @@ down_mtk_code()
 	cd /home/billy/work/${PROJECT}/alps/${code_origin}
 	repo forall -c "scp -p -P 29418 wangbb@18.8.3.13:hooks/commit-msg .git/hooks/"
 
+if false;then
 	if [ "$PROJECT" == "CSW1705_P" ];then
         mv ~/work/${PROJECT}/alps/${code_origin} ~/work/${PROJECT}/alps/${code_origin}_
         mkdir -p ~/work/${PROJECT}/alps/${code_origin}
@@ -254,18 +277,18 @@ down_mtk_code()
         #mv ~/work/${PROJECT}/alps/${code_origin}_/.repo ~/home/billy/work/${PROJECT}/alps
         #rm -rf ~/work/${PROJECT}/alps/${code_origin}_
     fi
+fi
 
-#if false;then
-if true;then
+if false;then
+#if true;then
 	echo "down packages"
 	mkdir -p /home/billy/work/${PROJECT}/chenyee_rom_apk
 	cd /home/billy/work/${PROJECT}/chenyee_rom_apk
 
-
-	if [ "$PROJECT" == "CSW1705_P" ];then
+	if [[ "$PROJECT" == "CSW1705_P" ]] || [[ "$PROJECT" == "CSW1805" ]] || [[ "$PROJECT" == "CSW1809" ]];then
 	    repo init -u ssh://wangbb@18.8.3.13:29418/P/manifest -b chenyee_rom_apk -m CSW1705_master.xml --no-repo-verify
     else
-	    repo init -u ssh://wangbb@18.8.3.13:29418/151/manifest -b chenyee_rom_apk -m ${PROJECT}_oversea_${package_dev}.xml --no-repo-verify
+	    repo init -u ssh://wangbb@18.8.3.13:29418/151/manifest -b chenyee_rom_apk -m ${PROJECT}_oversea${package_dev}.xml --no-repo-verify
     fi
 
     repo sync --no-tags
@@ -856,9 +879,29 @@ kernel_log_converter()
 
 change_io_desk_block()
 {
-	sdparm -s WCE=1, RCD=0 -S /dev/sda
-	sudo blockdev --setra 256 /dev/mapper/ubuntu--vg-root
-	sudo blockdev --setra 256 /dev/sda
+    #测试请求一个1G大小的文件 
+    echo "time dd if=/dev/zero of=test bs=1M count=1000"
+    time dd if=/dev/zero of=test bs=1M count=1000
+    #IO调度算法 noop deadline [cfq]
+    echo "cat /sys/block/sdx/queue/scheduler"
+    cat /sys/block/sda/queue/scheduler
+    cat /sys/block/sdb/queue/scheduler
+    #查看磁盘的默认请求队列：
+    echo "cat /sys/block/sdx/queue/nr_requests"
+    cat /sys/block/sda/queue/nr_requests
+    cat /sys/block/sdb/queue/nr_requests
+    
+    #一次读多少内容，默认128kb
+    echo "cat /sys/block/sdx/queue/read_ahead_kb"
+    cat /sys/block/sda/queue/read_ahead_kb
+    cat /sys/block/sdb/queue/read_ahead_kb
+    #blockdev –setra 来设置,setra 设置的是多少个扇区,所以实际的字节是除以2,比如设置 512 ,实际是读 256 个字节.
+	echo "sdparm -s WCE(Write Cache Enable)=1,RCD(Read Cache Disable)=0 -S /dev/sdb"
+	#sdparm -s WCE=1,RCD=0 -S /dev/sdb
+	#sudo blockdev --setra 512 /dev/mapper/ubuntu--vg-root
+	echo "sudo blockdev --setra 512 /dev/sdx"
+	sudo blockdev --setra 512 /dev/sda
+	sudo blockdev --setra 512 /dev/sdb
 }
 
 change_CRLF2LF()
@@ -875,6 +918,107 @@ change_LF2CRLF()
 	sed -i 's/$/\r/g' $2
 }
 
+scandir()
+{
+    local cur_dir parent_dir workdir
+    workdir=$1
+    cd ${workdir}
+    if [ ${workdir} = "/" ]
+    then
+        cur_dir=""
+    else
+        cur_dir=$(pwd)
+    fi
+
+    for dirlist in $(ls ${cur_dir})
+    do
+        if test -d ${dirlist};then
+            cd ${dirlist}
+            scandir ${cur_dir}/${dirlist}
+            cd ..
+        else
+            sed -i 's/\/\/#define LOG_NDEBUG 0/#define LOG_NDEBUG 0 \/\/billy/g' $dirlist
+        fi
+    done
+}
+
+
+enable_debug()
+{
+    local cur_dir
+    cur_dir=$(pwd)
+    CY_BUILD_ROOT_DIR=$cur_dir
+    echo "**** curdir $(pwd) *******"
+    echo "********* enable audio debug LOG_NDEBUG 0 **********"
+    
+    AudPar=vendor/mediatek/proprietary/external/AudioParamParser/AudioParamParser.h
+
+    AudioJniDir=$CY_BUILD_ROOT_DIR/frameworks/base/core/jni
+    AudioFlinger=$CY_BUILD_ROOT_DIR/frameworks/av/services/audioflinger
+    AudioPolicy=$CY_BUILD_ROOT_DIR/frameworks/av/services/audiopolicy
+    MediaJniDir=$CY_BUILD_ROOT_DIR/frameworks/base/media/jni
+    Media=$CY_BUILD_ROOT_DIR/frameworks/av/media
+
+    android_media_MediaDrm=$MediaJniDir/android_media_MediaDrm.cpp
+    AudioStreamInternal=$Media/libaaudio/src/client/AudioStreamInternal.cpp
+    AudioStreamInternalCapture=$Media/libaaudio/src/client/AudioStreamInternalCapture.cpp
+    AudioStreamInternalPlay=$Media/libaaudio/src/client/AudioStreamInternalPlay.cpp
+    MonoPipeReader=$Media/libnbaio/MonoPipeReader.cpp
+    MonoPipe=$Media/libnbaio/MonoPipe.cpp
+    Pipe=$Media/libnbaio/Pipe.cpp
+    PipeReader=$Media/libnbaio/PipeReader.cpp
+
+    AudioMixer=$Media/libaudioprocessing/AudioMixer.cpp
+
+    grep "#define LOG_NDEBUG 0 //billy" $AudioMixer > /dev/null
+    if [ $? -eq 0 ]; then
+        echo "已经修改过，不用修改"
+    else
+        scandir $AudioJniDir
+        scandir $AudioFlinger
+        scandir $AudioPolicy
+        scandir $MediaJniDir
+        scandir $Media
+
+        sed -i 's/i);/name\/*billy*\/);/g' $AudioMixer
+
+        sed -i 's/\/\/\#define FORCE_DEBUG_LEVEL/\#define FORCE_DEBUG_LEVEL/g' $AudPar
+        
+        sed -i 's/#define LOG_NDEBUG 0 \/\/billy/\/\/#define LOG_NDEBUG 0 \/\/billy/g' $android_media_MediaDrm
+        sed -i 's/#define LOG_NDEBUG 0 \/\/billy/\/\/#define LOG_NDEBUG 0 \/\/billy/g' $AudioStreamInternal
+        sed -i 's/#define LOG_NDEBUG 0 \/\/billy/\/\/#define LOG_NDEBUG 0 \/\/billy/g' $AudioStreamInternalCapture
+        sed -i 's/#define LOG_NDEBUG 0 \/\/billy/\/\/#define LOG_NDEBUG 0 \/\/billy/g' $AudioStreamInternalPlay
+        sed -i 's/#define LOG_NDEBUG 0 \/\/billy/\/\/#define LOG_NDEBUG 0 \/\/billy/g' $MonoPipeReader
+        sed -i 's/#define LOG_NDEBUG 0 \/\/billy/\/\/#define LOG_NDEBUG 0 \/\/billy/g' $MonoPipe
+        sed -i 's/#define LOG_NDEBUG 0 \/\/billy/\/\/#define LOG_NDEBUG 0 \/\/billy/g' $Pipe
+        sed -i 's/#define LOG_NDEBUG 0 \/\/billy/\/\/#define LOG_NDEBUG 0 \/\/billy/g' $PipeReader
+
+        cd $cur_dir
+    fi
+
+    grep -nr billy $AudioJniDir
+    grep -nr billy $AudioFlinger
+    grep -nr billy $AudioPolicy
+    grep -nr billy $MediaJniDir
+    grep -nr billy $Media
+
+}
+
+quick_build()
+{
+  #build/core/main.mk 
+  # billy add
+    subdir_makefiles=$(shell cat build/tools/Android.mk.cache)
+    #ifeq ($(subdir_makefiles),)
+        $(warning "no cache.create build/tools/Android.mk.cache")
+        $(shell build/tools/findleaves.py --prune="./out" Android.mk > build/tools/Android.mk.cache)
+        subdir_makefiles=$(shell cat build/tools/Android.mk.cache)
+    #else
+        $(warning "use cache:build/tools/Android.mk.cache")
+    #endif
+
+}
+
 build_mtk_android()
 {
     local_dir=$PWD
@@ -882,24 +1026,25 @@ build_mtk_android()
     cd $local_dir
     export LC_ALL=C
     MK=vendor/mediatek/proprietary/hardware/interfaces/Android.mk
-    AudPar=vendor/mediatek/proprietary/external/AudioParamParser/AudioParamParser.h
 
-    CYO1MP6=$(pwd | grep cy_o1.mp6)
-    CYp0MP2=$(pwd | grep cy_p0.mp2)
-    echo "** $CYO1MP6 $CYp0MP2 **"
-	if [ -d "$CYO1MP6" ];then
-		TmakeChenyee=TmakeChenyee_mp6
-    elif [ -d "$CYp0MP2" ];then
+    O1MP7=$(pwd | grep -E "mp6|android_mtk_o1_mp7")
+    P0MP1=$(pwd | grep android_mtk_p0_mp1)
+    echo "** $O1MP7 $P0MP1 **"
+	if [ -d "$O1MP7" ];then
+		TmakeChenyee=TmakeChenyee_mp7
+    elif [ -d "$P0MP1" ];then
 		TmakeChenyee=TmakeChenyee_P
 	else
 		TmakeChenyee=TmakeChenyee
 	fi
+    
+    echo "chose build shell $TmakeChenyee !!!! "
 
     while true 
     do
         case "$2" in
         -enabledebug)
-            sed -i 's/\/\/\#define FORCE_DEBUG_LEVEL/\#define FORCE_DEBUG_LEVEL/g' $AudPar
+            enable_debug
             exit 0
             ;;
         -fix)
@@ -938,8 +1083,6 @@ build_mtk_android()
             ;;
         esac
     done
-
-
 }
 
 adblogcat_all()
@@ -951,6 +1094,200 @@ adblogcat_all()
     adb logcat -b kernel -b main -b system -v events -v time > ~/tmp/all.log
 }
 
+zip_bootanimation()
+{
+   #frameworks/base/data/sounds
+   #frameworks/base/cmds/bootanimation/FORMAT.md
+   cd ~/bin/shell_test/package/bootanimation
+   zip -0qry -i \*.txt \*.png \*.wav @ ../bootanimation.zip *.txt part*
+   cd -
+}
+
+adb_unlock()
+{
+   adb shell input keyevent 82 
+}
+
+adb_home()
+{
+   adb shell input keyevent 3
+}
+adb_break()
+{
+   adb shell input keyevent 4 
+}
+
+change_gcc()
+{
+    echo "$@"
+ 
+    while true 
+    do
+        case "$2" in
+          -s)
+            gcc -v
+            g++ -v
+            cpp -v
+            ls /usr/bin/gcc*
+            ls /usr/bin/g++*
+            ls /usr/bin/cpp*
+            sudo update-alternatives --get-selections | grep gcc
+            sudo update-alternatives --get-selections | grep cc
+            sudo update-alternatives --get-selections | grep g++
+            sudo update-alternatives --get-selections | grep c++
+            sudo update-alternatives --get-selections | grep cpp
+            exit 0
+            ;;
+          -install)
+            sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 40
+            sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 50
+            sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 40
+            sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 50
+            sudo update-alternatives --install /usr/bin/cpp cpp /usr/bin/cpp-8 40
+            sudo update-alternatives --install /usr/bin/cpp cpp /usr/bin/cpp-7 50
+            exit 0
+            ;;
+          -set)
+            sudo update-alternatives --set cc /usr/bin/gcc
+            sudo update-alternatives --set c++ /usr/bin/g++
+            sudo update-alternatives --set cpp /usr/bin/cpp
+            exit 0
+            ;;
+          -config)
+            #sudo update-alternatives --config cc
+            sudo update-alternatives --config gcc
+            #sudo update-alternatives --config c++
+            read
+            sudo update-alternatives --config g++
+            read
+            sudo update-alternatives --config cpp
+            read
+            exit 0
+            ;;
+          -remove)
+            sudo update-alternatives --remove gcc /usr/bin/gcc-8
+            sudo update-alternatives --remove g++ /usr/bin/g++-8
+            exit 0
+            ;;
+          *)
+            printf "
+              --install <链接> <名称> <路径> <优先级>
+              --auto <名称>            将 <名称> 的主链接切换到自动模式。
+              --remove <名称> <路径>   从 <名称> 替换组中去除 <路径> 项。
+              --get-selections         列出主要候选项名称以及它们的状态。
+              --set-selections         从标准输入中读入候选项的状态。
+              --config <名称>          列出 <名称> 替换组中的可选项，并就使用其中
+                                         哪一个，征询用户的意见。
+              --set <名称> <路径>      将 <路径> 设置为 <名称> 的候选项。
+            "
+            echo "$0 -change -s|-install|-set|-remove|-config "
+            exit 0
+            ;;
+        esac
+    done
+
+}
+
+scandir()
+{
+    local cur_dir parent_dir workdir
+    workdir=$1
+    cd ${workdir}
+    if [ ${workdir} = "/" ]
+    then
+        cur_dir=""
+    else
+        cur_dir=$(pwd)
+    fi
+
+    for dirlist in $(ls ${cur_dir})
+    do
+        if test -d ${dirlist};then
+            cd ${dirlist}
+            scandir ${cur_dir}/${dirlist}
+            cd ..
+        else
+            while true
+            do
+                case "$2" in
+                    -enable)
+                        sed -i 's/\/\/#define LOG_NDEBUG 0/#define LOG_NDEBUG 0 \/\/billy/g' $dirlist
+                        exit 0
+                        ;;
+                    -disable)
+                        sed -i 's/#define LOG_NDEBUG 0 \/\/billy/\/\/#define LOG_NDEBUG 0/g' $dirlist
+                        exit 0
+                        ;;
+                    *)
+                        exit 1
+                        ;;
+                esac
+            done
+        fi
+    done
+}
+
+change_audio_LOG_NDEBUG()
+{
+    local cur_dir
+    cur_dir=$(pwd)
+    CY_BUILD_ROOT_DIR=$cur_dir
+    echo "**** curdir $(pwd) *******"
+    echo "********* enable audio debug LOG_NDEBUG 0 **********"
+    AudioJniDir=$CY_BUILD_ROOT_DIR/frameworks/base/core/jni
+    AudioFlinger=$CY_BUILD_ROOT_DIR/frameworks/av/services/audioflinger
+    AudioPolicy=$CY_BUILD_ROOT_DIR/frameworks/av/services/audiopolicy
+    MediaExtractor=$CY_BUILD_ROOT_DIR/frameworks/av/services/mediaextractor
+    MediaJniDir=$CY_BUILD_ROOT_DIR/frameworks/base/media/jni
+    Media=$CY_BUILD_ROOT_DIR/frameworks/av/media
+
+    android_media_MediaDrm=$MediaJniDir/android_media_MediaDrm.cpp
+    AudioStreamInternal=$Media/libaaudio/src/client/AudioStreamInternal.cpp
+    AudioStreamInternalCapture=$Media/libaaudio/src/client/AudioStreamInternalCapture.cpp
+    AudioStreamInternalPlay=$Media/libaaudio/src/client/AudioStreamInternalPlay.cpp
+    MonoPipeReader=$Media/libnbaio/MonoPipeReader.cpp
+    MonoPipe=$Media/libnbaio/MonoPipe.cpp
+    Pipe=$Media/libnbaio/Pipe.cpp
+    PipeReader=$Media/libnbaio/PipeReader.cpp
+
+    AudioMixer=$Media/libaudioprocessing/AudioMixer.cpp
+    SpeechType=$CY_BUILD_ROOT_DIR/vendor/mediatek/proprietary/hardware/audio/common/include/SpeechType.h
+
+    while true
+    do
+        case "$2" in
+                -enable)
+                    grep "#define LOG_NDEBUG 0 //billy" $AudioMixer > /dev/null
+                    if [ $? -eq 0 ]; then
+                        echo "已经修改过，不用修改"
+                        exit 0
+                    fi
+                    ;;
+                -disable)
+                    grep "//#define LOG_NDEBUG 0" $AudioMixer > /dev/null
+                    if [ $? -eq 0 ]; then
+                        echo "已经修改过，不用修改"
+                        exit 0
+                    fi
+                    ;;
+                *)
+                    exit 1
+                    ;;
+                esac
+    done
+
+    scandir $AudioJniDir
+    scandir $AudioFlinger
+    scandir $AudioPolicy
+    scandir $MediaExtractor
+    scandir $MediaJniDir
+    scandir $Media
+
+    #sed -i 's/#if 0 \/\/ for/#if 1 \/\/ billy for/g' $SpeechType
+    sed -i 's/#if 1 \/\/ billy for/#if 0 \/\/ for/g' $SpeechType
+    cd $cur_dir
+
+}
 
 get_opts()
 {
@@ -1053,6 +1390,30 @@ get_opts()
                 ;;
             -adb)
                 adblogcat_all "$@"
+                exit 0
+                ;;
+            -zip)
+                zip_bootanimation "$@"
+                exit 0
+                ;;
+            -unlock)
+                adb_unlock "$@"
+                exit 0
+                ;;
+            -home)
+                adb_home "$@"
+                exit 0
+                ;;
+            -break)
+                adb_break "$@"
+                exit 0
+                ;;
+            -gcc)
+                change_gcc "$@"
+                exit 0
+                ;;
+            -LOG_NDEBUG)
+                change_audio_LOG_NDEBUG "$@"
                 exit 0
                 ;;
             *)
