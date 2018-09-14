@@ -40,6 +40,9 @@ dispatching
 trackPlayer
 
 MediaRouter
+content
+number_of_albums
+number_of_tracks
 
 mode
 audio_mode
@@ -135,7 +138,7 @@ MP3Extractor
 music_app_Activity
 music_app_MediaPlaybackActivity
 music_app_MediaPlaybackService
-
+MediaProvider
 
 NuPlayerDriver
 GenericSource

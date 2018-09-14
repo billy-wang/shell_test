@@ -10,3 +10,6 @@ NoDisplay=false
 StartupNotify=true
 Type=Application
 Categories=Network;InstantMessaging;
+
+#/usr/share/applications/TIM.desktop
+
