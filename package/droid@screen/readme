@@ -1,0 +1,21 @@
+1.    下载地址：http://droid-at-screen.org/download.html，下载后是一个jar包，放到某个目录就可以。
+
+2.    安装JDK6或以上版本
+
+3.    安装Android SDK（从Android官方下载一个完整包解压即可）
+
+4.    设置ANDROID_HOME环境变量指向AndroidSDK主目录（这步如果不做，则需要在droidAtScreen主界面手动设置adb的绝对路径，效果一样）。
+
+5.    安装你的Android设备的USB 驱动，需要支持adb的驱动。
+
+6.    开启Android设备的USB Debugging选项(Settings-> Developer options -> USB debugging)
+
+7.    用USB线将PC和Android设备连接起来，可以在cmd中输入adb devices确保你的设备已经被识别到。出现异常的情况下可以拔出USB线再插入进行再次识别。
+
+重启adb服务：
+
+adb kill-server
+adb start-server
+8.    运行Droid@Screen
+
+java –jar droidAtScreen-1.2.jar
