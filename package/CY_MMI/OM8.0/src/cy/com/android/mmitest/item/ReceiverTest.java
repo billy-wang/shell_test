@@ -169,8 +169,8 @@ public class ReceiverTest extends BaseActivity implements OnClickListener {
         mAudioMode = mAM.getMode();
         DswLog.d(TAG, "getMode " + mAudioMode);
 
-        DswLog.d(TAG, "A set mode  = mode normal ");
-        mAM.setMode(AudioManager.MODE_NORMAL);
+        //DswLog.d(TAG, "A set mode  = mode normal ");
+        //mAM.setMode(AudioManager.MODE_NORMAL);
 
         SpeakerphoneOn = mAM.isSpeakerphoneOn();
         BluetoothScoOn = mAM.isBluetoothScoOn();
@@ -215,8 +215,8 @@ public class ReceiverTest extends BaseActivity implements OnClickListener {
 	    /* add by Billy.Wang */
         //DswLog.d(TAG, "setMode AudioManager.MODE_IN_COMMUNICATION");
         //mAM.setMode(AudioManager.MODE_IN_COMMUNICATION);
-        DswLog.d(TAG, "setMode AudioManager.MODE_IN_CALL");
-        mAM.setMode(AudioManager.MODE_IN_CALL);
+        //DswLog.d(TAG, "setMode AudioManager.MODE_IN_CALL");
+        //mAM.setMode(AudioManager.MODE_IN_CALL);
 
         DswLog.d(TAG, "new AudioTrack STREAM_VOICE_CALL");
         mAudioTrack = new AudioTrack(AudioManager.STREAM_VOICE_CALL, sampleRate,

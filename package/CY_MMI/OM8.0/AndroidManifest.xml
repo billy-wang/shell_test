@@ -2,8 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="cy.com.android.mmitest"
     android:sharedUserId="android.uid.phone"
-    android:versionCode="80100024"
-    android:versionName="8.1.0.az">
+    android:versionCode="90101018"
+    android:versionName="9.9.1.ct">
 
     <eat-comment />
     <protected-broadcast android:name="android.intent.action.NV_BACKUP_END" />

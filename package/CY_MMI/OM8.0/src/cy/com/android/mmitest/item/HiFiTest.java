@@ -175,7 +175,7 @@ public class HiFiTest extends BaseActivity implements OnClickListener {
         } catch (IllegalStateException ex) {
 
         }
-        mAM.setMode(AudioManager.MODE_NORMAL);
+        //mAM.setMode(AudioManager.MODE_NORMAL);
         //turn off HIFI
         if (hifi) {
             TestUtils.openOrcloseHifi(this, false);
