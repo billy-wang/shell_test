@@ -782,6 +782,7 @@ create_check_list(){
 fix_build_err()
 {
     MK=$CY_BUILD_ROOT_DIR/vendor/mediatek/proprietary/hardware/interfaces/Android.mk
+    AudioSystem=$CY_BUILD_ROOT_DIR/frameworks/base/media/java/android/media/AudioSystem.java
     linenum=`sed -n '/touch/=' $MK`
     num=`echo ${linenum:0:3}`
     #echo $num
@@ -791,6 +792,8 @@ fix_build_err()
         sed -e ''"$num"'a\	@mv \$@ \$@_' -i $MK
         sed -e ''"$[num+1]"'a\	@sort \$@_ > $@' -i $MK
         sed -e ''"$[num+2]"'a\	@rm -f \$@_' -i $MK
+        # lint: Unknown tag: @}
+        sed -e "/** @}/d" -i $AudioSystem
     else
         echo "已经修复，不需要修改"
     fi
