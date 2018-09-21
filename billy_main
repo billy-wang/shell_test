@@ -30,8 +30,8 @@ usage()
 		== io desk ==
 		-io 		:		修改优化io性能
 		== (Window) CRLF <-> LF (Linux) ===
-		-win file 		:  转换window回车符
-		-lin file		:　转换linux 回车符
+		-win file or dir	:  转换window回车符为linux　回车符
+		-lin file or dir	:　转换linux 回车符为window 回车符
 		== UltralEdit_crack ==
 		-uex			: 	UltralEdit试用
 		== down code ==
@@ -51,6 +51,9 @@ usage()
 		-build -l  		                :	编译android 项目列表
 		-build -h  		                :	编译android 帮助
 		-build -v user CSW1707A_1201 -n :	全新编译android
+		== LOG_NDEBUG change ==
+        -LOG_NDEBUG -enable             :   使能media av DEBUG
+        -LOG_NDEBUG -disable            :   关闭media av DEBUG
 		== logcat all log ==
         -adb                            :   抓取所有log
 	Actions:
@@ -722,7 +725,47 @@ cpu_freq()
         esac
     done
  	else
-        echo "not inster usb!!"
+        echo "******** linux system !!!! *********"
+		while true 
+		do
+			printf "
+			== cpu freq ==
+			1 -g			:	查下CPU支持哪些governor的模式
+			------ powersave|ondemand|conservative|performance ----
+			2 -d			:	设置CPU最小频率
+			3 -u			:	设置CPU最大频率
+			------ userspace ----
+			4 -f			:	设置CPU频率
+			
+			5 -c			:	设置CPU个数
+			6 -performance	:	performance模式,最高频率,不降频
+			a stop 			: 	退出
+			"
+			local input=a
+			read -p "Enter your chose:" input echo $input
+        case "$input" in
+		1|-g)
+			sudo cpufreq-info ;;
+		2|-d)
+			echo "设置最小频率3GHz "
+			sudo cpufreq-set -d 3000m ;;
+		3|-u)
+			echo "设置最大频率3.2GHz "
+			sudo cpufreq-set -u 3200m ;;
+		4|-f)
+			#sudo cpufreq-set -f {3000m~3200m} 
+            ;;
+		5|-c)
+			echo "设置CPU个数 "
+			#sudo cpufreq-set -c cpu3 
+            ;;
+		6|-performance)
+			sudo cpufreq-set -g performance ;;
+        a|stop)
+            echo "***** 退出 *****"
+            exit 0 ;;
+           esac
+        done
     fi
 }
 
@@ -906,46 +949,35 @@ change_io_desk_block()
 
 change_CRLF2LF()
 {
-	echo "linux 回车符 LF"
-	echo $@
-	sed -i 's/\r//g' $2
+    echo "linux 回车符 LF"
+    echo $@
+    cur_dir=$(pwd)
+    scandir_par=$1
+    if test -d $2;then
+       scandir $cur_dir/$2
+    else
+        sed -i 's/\r//g' $2
+    fi
 }
 
 change_LF2CRLF()
 {
-	echo "window 回车符 CRLF"
-	echo $@
-	sed -i 's/$/\r/g' $2
-}
-
-scandir()
-{
-    local cur_dir parent_dir workdir
-    workdir=$1
-    cd ${workdir}
-    if [ ${workdir} = "/" ]
-    then
-        cur_dir=""
+    echo "window 回车符 CRLF"
+    echo $@
+    cur_dir=$(pwd)
+    scandir_par=$1
+    if test -d $2;then
+       scandir $cur_dir/$2
     else
-        cur_dir=$(pwd)
+       sed -i 's/$/\r/g' $2
     fi
-
-    for dirlist in $(ls ${cur_dir})
-    do
-        if test -d ${dirlist};then
-            cd ${dirlist}
-            scandir ${cur_dir}/${dirlist}
-            cd ..
-        else
-            sed -i 's/\/\/#define LOG_NDEBUG 0/#define LOG_NDEBUG 0 \/\/billy/g' $dirlist
-        fi
-    done
 }
 
 
 enable_debug()
 {
     local cur_dir
+    scandir_par=$1
     cur_dir=$(pwd)
     CY_BUILD_ROOT_DIR=$cur_dir
     echo "**** curdir $(pwd) *******"
@@ -996,12 +1028,13 @@ enable_debug()
         cd $cur_dir
     fi
 
-    grep -nr billy $AudioJniDir
-    grep -nr billy $AudioFlinger
-    grep -nr billy $AudioPolicy
-    grep -nr billy $MediaJniDir
-    grep -nr billy $Media
-
+    if false;then
+        grep -nr billy $AudioJniDir
+        grep -nr billy $AudioFlinger
+        grep -nr billy $AudioPolicy
+        grep -nr billy $MediaJniDir
+        grep -nr billy $Media
+    fi
 }
 
 quick_build()
@@ -1172,7 +1205,7 @@ change_gcc()
           *)
             printf "
               --install <链接> <名称> <路径> <优先级>
-              --auto <名称>            将 <名称> 的主链接切换到自动模式。
+              --auto <名称>           将 <名称> 的主链接切换到自动模式。
               --remove <名称> <路径>   从 <名称> 替换组中去除 <路径> 项。
               --get-selections         列出主要候选项名称以及它们的状态。
               --set-selections         从标准输入中读入候选项的状态。
@@ -1190,8 +1223,15 @@ change_gcc()
 
 scandir()
 {
-    local cur_dir parent_dir workdir
+    local cur_dir parent_dir workdir lin win build LOG_NDEBUG 
+    lin=-lin
+    win=-win
+    build=-build
+    LOG_NDEBUG=-LOG_NDEBUG
     workdir=$1
+    
+    #echo workdir=$workdir 
+
     cd ${workdir}
     if [ ${workdir} = "/" ]
     then
@@ -1199,6 +1239,8 @@ scandir()
     else
         cur_dir=$(pwd)
     fi
+    
+    #echo cur_dir=${cur_dir}
 
     for dirlist in $(ls ${cur_dir})
     do
@@ -1207,22 +1249,37 @@ scandir()
             scandir ${cur_dir}/${dirlist}
             cd ..
         else
-            while true
-            do
-                case "$2" in
+            #echo scandir_par=$scandir_par LOG_NDEBUG=$LOG_NDEBUG
+            #echo NDEBUG_onoff=$NDEBUG_onoff
+            if [ "$scandir_par" == "$lin" ];then
+               #echo "sed -i 's/$/\r/g' $dirlist"
+               sed -i 's/$/\r/g' $dirlist
+            elif [ "$scandir_par" == "$win" ];then
+               #echo "sed -i 's/\r//g' $dirlist"
+               sed -i 's/\r//g' $dirlist
+            elif [ "$scandir_par" == "$build" ];then
+               #echo "build enable LOG_NDEBUG"
+               sed -i 's/\/\/#define LOG_NDEBUG 0/#define LOG_NDEBUG 0 \/\/billy/g' $dirlist
+            elif [ "$scandir_par" == "$LOG_NDEBUG" ];then
+                while true
+                do
+                case "$NDEBUG_onoff" in
                     -enable)
                         sed -i 's/\/\/#define LOG_NDEBUG 0/#define LOG_NDEBUG 0 \/\/billy/g' $dirlist
-                        exit 0
+                        break
                         ;;
                     -disable)
                         sed -i 's/#define LOG_NDEBUG 0 \/\/billy/\/\/#define LOG_NDEBUG 0/g' $dirlist
-                        exit 0
+                        break
                         ;;
                     *)
                         exit 1
                         ;;
                 esac
-            done
+                done
+
+            fi
+
         fi
     done
 }
@@ -1230,10 +1287,12 @@ scandir()
 change_audio_LOG_NDEBUG()
 {
     local cur_dir
+    scandir_par=$1
+    NDEBUG_onoff=$2
     cur_dir=$(pwd)
     CY_BUILD_ROOT_DIR=$cur_dir
     echo "**** curdir $(pwd) *******"
-    echo "********* enable audio debug LOG_NDEBUG 0 **********"
+    echo "********* $2 audio debug LOG_NDEBUG 0 **********"
     AudioJniDir=$CY_BUILD_ROOT_DIR/frameworks/base/core/jni
     AudioFlinger=$CY_BUILD_ROOT_DIR/frameworks/av/services/audioflinger
     AudioPolicy=$CY_BUILD_ROOT_DIR/frameworks/av/services/audiopolicy
@@ -1253,6 +1312,7 @@ change_audio_LOG_NDEBUG()
     AudioMixer=$Media/libaudioprocessing/AudioMixer.cpp
     SpeechType=$CY_BUILD_ROOT_DIR/vendor/mediatek/proprietary/hardware/audio/common/include/SpeechType.h
 
+    if [ ! -z $2 ];then 
     while true
     do
         case "$2" in
@@ -1261,6 +1321,8 @@ change_audio_LOG_NDEBUG()
                     if [ $? -eq 0 ]; then
                         echo "已经修改过，不用修改"
                         exit 0
+                    else
+                        break
                     fi
                     ;;
                 -disable)
@@ -1268,6 +1330,8 @@ change_audio_LOG_NDEBUG()
                     if [ $? -eq 0 ]; then
                         echo "已经修改过，不用修改"
                         exit 0
+                    else
+                        break
                     fi
                     ;;
                 *)
@@ -1286,6 +1350,7 @@ change_audio_LOG_NDEBUG()
     #sed -i 's/#if 0 \/\/ for/#if 1 \/\/ billy for/g' $SpeechType
     sed -i 's/#if 1 \/\/ billy for/#if 0 \/\/ for/g' $SpeechType
     cd $cur_dir
+    fi
 
 }
 
@@ -1430,5 +1495,8 @@ main()
 {
 	get_opts "$@"
 }
+
+scandir_par=
+NDEBUG_onoff=
 
 main $@
