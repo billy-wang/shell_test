@@ -167,10 +167,9 @@ public class TouchPadTest extends BaseActivity {
 
                 }
             }else if (event.getAction() == MotionEvent.ACTION_MOVE) {
-                touch_move(x, y);
 
                 if (x < mAverageWidth) {
-                    for (int a = 0; a < 3 && a * v < dy; a++) {
+                    for (int a = 0; a < 3 && a * v <= dy * 1.5; a++) {
                         int i = gnBinarySearch(y - mY > 0 ? mY + a * v : mY - a * v, mVertBaseline, 0, 14);
                         if (-1 != i && !mLeftList.contains(i)) {
                             mLeftList.add(i);
@@ -178,7 +177,7 @@ public class TouchPadTest extends BaseActivity {
                         }
                     }
                 } else if (x > mHorBaseline[9]) {
-                    for (int a = 0; a < 3 && a * v < dy; a++) {
+                    for (int a = 0; a < 3 && a * v <= dy * 1.5; a++) {
                         int i = gnBinarySearch(y - mY > 0 ? mY + a * v : mY - a * v, mVertBaseline, 0, 14);
                         if (-1 != i && !mRightList.contains(i)) {
                             mRightList.add(i);
@@ -187,7 +186,7 @@ public class TouchPadTest extends BaseActivity {
                     }
 
                 } else if (y < mAverageHeight) {
-                    for (int a = 0; a < 3 && a * h < dx; a++) {
+                    for (int a = 0; a < 3 && a * h <= dx * 1.5; a++) {
                         int i = gnBinarySearch(x - mX > 0 ? mX + a * h : mX - a * h, mHorBaseline, 0, 9);
                         if (-1 != i && !mTopList.contains(i) && i != 9 && i != 0) {
                             mTopList.add(i);
@@ -195,7 +194,7 @@ public class TouchPadTest extends BaseActivity {
                         }
                     }
                 } else if (y > mVertBaseline[14]) {
-                    for (int a = 0; a < 3 && a * h < dx; a++) {
+                    for (int a = 0; a < 3 && a * h <= dx * 1.5; a++) {
                         int i = gnBinarySearch(x - mX > 0 ? mX + a * h : mX - a * h, mHorBaseline, 0, 9);
                         if (-1 != i && false == mBottomList.contains(i) && i != 9 && i != 0) {
                             mBottomList.add(i);
@@ -213,6 +212,23 @@ public class TouchPadTest extends BaseActivity {
                     }
 
                 }
+
+                if (x < mAverageWidth || x > mHorBaseline[9]) {
+                    if (y < mAverageHeight)  {
+                        int i = gnBinarySearch(x, mHorBaseline, 0, 9);
+                        if (-1 != i && !mTopList.contains(i) && i != 9 && i != 0) {
+                            mTopList.add(i);
+                            DswLog.i(TAG, "#mTopList.add(i) = " + i + " x="+x +" y="+y);
+                        }
+                    }else if (y > mVertBaseline[14]) {
+                        int i = gnBinarySearch(x, mHorBaseline, 0, 9);
+                        if (-1 != i && false == mBottomList.contains(i) && i != 9 && i != 0) {
+                            mBottomList.add(i);
+                            DswLog.i(TAG, "#mBottomList.add(i) = " + i + " x="+x +" y="+y);
+                        }
+                    }
+                }
+                touch_move(x, y);
             }else if (event.getAction() == MotionEvent.ACTION_UP) {
                 touch_up(x, y);
                 if (46 + mTestRecs.size() == mLeftList.size() + mRightList.size() + mTopList.size()
@@ -297,7 +313,6 @@ public class TouchPadTest extends BaseActivity {
         }
 
         private void initView(Canvas canvas) {
-            canvas.drawColor(Color.WHITE);
             //画中间黑色斜方块边框
             drawTestRects(canvas);
 
@@ -327,9 +342,23 @@ public class TouchPadTest extends BaseActivity {
                 initData();
             }
 
+            canvas.drawColor(Color.WHITE);
+
+            drawRectView(canvas);
+
+            for (int idx : mIdxTRecsBePassed) {
+                canvas.drawRect(mTestRecs.get(idx), mBackGroudPaint);
+            }
+
             initView(canvas);
 
-            if (false == mLeftList.isEmpty()) {
+            canvas.drawPath(mPath, mPaint);
+
+            canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
+        }
+
+        private void drawRectView(Canvas canvas) {
+            if (!mLeftList.isEmpty()) {
                 for (int i = 0; i < mLeftList.size(); i++) {
                     mRf.set(0, mVertBaseline[((Integer) mLeftList.get(i)).intValue()],
                             mAverageWidth,
@@ -338,7 +367,7 @@ public class TouchPadTest extends BaseActivity {
                 }
             }
 
-            if (false == mRightList.isEmpty()) {
+            if (!mRightList.isEmpty()) {
                 for (int i = 0; i < mRightList.size(); i++) {
                     mRf.set(getMeasuredWidth() - mAverageWidth, mVertBaseline[((Integer) mRightList.get(i)).intValue()],
                             getMeasuredWidth(),
@@ -347,7 +376,7 @@ public class TouchPadTest extends BaseActivity {
                 }
             }
 
-            if (false == mTopList.isEmpty()) {
+            if (!mTopList.isEmpty()) {
                 for (int i = 0; i < mTopList.size(); i++) {
                     mRf.set(mHorBaseline[((Integer) mTopList.get(i)).intValue()], 0,
                             mHorBaseline[((Integer) mTopList.get(i)).intValue() + 1],
@@ -356,7 +385,7 @@ public class TouchPadTest extends BaseActivity {
                 }
             }
 
-            if (false == mBottomList.isEmpty()) {
+            if (!mBottomList.isEmpty()) {
                 for (int i = 0; i < mBottomList.size(); i++) {
                     mRf.set(mHorBaseline[((Integer) mBottomList.get(i)).intValue()], getMeasuredHeight() - mAverageHeight,
                             mHorBaseline[((Integer) mBottomList.get(i)).intValue() + 1],
@@ -364,13 +393,7 @@ public class TouchPadTest extends BaseActivity {
                     canvas.drawRect(mRf, mBackGroudPaint);
                 }
             }
-
-            canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
-
-            for (int idx : mIdxTRecsBePassed) {
-                canvas.drawRect(mTestRecs.get(idx), mBackGroudPaint);
-            }
-            canvas.drawPath(mPath, mPaint);
+ 
         }
 
 

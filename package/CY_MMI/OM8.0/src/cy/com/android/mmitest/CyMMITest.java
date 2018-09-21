@@ -89,6 +89,8 @@ import android.os.storage.DiskInfo;
 import android.os.storage.StorageManager;
 import android.os.storage.StorageVolume;
 import android.os.storage.VolumeInfo;
+import cy.com.android.mmitest.utils.HelPerformUtil;
+import cy.com.android.mmitest.utils.FlagNvramUtil;
 
 public class CyMMITest extends BaseActivity implements OnItemClickListener {
     /**
@@ -239,7 +241,7 @@ public class CyMMITest extends BaseActivity implements OnItemClickListener {
         //Gionee zhangke 20160310 add for CR01650400 start
         if (!FeatureOption.GN_RW_GN_MMI_RPMB_SUPPORT) {
             List<String> t = new ArrayList(Arrays.<String>asList(it));
-            t.remove(getResources().getStringArray(R.array.test_project_item)[5]);
+            t.remove(getResources().getStringArray(R.array.test_project_item)[6]);
             it = t.toArray(new String[1]);
         }
         if (SystemProperties.get("ro.gn.format.kptcFlag").equals("yes")) {
@@ -265,9 +267,11 @@ public class CyMMITest extends BaseActivity implements OnItemClickListener {
         DswLog.e(TAG, "setaudio after setRingerMode = " + ringMode1);
         //Gionee <zhangxiaowei><2013-04-11> add for CR00796293  begin
 
-	/* disable by Billy.Wang */
+	    /* disable by Billy.Wang */
+		//if (ProinfoUtil.isSetAurisys()) {
         //DswLog.e(TAG, "MMI set setParameters :SET_AURISYS_ON=0");
         //am.setParameters("SET_AURISYS_ON=0");
+        //}
 
         setMtkLogSize();
         startMtkLog();
@@ -310,6 +314,25 @@ public class CyMMITest extends BaseActivity implements OnItemClickListener {
         //Gionee <GN_BSP_MMI> <chengq> <20170321> modify for ID 89433 end
         TestUtils.checkTestItems();
         lockWakeup();
+
+        if (FeatureOption.GN_RW_GN_MMI_SENSOR_GPS_SUPPORT) {
+            startGPSService();
+        }
+        startAdjvService();
+    }
+
+    private void startGPSService() {
+        Intent cIntent = new Intent(this.getApplicationContext(),
+                cy.com.android.mmitest.service.GPSService.class);
+        cIntent.putExtra("gps_staus",1);
+        startService(cIntent);
+    }
+
+    private void stopGPSService() {
+        Intent cIntent = new Intent(this.getApplicationContext(),
+                cy.com.android.mmitest.service.GPSService.class);
+        cIntent.putExtra("gps_staus",2);
+        startService(cIntent);
     }
 
     private void stopAdjvService() {
@@ -328,7 +351,7 @@ public class CyMMITest extends BaseActivity implements OnItemClickListener {
     public void onResume() {
         super.onResume();
 
-        startAdjvService();
+        //startAdjvService(); //disable P
         ProinfoUtil.setDispatchAllKey();
         DswLog.e(TAG, " CyMMITest onResume");
 
@@ -362,8 +385,8 @@ public class CyMMITest extends BaseActivity implements OnItemClickListener {
         DswLog.e(TAG,"getFailedMessage  start ");
         String result = null;
 
-        if (level < 50){
-            DswLog.e(TAG,"电池电量不足50%");
+        if (level < 30){
+            DswLog.e(TAG,"电池电量不足30%");
             result = getResources().getString(R.string.efuse_battery_lower);
             return result;
         }
@@ -396,7 +419,7 @@ public class CyMMITest extends BaseActivity implements OnItemClickListener {
                         dialog.dismiss();
 
                         DswLog.e(TAG,"mSnByteArray[MMI_ALL_TAG] = " + mSnByteArray[MMI_ALL_TAG] );
-                        if(level >= 50 && mSnByteArray[MMI_ALL_TAG] == MMI_PASS){
+                        if(level >= 30 && mSnByteArray[MMI_ALL_TAG] == MMI_PASS){
                             startActivityForResult(new Intent(CyMMITest.this,CheckEfuse.class),0);
                         }else {
                             showDialog(EFUSE_ERROR_DLG);
@@ -575,6 +598,8 @@ public class CyMMITest extends BaseActivity implements OnItemClickListener {
             result = 5;
         }else if (str.equals(project_item.get(6))) {
             result = 6;
+        }else if (str.equals(project_item.get(7))) {
+            result = 7;
         }
         return result;
     }
@@ -613,7 +638,7 @@ public class CyMMITest extends BaseActivity implements OnItemClickListener {
             return;
         }
         //autotest is OK
-        mSnByteArray = ProinfoUtil.getProductInfo(SN_LENGTH);
+        mSnByteArray = FlagNvramUtil.readINvramInfo(SN_LENGTH);
         if (mSnByteArray[MMI_ALL_TAG] != MMI_PASS) {
             curRpmbFlag = RPMB_MMI_FAIL_STATUS;
             showDialog(RPMB_RESULT_DLG);
@@ -635,7 +660,7 @@ public class CyMMITest extends BaseActivity implements OnItemClickListener {
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        DswLog.e(TAG, "chenguang parent.getItemAtPosition(position).toString()="+parent.getItemAtPosition(position).toString());
+        DswLog.e(TAG, "parent.getItemAtPosition(position).toString()="+parent.getItemAtPosition(position).toString());
         switch (chooseItem(parent.getItemAtPosition(position).toString())) {
             case 0: {
                 try {
@@ -643,11 +668,14 @@ public class CyMMITest extends BaseActivity implements OnItemClickListener {
                     TestUtils.openBtAndWifi(CyMMITest.this);
                     TestUtils.mIsAutoMode = true;
                     TestUtils.mIsAutoMode_2 = false;
-                    SystemProperties.set("persist.radio.setcolor", "true");
+                    TestUtils.initmTestEditor();
+                  //  SystemProperties.set("persist.radio.setcolor", "true");
                     mSNEditor.clear();
                     mSNEditor.putBoolean("mIsAutoMode", true);
                     mSNEditor.commit();
                     DswLog.e(TAG, "start enter atuo mmi ");
+
+                    startNvService(FlagNvramUtil.CLEAR_FACTORY_FLAG);
                     startActivity(new Intent(this, Class.forName("cy.com.android.mmitest.item."
                             + TestUtils.getAutoItemKeys(this).get(0))));
                 } catch (ClassNotFoundException e) {
@@ -663,7 +691,7 @@ public class CyMMITest extends BaseActivity implements OnItemClickListener {
                 TestUtils.openBtAndWifi(CyMMITest.this);
                 TestUtils.mIsAutoMode = false;
                 TestUtils.mIsAutoMode_2 = false;
-                SystemProperties.set("persist.radio.setcolor", "false");
+               // SystemProperties.set("persist.radio.setcolor", "false");
                 mSNEditor.clear();
                 mSNEditor.commit();
                 DswLog.e(TAG, "start enter hardware mmi ");
@@ -684,7 +712,7 @@ public class CyMMITest extends BaseActivity implements OnItemClickListener {
             case 3: {
 
                 if (ProinfoUtil.isWriteEfuse()) {
-                    mSnByteArray = ProinfoUtil.getProductInfo(SN_LENGTH);
+                    mSnByteArray = FlagNvramUtil.readINvramInfo(SN_LENGTH);
                     isSupportEfuse = getEfusedResult(isEfused);
                     DswLog.e(TAG,"isSupportEfuse = " + isSupportEfuse);
                     if("0".equals(isSupportEfuse)){
@@ -702,10 +730,11 @@ public class CyMMITest extends BaseActivity implements OnItemClickListener {
                     TestUtils.openBtAndWifi(CyMMITest.this);
                     TestUtils.mIsAutoMode_2 = true;
                     TestUtils.mIsAutoMode = false;
-                    SystemProperties.set("persist.radio.setcolor", "true");
+                //    SystemProperties.set("persist.radio.setcolor", "true");
                     mSNEditor.clear();
-                    mSNEditor.putBoolean("mIsAutoMode", true);
+                    mSNEditor.putBoolean("mIsAutoMode_2", true);
                     mSNEditor.commit();
+                    TestUtils.initmTestEditor();
                     DswLog.e(TAG, "start enter atuommi2 ");
                     startActivity(new Intent(this, Class.forName("cy.com.android.mmitest.item."
                             + TestUtils.getAutoItemKeys_2(this).get(0))));
@@ -715,8 +744,15 @@ public class CyMMITest extends BaseActivity implements OnItemClickListener {
                 }
                 break;
             }
-            //Gionee zhangke 20160310 add for CR01650400 start
-            case 5: {
+            case 5:
+                TestUtils.mIsAutoMode = false;
+                TestUtils.mIsAutoMode_2 = false;
+                mSNEditor.clear();
+                mSNEditor.commit();
+                DswLog.e(TAG, "start1 enter  mmi TestResult2");
+                startActivity(new Intent(this, TestResult2.class));
+                break;
+            case 6: {
                 if (ProinfoUtil.isWriteRpmbTag()) {
                     curRpmbFlag = RPMB_SUCCESS_STATUS;
                     showDialog(RPMB_RESULT_DLG);
@@ -725,17 +761,11 @@ public class CyMMITest extends BaseActivity implements OnItemClickListener {
                 }
                 break;
             }
-            case 6: {
-                TestUtils.mIsAutoMode = false;
-                TestUtils.mIsAutoMode_2 = false;
-                mSNEditor.clear();
-                mSNEditor.commit();
+            case 7: {
                 DswLog.e(TAG, "start1 enter  mmi DevicesInfo");
                 startActivity(new Intent(this, DevicesInfo.class));
                 break;
             }
-            //Gionee zhangke 20160310 add for CR01650400 end
-
         }
     }
 
@@ -913,7 +943,7 @@ public class CyMMITest extends BaseActivity implements OnItemClickListener {
 
         protected void onPostExecute(Void result) {
             removeDialog(CLEAR_DATA_DLG);
-            startNvService();
+            startNvService(FlagNvramUtil.WRITE_FACTORY_FLAG);
         }
 
         ;
@@ -924,10 +954,11 @@ public class CyMMITest extends BaseActivity implements OnItemClickListener {
      */
     private void startMtkLog() {
         Intent starti = new Intent();
+        starti.setPackage("com.mediatek.mtklogger");
         starti.setAction("com.mediatek.mtklogger.ADB_CMD");
         Bundle bundle = new Bundle();
         bundle.putString("cmd_name", "start");
-        bundle.putInt("cmd_target", 23);
+        bundle.putInt("cmd_target", -1);
         starti.putExtras(bundle);
         sendBroadcast(starti);
         DswLog.e(TAG, "start mtk mmi logcat ");
@@ -938,11 +969,12 @@ public class CyMMITest extends BaseActivity implements OnItemClickListener {
      */
     private void stopMtkLog() {
         Intent stopi = new Intent();
+        stopi.setPackage("com.mediatek.mtklogger");
         stopi.setAction("com.mediatek.mtklogger.ADB_CMD");
         Bundle bundle = new Bundle();
         bundle.putString("cmd_name", "stop");
         //Gionee zhangke 20151030 modify for CR01577329 start
-        bundle.putInt("cmd_target", 23);
+        bundle.putInt("cmd_target", -1);
         //Gionee zhangke 20151030 modify for CR01577329 end
         stopi.putExtras(bundle);
         sendBroadcast(stopi);
@@ -954,6 +986,7 @@ public class CyMMITest extends BaseActivity implements OnItemClickListener {
      */
     private void setMtkLogSize() {
         Intent starti = new Intent();
+        starti.setPackage("com.mediatek.mtklogger");
         starti.setAction("com.mediatek.mtklogger.ADB_CMD");
         Bundle bundle = new Bundle();
         bundle.putString("cmd_name", "set_total_log_size_6000");
@@ -966,9 +999,10 @@ public class CyMMITest extends BaseActivity implements OnItemClickListener {
     /**
      * Start FactoryRest service
      */
-    private void startNvService() {
+    private void startNvService(int action) {
         Intent intent = new Intent(CyMMITest.this,
                 cy.com.android.mmitest.item.NvService.class);
+        intent.putExtra("setFactoryFlag",action);
         startService(intent);
     }
 
@@ -1002,6 +1036,9 @@ public class CyMMITest extends BaseActivity implements OnItemClickListener {
         //Gionee <GN_BSP_MMI> <chengq> <20170429> modify for ID 128069 end
         releaseWakeup();
         stopAdjvService();
+        if (FeatureOption.GN_RW_GN_MMI_SENSOR_GPS_SUPPORT) {
+            stopGPSService();
+        }
 
         CyMMITestApplication.languageState = -1;
         TestUtils.initInitData();
@@ -1032,9 +1069,11 @@ public class CyMMITest extends BaseActivity implements OnItemClickListener {
         int ringMode2 = am.getRingerMode();
         DswLog.e(TAG, "releaseMmi: mmi test is fininsh setRingerMode = " + ringMode2);
 
-	/* disable by Billy.Wang */
+	    /* disable by Billy.Wang */
+		//if (ProinfoUtil.isSetAurisys()) {
         //DswLog.e(TAG, "MMI set setParameters :SET_AURISYS_ON=1");
         //am.setParameters("SET_AURISYS_ON=1");
+        //}
 
         try {
             unregisterReceiver(mReceiver);
@@ -1044,6 +1083,8 @@ public class CyMMITest extends BaseActivity implements OnItemClickListener {
         //AmigoSettings.putInt(getContentResolver(), "control_center_switch", 1);
 
         //Gionee <GN_BSP_MMI> <chengq> <20170425> modify for ID 122934 begin
+
+        HelPerformUtil.getInstance().onDestroy();
         if (exit) {
             finish();
         }

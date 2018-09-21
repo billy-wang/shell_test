@@ -5,11 +5,13 @@
     <string name="auto_test_2">"自动测试2"</string>
     <string name="single_test">"硬件测试"</string>
     <string name="test_result">"测试报告"</string>
+    <string name="test_result2">"测试报告2"</string>
     <string name="master_clear">"恢复出厂设置"</string>
     <string name="wait">"请稍候。。。"</string>
 
     <string name="result_from_sn">"从标志位中得到的测试结果"</string>
-    <string name="result_from_test">"自动测试中的测试结果"</string>
+    <string name="result_from_test">"自动测试中的测试失败项"</string>
+    <string name="result_from_test2">"自动测试2中的测试失败项"</string>
     <string name="no_mmitest">"未进行过MMI测试"</string>
     <string name="mmitest_success">"从标志位数据判断MMI测试已成功"</string>
     <string name="mmitest_fail">"从标志位数据判断MMI测试失败"</string>
@@ -40,6 +42,7 @@
     <string name="sensortest_deadpixel_test_success">坏点测试通过！</string>
     <string name="sensortest_deadpixel_test_fail">器件存在坏点，个数：！</string>
     <string name="sensortest_deadpixel_test_exception">坏点测试异常！</string>
+    <string name="sensortest_deadpixel_unclean">请不要触碰指纹模块表面，重新测试</string>
     <string name="sensortest_exception">未知测试异常！</string>
     <string name="test_right">"测试通过"</string>
     <string name="test_wrong">"未通过测试"</string>
@@ -56,7 +59,7 @@
 
 
     <string name="hello">Hello World, GnHardWareTestActivity!</string>
-    <string name="app_name">GnHardWareTest</string>
+    <string name="app_name">CyHardWareTest</string>
     <string name="sw_version">"软件版本检测"</string>
     <string name="keys">"按键"</string>
     <string name="touch_pad">"CTP划线"</string>
@@ -250,7 +253,7 @@
     <string name="gps_scan_timeout">"定位超时： "</string>
     <string name="info_text">经度：%1$.3f\n纬度：%2$.3f\n海拔：%3$.3f</string>
     <string name="satellite_count">"卫星数目：\n"</string>
-    <string name="satellite_snc">"第%1$3d个卫星信噪比： "</string>
+    <string name="satellite_snc">"第%1$3s个卫星信噪比： "</string>
 
 
 
@@ -487,7 +490,7 @@
     <string name="efuse_write_faild">写入efuse失败,请检查是否有文件路径.</string>
     <string name="efuse_need_write">尚未烧写efuse,是否要烧写efuse?</string>
     <string name="efuse_to_backup">已经烧写efuse,是否继续恢复出厂设置?</string>
-    <string name="efuse_battery_lower">电池电量不足50%,请满足条件之后再进行烧写efuse.</string>
+    <string name="efuse_battery_lower">电池电量不足30%,请满足条件之后再进行烧写efuse.</string>
     <string name="efuse_mmi_failed">MMI全部测试没有通过,请满足条件之后再进行烧写efuse.</string>
     <string name="efuse_wchate_faild">微信soter测试没有通过,请满足条件之后再进行烧写efuse.</string>
     <string name="efuse_ifaa_failed">IFAA测试没有通过,请满足条件之后再进行烧写efuse.</string>
@@ -528,4 +531,9 @@
     <string name="softversion_band_b">美洲</string>
     <string name="softversion_band_c">南亚</string>
     <string name="softversion_band_d">欧洲</string>
+    <string name="softversion_band_db">东亚</string>
+    <string name="softversion_band_lt">也门</string>
+    <string name="ctp_fulltest_notice">测试过程中，请不要触碰屏幕!</string>
+    <string name="efuse_stauts_2">失败可重熔断</string>
+    <string name="efuse_stauts_3">失败不可重熔</string>
 </resources>

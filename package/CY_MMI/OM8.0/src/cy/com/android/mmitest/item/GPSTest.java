@@ -3,19 +3,10 @@ package cy.com.android.mmitest.item;
 import cy.com.android.mmitest.BaseActivity;
 import cy.com.android.mmitest.TestUtils;
 
-import java.util.Iterator;
-import java.util.Locale;
-import java.util.Timer;
-import java.util.TimerTask;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.location.GpsSatellite;
-import android.location.GpsStatus;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
+
 import android.os.Bundle;
 import android.provider.Settings;
 import cy.com.android.mmitest.utils.DswLog;
@@ -29,183 +20,41 @@ import cy.com.android.mmitest.R;
 //Gionee zhangke 20151225 modify for CR01608849 start
 import android.os.Handler;
 import android.os.Message;
-//Gionee zhangke 20151225 modify for CR01608849 end
+import cy.com.android.mmitest.bean.OnGPSListenner;
+import cy.com.android.mmitest.utils.Singleton;
+import java.util.Locale;
+import android.content.Intent;
+import cy.com.android.mmitest.utils.HelPerformUtil;
+import cy.com.android.mmitest.bean.OnPerformListen;
 
-public class GPSTest extends BaseActivity implements View.OnClickListener {
+public class GPSTest extends BaseActivity implements View.OnClickListener ,OnGPSListenner,OnPerformListen {
     private static final String TAG = "GPSTest";
-    private static final int TIME_LENGTH = 1000;
-    private final int COUNT_TIME_OUT = 120;
 
-    private TextView mContentTv, mLocationView;
+
+    private TextView mContentTv, mLocationView,satelliteView;
     private Button mRightBtn, mWrongBtn, mRestartBtn;
-    private boolean mLocaleSuccess;
 
-    LocationManager mLocationMgr;
-    LocationListener mListener;
-
-    //Gionee zhangke 20151225 modify for CR01608849 start
     private TextView mTimerView,mTimerScan;
-    private static final int MESSAGE_SHOW_TIME = 0;
-    //Gionee zhangke 20151225 modify for CR01608849 end
-
-    // To update GPS update times
-    Timer mTimer;
-    private int mTimeCount = 0;
-
-    private class TimerCountTask extends TimerTask {
-        @Override
-        public void run() {
-            runOnUiThread(new Runnable() {
-                public void run() {
-                    // show time count
-                    TextView timerView = (TextView) findViewById(R.id.timer);
-                    //Gionee zhangke 20151225 modify for CR01608849 start
-                    //DswLog.i(TAG, "TimerCountTask mTimeCount1="+mTimeCount);
-                    mTimeCount = mTimeCount + 1;
-                    timerView.setText(mTimeCount + "");
-                    //DswLog.i(TAG, "TimerCountTask mTimeCount2="+mTimeCount);
-                    //Gionee zhangke 20151225 modify for CR01608849 end
-
-                }
-            });
-        }
-    }
-
-    /**
-     * start timer
-     */
-    private void startTimer() {
-        if (mTimer == null) {
-            mTimer = new Timer();
-            mTimer.scheduleAtFixedRate(new TimerCountTask(), 0, TIME_LENGTH);
-        }
-    }
-
-    /**
-     * cancel timer
-     */
-    private void cancelTimer() {
-        if (mTimer != null) {
-            mTimer.cancel();
-            mTimer = null;
-        }
-    }
-
-    // To receive notifications when GPS status has changed
-    GpsStatus.Listener mGpsListner = new GpsStatus.Listener() {
-
-        @Override
-        public void onGpsStatusChanged(int event) {
-
-            TextView satelliteView = (TextView) findViewById(R.id.satellites_info);
-            StringBuilder sb = new StringBuilder();
-            sb.append(getString(R.string.satellite_count));
-            switch (event) {
-                case GpsStatus.GPS_EVENT_STARTED: {
-                    DswLog.e(TAG, "onGpsStatusChanged");
-                    break;
-                }
-                case GpsStatus.GPS_EVENT_SATELLITE_STATUS: {
-                    DswLog.i(TAG, "GpsStatus.GPS_EVENT_SATELLITE_STATUS");
-                    if (null != mLocationMgr) {
-                        GpsStatus status = mLocationMgr.getGpsStatus(null);
-                        Iterator<GpsSatellite> iterator = status.getSatellites().iterator();
-                        int index = 1;
-                        // get satellite count
-                        while (iterator.hasNext()) {
-                            GpsSatellite satellite = iterator.next();
-                            sb.append(getString(R.string.satellite_snc, index++))
-                                    .append(satellite.getSnr()).append("\n");
-                        }
-                        DswLog.e(TAG, sb.toString());
-                        DswLog.i(TAG, "index=" + index);
-                        if (index > 2) {
-                            mLocaleSuccess = true;
-                        }
-                    }
-                    break;
-                }
-            }
-            satelliteView.setText(sb.toString());
-        }
-    };
-
-    private boolean stopTimeNUm=false;
-    /**
-     * Used for receiving notifications from the LocationManager when the
-     * location has changed.
-     */
-    private LocationListener mLocationListener = new LocationListener() {
-        @Override
-        public void onStatusChanged(String provider, int status, Bundle extras) {
-        }
-
-        @Override
-        public void onProviderEnabled(String provider) {
-            mContentTv.setText(R.string.scanning_gps);
-            //Gionee zhangke 20151225 modify for CR01608849 start
-            //startTimer();
-            DswLog.i(TAG, "onProviderEnabled startTimer");
-            mTimeCount = 0;
-            mUiHandler.removeMessages(MESSAGE_SHOW_TIME);
-            mUiHandler.sendEmptyMessageDelayed(MESSAGE_SHOW_TIME, TIME_LENGTH);
-            //Gionee zhangke 20151225 modify for CR01608849 end
-        }
-
-        @Override
-        public void onProviderDisabled(String provider) {
-            Settings.Secure.setLocationProviderEnabled(getContentResolver(),
-                    LocationManager.GPS_PROVIDER, true);
-        }
-
-        @Override
-        public void onLocationChanged(Location location) {
-            // TODO Auto-generated method stub
-            DswLog.e(TAG, "onLocationChanged location=" + location);
-            if (null != location) {
-                /*Gionee huangjianqiang 20160531 modify for CR01710422 begin*/
-                String info = String.format(Locale.ENGLISH, getString(R.string.info_text),
-                        location.getLongitude(), location.getLatitude(),
-                        location.getAltitude());
-                /*Gionee huangjianqiang 20160531 modify for CR01710422 end*/
-                DswLog.d(TAG, "onLocationChanged: " + info);
-                mLocationView.setText(info);
-                DswLog.i(TAG, "mLocaleSuccess=" + mLocaleSuccess + ";info=" + info);
-                //Gionee tanbotao 20160912 modify for CR01760120 begin
-                String latitude = Integer.toString((int) location.getLatitude());
-                if (latitude.equals("")) {
-                } else if (mLocaleSuccess) {
-                    stopTimeNUm=true;
-                    if (mTimeCount < COUNT_TIME_OUT)
-                        mRightBtn.setEnabled(true);
-                }
-                //Gionee tanbotao 20160912 modify for CR01760120 end
-            }
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         DswLog.d(TAG, "\n\n\n****************打开GPS @" + Integer.toHexString(hashCode()));
 
-        // Gionee xiaolin 20120924 add for CR00693542 start
         TestUtils.checkToContinue(this);
-        // Gionee xiaolin 20120924 add for CR00693542 end
         TestUtils.setCurrentAciticityTitle(TAG,this);
         setContentView(R.layout.gps_test);
 
         mTimerScan = (TextView) findViewById(R.id.gps_scan_time);
-        //Gionee zhangke 20151225 modify for CR01608849 start
         mTimerView = (TextView) findViewById(R.id.timer);
-        //Gionee zhangke 20151225 modify for CR01608849 end
         // Location results
         mLocationView = (TextView) findViewById(R.id.gps_info);
                 /*Gionee huangjianqiang 20160531 modify for CR01710422 begin*/
         String info = String.format(Locale.ENGLISH, getString(R.string.info_text), 0f, 0f, 0f);
                 /*Gionee huangjianqiang 20160531 modify for CR01710422 end*/
         mLocationView.setText(info);
-
+        satelliteView = (TextView) findViewById(R.id.satellites_info);
+        satelliteView.setText(getString(R.string.satellite_count));
         //Gionee zhangke 20160428 modify for CR01687958 start
         mRightBtn = (Button) findViewById(R.id.right_btn);
         mWrongBtn = (Button) findViewById(R.id.wrong_btn);
@@ -228,11 +77,74 @@ public class GPSTest extends BaseActivity implements View.OnClickListener {
                 mRestartBtn.setOnClickListener(GPSTest.this);
             }
         }, TestUtils.BUTTON_ENABLED_DELAY_TIME);
-        //Gionee zhangke 20160428 modify for CR01687958 end
 
-
-        mLocationMgr = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         mContentTv = (TextView) findViewById(R.id.gps_state);
+
+        Singleton.getInstance().setOnGPSListenner(this);
+
+        restartGPSService(1);
+    }
+
+    @Override
+    public void onTestGPS(Intent intent) {
+
+        //intent msg
+        DswLog.i(TAG, "onTestGPS");
+        String satellites = intent.getStringExtra("gps_satellites");
+        String satelMessage = intent.getStringExtra("gps_satel_msg");
+        String latitude = intent.getStringExtra("gps_vlatitude");
+        int numSate = intent.getIntExtra("gps_sate_number",0);
+        int curSecond = intent.getIntExtra("gps_timelong",0);
+        boolean isPass = intent.getBooleanExtra("isPass",false);
+
+        if (latitude != null && latitude.length() > 1) {
+            String info = String.format(Locale.ENGLISH, getString(R.string.info_text),
+                    intent.getDoubleExtra("sLongitude", 0.000), intent.getDoubleExtra("sLatitude", 0.000),
+                    intent.getDoubleExtra("sAltitude", 0.000));
+            mLocationView.setText(info);
+        }
+
+        if (isPass) {
+            restartGPSService(2);
+            mRightBtn.setEnabled(true);
+
+            if (TestUtils.mIsAutoMode) {
+                HelPerformUtil.getInstance().performDelayed(GPSTest.this, 600);
+            }
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(getString(R.string.satellite_count));
+        try {
+            if (numSate > 0) {
+                String[] subs = satelMessage.split(";");
+                for (int i = 0; i < subs.length; i++) {
+                    int limit = subs[i].indexOf(",");
+                    sb.append(getString(R.string.satellite_snc, subs[i].substring(limit+1)))
+                            .append(subs[i].subSequence(0,limit)).append("\n");
+                }
+            }
+        }catch (Exception e) {
+            DswLog.i(TAG, "error="+e.getMessage());
+        }
+
+        if (curSecond > 119) {
+            mTimerScan.setText(R.string.gps_scan_timeout);
+            mTimerView.setText("120");
+            restartGPSService(2);
+        }else {
+            satelliteView.setText(sb.toString());
+            mTimerView.setText(curSecond + "");
+        }
+
+    }
+
+
+    private void restartGPSService(int number) {
+        Intent cIntent = new Intent(this.getApplicationContext(),
+                cy.com.android.mmitest.service.GPSService.class);
+        cIntent.putExtra("gps_staus",number);
+        startService(cIntent);
     }
 
     @Override
@@ -242,57 +154,27 @@ public class GPSTest extends BaseActivity implements View.OnClickListener {
     }
 
 
-    //Gionee zhangke 20160428 modify for CR01679700 start
     @Override
     protected void onStart() {
         super.onStart();
+        DswLog.i(TAG, "GPSTest onStart");
     }
 
     @Override
     protected void onResume() {
-        // TODO Auto-generated method stub
         super.onResume();
-        DswLog.i(TAG, "onResume");
-        if (true == mLocationMgr.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            mContentTv.setText(R.string.scanning_gps);
-            //Gionee zhangke 20151225 modify for CR01608849 start
-            //startTimer();
-            mUiHandler.sendEmptyMessageDelayed(MESSAGE_SHOW_TIME, TIME_LENGTH);
-            //Gionee zhangke 20151225 modify for CR01608849 end
-
-        } else {
-            mContentTv.setText(R.string.opening_gps);
-        }
-
-        //Gionee zhangke 20160428 modify for CR01679700 start
-        mLocationMgr.addGpsStatusListener(mGpsListner);
-        mLocationMgr.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0,
-                mLocationListener);
-        //Gionee zhangke 20160428 modify for CR01679700 end
-
+        DswLog.i(TAG, "GPSTest onResume setOnGPSListenner");
+        Singleton.getInstance().setOnGPSListenner(this);
+        mContentTv.setText(R.string.scanning_gps);
     }
 
     @Override
     protected void onPause() {
-        // TODO Auto-generated method stub
         super.onPause();
-        DswLog.i(TAG, "onPause");
-        mUiHandler.removeMessages(MESSAGE_SHOW_TIME);
-        mTimeCount = 0;
-        stopTimeNUm=false;
-        try {
-            mLocationMgr.removeUpdates(mLocationListener);
-            mLocationMgr.removeGpsStatusListener(mGpsListner);
-        } catch (Exception e) {
-            DswLog.i(TAG, "Exception e=" + e.getMessage());
-        }
+        DswLog.i(TAG, "onPause unsetOnGPSListenner");
+        Singleton.getInstance().setOnGPSListenner(null);
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-    }
-    //Gionee zhangke 20160428 modify for CR01679700 end
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
@@ -301,7 +183,6 @@ public class GPSTest extends BaseActivity implements View.OnClickListener {
 
     @Override
     public void onClick(View v) {
-        // TODO Auto-generated method stub
         switch (v.getId()) {
 
             case R.id.right_btn: {
@@ -315,6 +196,7 @@ public class GPSTest extends BaseActivity implements View.OnClickListener {
                     editor.commit();
                 }
                 TestUtils.rightPress(TAG, this);
+                restartGPSService(2);
                 break;
             }
 
@@ -329,6 +211,7 @@ public class GPSTest extends BaseActivity implements View.OnClickListener {
                     editor.commit();
                 }
                 TestUtils.wrongPress(TAG, this);
+                restartGPSService(2);
                 break;
             }
 
@@ -336,10 +219,11 @@ public class GPSTest extends BaseActivity implements View.OnClickListener {
                 mRightBtn.setEnabled(false);
                 mWrongBtn.setEnabled(false);
                 mRestartBtn.setEnabled(false);
-                stopTimeNUm=false;
+
                 if (TestUtils.mAppContext == null) {
                     TestUtils.setAppContext(this);
                 }
+                restartGPSService(2);
                 TestUtils.restart(this, TAG);
                 break;
             }
@@ -347,28 +231,10 @@ public class GPSTest extends BaseActivity implements View.OnClickListener {
     }
 
 
-    //Gionee zhangke 20151225 modify for CR01608849 start
-    private Handler mUiHandler = new Handler() {
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case MESSAGE_SHOW_TIME:
-                    //DswLog.i(TAG, "mTimeCount="+mTimeCount);
-
-                    //Gionee tanbotao 20160912 modify for CR01760120 begin
-                    if (true == stopTimeNUm) {
-                    } else {
-                        mTimeCount = mTimeCount + 1;
-                    }
-                    //Gionee tanbotao 20160912 modify for CR01760120 end
-                    if (mTimeCount > COUNT_TIME_OUT ) {
-                        mTimerScan.setText(R.string.gps_scan_timeout);
-                    }
-                    mTimerView.setText(mTimeCount + "");
-                    mUiHandler.sendEmptyMessageDelayed(MESSAGE_SHOW_TIME, TIME_LENGTH);
-                    break;
-            }
-        }
-    };
-    //Gionee zhangke 20151225 modify for CR01608849 end
-
+    @Override
+    public void OnButtonPerform() {
+        HelPerformUtil.getInstance().unregisterPerformListen();
+        DswLog.i(TAG, "OnButtonPerform");
+        mRightBtn.performClick();
+    }
 }

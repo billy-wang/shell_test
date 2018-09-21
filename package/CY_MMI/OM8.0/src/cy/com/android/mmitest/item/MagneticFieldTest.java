@@ -56,8 +56,7 @@ public class MagneticFieldTest extends BaseActivity implements SensorEventListen
         TestUtils.setCurrentAciticityTitle(TAG,this);
         DswLog.e(TAG, "onCreate ");
         //Gionee zhangke 20160811 add for CR01744854 start
-        mSensorMgr = (SensorManager) this.getSystemService(SENSOR_SERVICE);
-        mSensor = mSensorMgr.getSensorList(Sensor.TYPE_MAGNETIC_FIELD).get(0);
+
         //Gionee zhangke 20160811 add for CR01744854 end
 
         // Gionee xiaolin 20120522 modify for CR00601846 start   
@@ -117,6 +116,9 @@ public class MagneticFieldTest extends BaseActivity implements SensorEventListen
             //Gionee zhangke 20160428 modify for CR01687958 end
             mIsRomVersion = true;
         } catch (Exception ex) {
+            mSensorMgr = (SensorManager) this.getSystemService(SENSOR_SERVICE);
+            mSensor = mSensorMgr.getSensorList(Sensor.TYPE_MAGNETIC_FIELD).get(0);
+
             setContentView(R.layout.acceleration_test);
             mTitleTv = (TextView) findViewById(R.id.test_title);
             mTitleTv.setText(R.string.magnetic_field_test);

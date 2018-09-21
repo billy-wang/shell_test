@@ -6,7 +6,6 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.os.RemoteException;
 import cy.com.android.mmitest.utils.DswLog;
-import cy.com.android.mmitest.TestResult;
 import java.util.ArrayList;
 import cy.com.android.mmitest.service.INvRamService;
 import vendor.mediatek.hardware.nvram.V1_0.INvram;

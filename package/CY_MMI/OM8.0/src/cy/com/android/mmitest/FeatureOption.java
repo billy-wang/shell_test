@@ -199,6 +199,7 @@ public final class FeatureOption {
     private static final String GN_RW_GN_MMI_SMARTPA_AUTOTEST2 = "GN_RW_GN_MMI_SMARTPA_AUTOTEST2";
     private static final String GN_RW_GN_MMI_FACEENROLL_AUTOTEST2 = "GN_RW_GN_MMI_FACEENROLL_AUTOTEST2";
     private static final String GN_RW_GN_MMI_FACEVERIFY_AUTOTEST2 = "GN_RW_GN_MMI_FACEVERIFY_AUTOTEST2";
+    private static final String CY_RW_CY_MMI_IRLIGHT_AUTOTEST2 = "CY_RW_CY_MMI_IRLIGHT_AUTOTEST2";
     // Gionee zhangke 20151014 add for CR01567923 start
     public static boolean GN_RW_GN_MMI_BRIGHTNESS_AUTOTEST2_SUPPORT;
     public static boolean GN_RW_GN_MMI_COLOR_AUTOTEST2_SUPPORT;
@@ -256,6 +257,7 @@ public final class FeatureOption {
     public static boolean GN_RW_GN_MMI_SMARTPA_AUTOTEST2_SUPPORT;
     public static boolean CY_RW_CY_MMI_FACEENROLL_AUTOTEST2_SUPPORT;
     public static boolean CY_RW_CY_MMI_FACEVERIFY_AUTOTEST2_SUPPORT;
+    public static boolean CY_RW_CY_MMI_IRLIGHT_AUTOTEST2_SUPPORT;
     // Gionee zhangke 20151014 add for CR01567923 end
     // Gionee zhangke 20151019 add for CR01571097 start
     public static boolean GN_RW_GN_MMI_AUTOTEST2_SUPPORT;
@@ -696,6 +698,8 @@ public final class FeatureOption {
                     CY_RW_CY_MMI_FACEENROLL_AUTOTEST2_SUPPORT = Boolean.parseBoolean(value);
                 } else if (GN_RW_GN_MMI_FACEVERIFY_AUTOTEST2.equals(name)) {
                     CY_RW_CY_MMI_FACEVERIFY_AUTOTEST2_SUPPORT = Boolean.parseBoolean(value);
+                } else if (CY_RW_CY_MMI_IRLIGHT_AUTOTEST2.equals(name)) {
+                    CY_RW_CY_MMI_IRLIGHT_AUTOTEST2_SUPPORT = Boolean.parseBoolean(value);
                 }
 //Gionee <Oversea_Bug> <tanbotao> <20161124> for #28369 end
                 DswLog.i(TAG, "name=" + name + ";value=" + value);

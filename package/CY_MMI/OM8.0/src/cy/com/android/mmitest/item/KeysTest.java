@@ -38,8 +38,10 @@ import android.widget.Toast;
 import cy.com.android.mmitest.utils.NodeNameUtil;
 import cy.com.android.mmitest.item.FeatureOption;
 //Gionee zhangke 20160309 add for CR01649229 end
+import cy.com.android.mmitest.utils.HelPerformUtil;
+import cy.com.android.mmitest.bean.OnPerformListen;
 
-public class KeysTest extends BaseActivity implements View.OnClickListener {
+public class KeysTest extends BaseActivity implements View.OnClickListener ,OnPerformListen{
     public TextView mPowerTv;
     private int mPowerInt;
     public TextView mVolumeUpTv;
@@ -288,6 +290,10 @@ public class KeysTest extends BaseActivity implements View.OnClickListener {
         DswLog.e(TAG, "mKeyState.size == " + mKeyState.size());
         if (mKeyCount == mKeyPressCount) {
             mRightBtn.setEnabled(true);
+
+            if (TestUtils.mIsAutoMode) {
+                HelPerformUtil.getInstance().performDelayed(KeysTest.this, HelPerformUtil.delayTime);
+            }
         }
     }
 
@@ -481,4 +487,10 @@ public class KeysTest extends BaseActivity implements View.OnClickListener {
     }
     //Gionee <GN_BSP_MMI> <chengq> <20170504> add for ID 125964 end
 
+    @Override
+    public void OnButtonPerform() {
+        HelPerformUtil.getInstance().unregisterPerformListen();
+        DswLog.i(TAG, "OnButtonPerform");
+        mRightBtn.performClick();
+    }
 }

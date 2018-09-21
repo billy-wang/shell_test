@@ -6,34 +6,40 @@ import cy.com.android.mmitest.CyMMITest;
 import cy.com.android.mmitest.utils.DswLog;
 import cy.com.android.mmitest.R;
 import cy.com.android.mmitest.TestUtils;
+
+import android.database.ContentObserver;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.Settings;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 import android.os.RemoteException;
-import android.hardware.fingerprint.ICyFingerprintServiceReceiver;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import android.util.Log;
-import android.os.IBinder;
 import android.os.Binder;
+import cy.com.android.mmitest.utils.HelPerformUtil;
+import cy.com.android.mmitest.bean.OnPerformListen;
+import android.content.Context;
+import java.lang.ref.WeakReference;
+import android.hardware.fingerprint.FingerprintManager;
+import android.os.CancellationSignal;
+import android.hardware.fingerprint.Fingerprint;
 
-
-public class FingerPrintsTest2 extends BaseActivity implements OnClickListener {
+public class FingerPrintsTest2 extends BaseActivity implements OnClickListener ,OnPerformListen{
     private Button mRightBtn, mWrongBtn, mRestartBtn;
     TextView titleTv;
     private static final String TAG = "FingerPrintsTest2";
-    private IBinder mToken = new Binder();
-    private Object fingerprintmanager;
+    private FingerprintManager fingerprintmanager;
     private boolean fingerFlag = false;
     private Class<?> clazz;
-    private Method testMethod;
-    private Method stopMethod;
+    public Method testMethod = getStartTestMethod("test",new Class[] {CancellationSignal.class,int.class});
+    public CancellationSignal cancellationSignal;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -69,12 +75,15 @@ public class FingerPrintsTest2 extends BaseActivity implements OnClickListener {
             }
         }, TestUtils.BUTTON_ENABLED_DELAY_TIME);
 
-        startTest();
+        initTestRst();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        getContentResolver().unregisterContentObserver(mRespirationFingerprintRstObserver);
+        fingerprintmanager = null;
+
         DswLog.d(TAG, "\n****************退出指纹坏点检测 @" + Integer.toHexString(hashCode()));
     }
 
@@ -82,19 +91,10 @@ public class FingerPrintsTest2 extends BaseActivity implements OnClickListener {
     public void onResume() {
         super.onResume();
         DswLog.i(TAG, "onResume");
-        try {
-            if(testMethod != null) {
-                DswLog.i(TAG, "MMI call FingerprintManager test(2) begin");
-                testMethod.invoke(fingerprintmanager,mToken, 2, mICyFingerprintServiceReceiver);
-                DswLog.i(TAG, "MMI call FingerprintManager test(2) end");
-            }
-        } catch (IllegalAccessException e) {
-            DswLog.i(TAG, "MMI call FingerprintManager Fail #1");
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            DswLog.i(TAG, "MMI call FingerprintManager Fail #2");
-            e.printStackTrace();
-        }
+        DswLog.i(TAG, "MMI call FingerprintManager test(2) begin");
+
+        startTest();
+        //DswLog.i(TAG, "MMI call FingerprintManager test(2) end");
     }
 
     @Override
@@ -126,6 +126,10 @@ public class FingerPrintsTest2 extends BaseActivity implements OnClickListener {
                 mWrongBtn.setEnabled(false);
                 mRestartBtn.setEnabled(false);
                 TestUtils.restart(this, TAG);
+				if(cancellationSignal != null){
+				    cancellationSignal.cancel();
+				}
+                uiHandler.sendEmptyMessageDelayed(MESSAGE_RESTART_TEST, 1000);
                 break;
             }
         }
@@ -136,12 +140,27 @@ public class FingerPrintsTest2 extends BaseActivity implements OnClickListener {
         return true;
     }
 
-    private Handler uiHandler = new Handler() {
+    private static final int MESSAGE_SUCCESS = 0;
+    private static final int MESSAGE_FAIL_UNCLEAN = 1;
+    private static final int MESSAGE_RESTART_TEST = 6;
+    private static final int DEFAULT_RST_VALUE = -1;
+
+    public Handler uiHandler = new Handler() {
         public void handleMessage(Message msg) {
             switch (msg.what) {
-                case 0:
+                case MESSAGE_SUCCESS:
                     titleTv.setText(R.string.sensortest_deadpixel_test_success);
                     mRightBtn.setEnabled(true);
+
+                    if (TestUtils.mIsAutoMode) {
+                        HelPerformUtil.getInstance().performDelayed(FingerPrintsTest2.this, 600);
+                    }
+                    break;
+                case MESSAGE_FAIL_UNCLEAN:
+                    titleTv.setText(R.string.sensortest_deadpixel_unclean);
+                    break;
+                case MESSAGE_RESTART_TEST:
+                    startTest();
                     break;
                 default:
                     titleTv.setText(R.string.sensortest_deadpixel_test_fail);
@@ -154,47 +173,72 @@ public class FingerPrintsTest2 extends BaseActivity implements OnClickListener {
     private void startTest() {
         titleTv.setText(R.string.fingerprints_note2);
         mRightBtn.setEnabled(false);
-
+        cancellationSignal  = new CancellationSignal();
+        fingerprintmanager   = (FingerprintManager)this.getSystemService(Context.FINGERPRINT_SERVICE);
+        //fingerprintmanager.test(cancellationSignal,2);
         try {
-            Class clazz = Class.forName("android.hardware.fingerprint.FingerprintManager");
-            fingerprintmanager = (Object)this.getSystemService("fingerprint");
-            DswLog.e(TAG,"fingerprintmanager=" + fingerprintmanager );
-            DswLog.e(TAG,"clazz" + clazz );
-            testMethod = clazz.getMethod("test",IBinder.class, int.class, ICyFingerprintServiceReceiver.class);
-            DswLog.e(TAG,"testMethod=" + testMethod );
-            stopMethod = clazz.getMethod("cancelTest",IBinder.class);
-            DswLog.e(TAG,"stopMethod=" + stopMethod );
-        } catch (ClassNotFoundException e) {
-            DswLog.e(TAG,"MMI FingerPrintsTest2 startTest Failed #1");
-            DswLog.v(TAG, Log.getStackTraceString(e));
+            if(null != testMethod){
+                testMethod.invoke(fingerprintmanager, new Object[] {cancellationSignal,2});
+            }
+        } catch (IllegalAccessException e) {
+            DswLog.i(TAG, "MMI call FingerprintManager Fail #1");
             e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            DswLog.e(TAG,"MMI FingerPrintsTest2 startTest Failed #2");
-            DswLog.v(TAG, Log.getStackTraceString(e));
+        } catch (InvocationTargetException e) {
+            DswLog.i(TAG, "MMI call FingerprintManager Fail #2");
             e.printStackTrace();
         }
     }
 
-    private ICyFingerprintServiceReceiver mICyFingerprintServiceReceiver = new ICyFingerprintServiceReceiver.Stub(){
-        public void onError(long deviceId, int errMsgId, int vendorCode){
-            DswLog.d(TAG,"onError deviceId=" + deviceId + " errMsgId="+errMsgId + " vendorCode="+vendorCode);
+    private static final String CY_MMI_FINGERPRINT_TEST_RST = "cy_mmi_fingerprint_test_rst";
+
+    private static final String CY_FINGERPRINT_MANAGER = "android.hardware.fingerprint.FingerprintManager";
+
+    private Method getStartTestMethod(String func, Class[] cls) {
+        try {
+            Class<?> appFingerprintManager = Class.forName(CY_FINGERPRINT_MANAGER);
+            Method method = appFingerprintManager.getDeclaredMethod(func, cls);
+            method.setAccessible(true);
+            return method;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
+    }
+    
+    private void initTestRst(){
+        Settings.Global.putInt(getContentResolver(),
+                CY_MMI_FINGERPRINT_TEST_RST, DEFAULT_RST_VALUE);
+        getContentResolver().registerContentObserver(
+                Settings.Global.getUriFor(CY_MMI_FINGERPRINT_TEST_RST),
+                true,mRespirationFingerprintRstObserver);
+    }
 
-        public void onTestCmd(long deviceId, int cmdId, int result){
-            DswLog.d(TAG,"onTestCmd cmdId="+cmdId+" result="+result);
-            uiHandler.sendEmptyMessage(result);
-
-            try {
-                if(testMethod != null) {
-                    DswLog.i(TAG, "MMI call FingerprintManager cancelTest() begin");
-                    stopMethod.invoke(fingerprintmanager,mToken);
-                    DswLog.i(TAG, "MMI call FingerprintManager cancelTest() end");
-                }
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
+    private ContentObserver mRespirationFingerprintRstObserver = new ContentObserver(new Handler()){
+        @Override
+        public void onChange(boolean selfChange) {
+            Log.e(TAG,"rst onChange:" + selfChange);
+            int rst = Settings.Global.getInt(getContentResolver(),CY_MMI_FINGERPRINT_TEST_RST,DEFAULT_RST_VALUE);
+            if (DEFAULT_RST_VALUE != rst) {
+                SendTestResult(rst);
             }
         }
     };
+
+    public void SendTestResult(int errMsgId){
+        //do something
+        if (null == cancellationSignal) return;
+        DswLog.d(TAG, "onTestResult errMsgId=" + errMsgId);
+        uiHandler.sendEmptyMessage(errMsgId);
+        cancellationSignal.cancel();
+        cancellationSignal = null;
+        Settings.Global.putInt(getContentResolver(),
+                CY_MMI_FINGERPRINT_TEST_RST, DEFAULT_RST_VALUE);
+    }
+
+    @Override
+    public void OnButtonPerform() {
+        HelPerformUtil.getInstance().unregisterPerformListen();
+        DswLog.i(TAG, "OnButtonPerform");
+        mRightBtn.performClick();
+    }
 }

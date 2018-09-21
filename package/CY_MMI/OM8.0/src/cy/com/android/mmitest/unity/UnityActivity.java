@@ -125,7 +125,7 @@ public class UnityActivity extends BaseActivity implements AdapterView.OnItemCli
 
     private void initAreaTag() {
         user = new User();
-        preference = TestUtils.getSharedPreferences(this);
+        preference = TestUtils.getTestSharedPreferences(this);
         String preTag = null;
         String curTag = SystemProperties.get("persist.sys.gn.area");
         if (curTag == null || curTag.length() < 1 ) {

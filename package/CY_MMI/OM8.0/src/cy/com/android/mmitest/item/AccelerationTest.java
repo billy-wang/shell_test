@@ -41,9 +41,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import cy.com.android.mmitest.BaseActivity;
-import cy.com.android.mmitest.item.SensorUserCal;
+import cy.com.android.mmitest.item.EmSensor.EmSensor;
+import cy.com.android.mmitest.utils.HelPerformUtil;
+import cy.com.android.mmitest.bean.OnPerformListen;
 
-public class AccelerationTest extends BaseActivity implements SensorEventListener, OnClickListener {
+public class AccelerationTest extends BaseActivity implements SensorEventListener, OnClickListener,OnPerformListen {
     private TextView mTitleTv;
 
     private TextView mContentTv;
@@ -57,6 +59,8 @@ public class AccelerationTest extends BaseActivity implements SensorEventListene
     private SensorManager mSensorMgr;
 
     private Sensor mSensor;
+
+    private EmSensor mEmSensor = null;
 
     private float[] mValues;
 
@@ -107,6 +111,8 @@ public class AccelerationTest extends BaseActivity implements SensorEventListene
         mWrongBtn.setOnClickListener(this);
         mRestartBtn = (Button) findViewById(R.id.restart_btn);
         mRestartBtn.setOnClickListener(this);
+
+        mEmSensor = EmSensor.getInstance(this);
     }
 
     @Override
@@ -158,18 +164,8 @@ public class AccelerationTest extends BaseActivity implements SensorEventListene
             public void run() {
                 try {
                     mUiHandler.sendEmptyMessage(CAL_FAIL_FAIL11);
-                    Context c = createPackageContext("com.mediatek.engineermode", Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY);
-                    Class clazz = c.getClassLoader().loadClass("com.mediatek.engineermode.sensor.EmSensor");
-                    GnReflectionMethods ReflectionMethods = new GnReflectionMethods(clazz, "doGsensorCalibration", new Class[]{int.class}, new Object[]{code}); //包名 方法名 方法参数类型 参数
 
-                    //Gionee zhangke 20160322 modify for CR01656207 start
-
-                    try{
-                        Thread.sleep(1000);
-                    }catch(InterruptedException e){
-                    }
-
-                    int calib_ret = (Integer)ReflectionMethods.getInvokeResult1();
+                    int calib_ret = mEmSensor.doGsensorCalibration();
                     /*	calib_ret = SensorUserCal.performUserCal((byte) 0,
 								(byte) 0);*/
                     DswLog.e(TAG, "calib_ret Number = " + calib_ret + ";isPause="+isPause);
@@ -354,6 +350,7 @@ public class AccelerationTest extends BaseActivity implements SensorEventListene
                 mSuccessNum++;
                 mIsFront = true;
             }
+
         } else if (z < -9f) {
             mArrowView.setImageResource(R.drawable.arrow);
             if (false == mIsback) {
@@ -367,6 +364,9 @@ public class AccelerationTest extends BaseActivity implements SensorEventListene
         if (6 <= mSuccessNum && calibsucc) {
             mRightBtn.setEnabled(true);
             //mSuccessNum++;
+            if (TestUtils.mIsAutoMode) {
+                HelPerformUtil.getInstance().performDelayed(AccelerationTest.this, HelPerformUtil.delayTime);
+            }
         }
     }
     //Gionee zhangke 20151124 modify for CR01595957 end
@@ -375,5 +375,12 @@ public class AccelerationTest extends BaseActivity implements SensorEventListene
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         return true;
+    }
+
+    @Override
+    public void OnButtonPerform() {
+        HelPerformUtil.getInstance().unregisterPerformListen();
+        DswLog.i(TAG, "OnButtonPerform");
+        mRightBtn.performClick();
     }
 }

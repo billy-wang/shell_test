@@ -74,6 +74,7 @@ public class TestUtils {
     /*Gionee huangjianqiang 20160729 add for CR01739425 begin*/
     public static final boolean IS_BLU = "yes".equals(SystemProperties.get("ro.cy.mmi.blufm", "no"));
     /*Gionee huangjianqiang 20160729 add for CR01739425 end*/
+    public static final int NODE_TYPE_WIFI_CHARGER_MODE = 71;// /sys/bus/i2c/devices/3-0023/status
 
 
     public static Context mAppContext;
@@ -86,7 +87,8 @@ public class TestUtils {
     private static AudioManager mAM;
     static String TAG1 = "CyMMITest--TestUtils";
     //Gionee zhangke 20160428 modify for CR01687958 start
-    public static final int BUTTON_ENABLED_DELAY_TIME = 1500;
+    public static final int BUTTON_ENABLED_DELAY_TIME = 500;
+    public static final int BUTTON_ENABLED_DELAY_MORETIME = 1500;
     //Gionee zhangke 20160428 modify for CR01687958 end
 
     // Gionee zhangxiaowei 20130517 add for CR00812238 start
@@ -100,7 +102,7 @@ public class TestUtils {
     // Gionee xiaolin 20120802 add for CR00662674 start 
     public static HashMap<String, Integer> autoTestResult = new HashMap<String, Integer>();
     // Gionee xiaolin 20120802 add for CR00662674 end
-
+    public static HashMap<String, Integer> autoTestResult2 = new HashMap<String, Integer>();
     // Gionee xiaolin 20120921 add for CR00693542 start
     static boolean sContinue = false;
 
@@ -166,16 +168,24 @@ public class TestUtils {
 
         String curTag = SystemProperties.get("persist.sys.gn.area");
         if (curTag != null && curTag.length() > 0 ) {
-            FeatureOption.GN_MMI_CONFIG_FILE = getSharedPreferences(mAppContext).getString("AreaTagConfigPath", FeatureOption.GN_MMI_CONFIG_FILE);
+            FeatureOption.GN_MMI_CONFIG_FILE = getTestSharedPreferences(mAppContext).getString("AreaTagConfigPath", FeatureOption.GN_MMI_CONFIG_FILE);
         }
     }
 
-    public static SharedPreferences getSharedPreferences(Context context) {
+    public static void initmTestEditor() {
+        mSharedPreferences = null;
+        mEditor = null;
+    }
+
+    public static SharedPreferences getTestSharedPreferences(Context context) {
         if (null == mSharedPreferences) {
-		//Gionee <Oversea_Bug> <tanbotao> <20161209> for 43139 begin
-            mSharedPreferences = context.getSharedPreferences("gn_mmi_test",
-                    Context.MODE_PRIVATE);
-		//Gionee <Oversea_Bug> <tanbotao> <20161209> for 32854 end
+		    if (mIsAutoMode) {
+                mSharedPreferences = context.getSharedPreferences("gn_mmi_test1",
+                        Context.MODE_PRIVATE);
+            }else if (mIsAutoMode_2) {
+                mSharedPreferences = context.getSharedPreferences("gn_mmi_test2",
+                        Context.MODE_PRIVATE);
+            }
         }
         return mSharedPreferences;
     }
@@ -192,7 +202,7 @@ public class TestUtils {
 
     public static SharedPreferences.Editor getSharedPreferencesEdit(Context context) {
         if (null == mEditor) {
-            mSharedPreferences = getSharedPreferences(context);
+            mSharedPreferences = getTestSharedPreferences(context);
             mEditor = mSharedPreferences.edit();
         }
         return mEditor;
@@ -309,7 +319,7 @@ public class TestUtils {
             mEditor.commit();
             // Gionee xiaolin 20120802 add for CR00662674 start
             autoTestResult.put(TestUtils.getAutoItems(activity).get(index), result);
-            SharedPreferences sp = getSharedPreferences(activity);
+            SharedPreferences sp = getTestSharedPreferences(activity);
             int i = sp.getInt(TestUtils.getAutoItems(activity).get(index), result);
             if (i != result) {
                 DswLog.e(TAG, " processButtonPress : write result failed one time! try again.");
@@ -811,7 +821,7 @@ public class TestUtils {
             String item = context.getResources().getString(R.string.sim_sdcard);
             removeTestItem(item);
         }
-        if (!FeatureOption.CY_RW_CY_MMI_WIRELESS_SUPPORT) {
+        if (/*!FeatureOption.CY_RW_CY_MMI_WIRELESS_SUPPORT ||*/ !isWirelessMode(context,NODE_TYPE_WIFI_CHARGER_MODE)) {
             String item = context.getResources().getString(R.string.battery_wireless);
             removeTestItem(item);
         }
@@ -1026,6 +1036,10 @@ public class TestUtils {
             String item = context.getResources().getString(R.string.face_verify);
             removeAutoTest2Item(item);
         }
+        if (!FeatureOption.CY_RW_CY_MMI_IRLIGHT_AUTOTEST2_SUPPORT) {
+            String item = context.getResources().getString(R.string.irlight);
+            removeAutoTest2Item(item);
+        }
     }
 
 
@@ -1116,16 +1130,26 @@ public class TestUtils {
             getSharedPreferencesEdit(activity);
         }
         //Gionee zhangke 20160105 delete for CR01618135 start
-        /*
+
         if (index == 0) {
             mEditor.clear();
         }
-        */
+
         //Gionee zhangke 20160105 delete for CR01618135 end
         mEditor.putInt(TestUtils.getAutoItems_2(activity).get(index), result);
         mEditor.commit();
+        autoTestResult2.put(TestUtils.getAutoItems_2(activity).get(index), result);
 
-        DswLog.e(TAG1, TestUtils.getAutoItems_2(activity).get(index) + ":" + result);
+
+        SharedPreferences sp = getTestSharedPreferences(activity);
+        int i = sp.getInt(TestUtils.getAutoItems_2(activity).get(index), result);
+        if (i != result) {
+            DswLog.d(TAG, " processButtonPress_2 : write result failed one time! try again.");
+            mEditor.putInt(TestUtils.getAutoItems_2(activity).get(index), result);
+            mEditor.commit();
+        }
+        DswLog.d(TAG1, TestUtils.getAutoItems_2(activity).get(index) + ":" + result);
+
         if (index < mAutoItemKeys_2.size() - 1) {
             try {
                 Intent it = new Intent().setClass(
@@ -1143,7 +1167,7 @@ public class TestUtils {
                 e.printStackTrace();
             }
         } else {
-            Intent it = new Intent(activity, TestResult.class);
+            Intent it = new Intent(activity, TestResult2.class);
             //Gionee zhangke 20151205 add for CR01604187 start
             it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
                     | it.FLAG_ACTIVITY_SINGLE_TOP
@@ -1304,10 +1328,45 @@ public class TestUtils {
     }
     //Gionee <GN_BSP_MMI> <chengq> <20170412> add for ID 111730 end
 
-    public static boolean getSbcFlag() {
+    public static boolean isWirelessMode(Context context, int value) {
+        Object  pm = (Object) (context.getSystemService("chenyeeserver"));
+        String changerMode = "";
+        try{
+            Class cls = Class.forName("android.os.chenyeeserver.ChenyeeServerManager");
+            Method method = cls.getMethod("getNodeContent", int.class);
+            changerMode =(String) method.invoke(pm, value);
+            DswLog.i("GnUtils","WirelessChangerMode:" + changerMode.trim() + ";");
+            if(changerMode != null && changerMode.trim().equals("ok")){
+                return true;
+            }
+        } catch (Exception ex) {
+            DswLog.e("GnUtils", "Exception :" + ex);
+        }
+        return false;
+    }
+
+    public static String getNodeContent(Context context, String nodeType) {
+        Object  pm = (Object) (context.getSystemService("chenyeeserver"));
+
+        try{
+            Class cls = Class.forName("android.os.chenyeeserver.ChenyeeServerManager");
+            Method method = cls.getMethod("getNodeContent", int.class);
+            Field f = cls.getField(nodeType);
+            String value =(String) method.invoke(pm, f.get(null));
+            DswLog.i(TAG1,"getNodeContent "+nodeType+" "+f.get(null)+":"+value);
+            if(value != null){
+                return value.trim();
+            }
+        } catch (Exception ex) {
+            DswLog.e(TAG1, "Exception :" + ex);
+        }
+        return null;
+    }
+
+    public static String getSbcFlag() {
         String mSbcFileName = "/proc/sbcflag";
         File mSbcFile = null;
-        String mSbcStatua = null;
+        String mSbcStatua = "0";
         try {
             mSbcFile = new File(mSbcFileName);
             if (mSbcFile.exists()) {
@@ -1318,10 +1377,9 @@ public class TestUtils {
         } catch (Exception e) {
             e.printStackTrace();
             DswLog.i(TAG1, "#2 "+mSbcStatua);
-            return false;
         }
         DswLog.i(TAG1, "#3 "+mSbcStatua);
-        return mSbcStatua != null && mSbcStatua.equals("1");
+        return mSbcStatua;
     }
 }
 

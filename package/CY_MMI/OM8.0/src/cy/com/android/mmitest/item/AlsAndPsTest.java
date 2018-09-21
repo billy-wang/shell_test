@@ -41,10 +41,12 @@ import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.os.Message;
+import cy.com.android.mmitest.utils.HelPerformUtil;
+import cy.com.android.mmitest.bean.OnPerformListen;
 
 //Gionee <xuna><2012-11-02> modify for CR00724154 begin
 
-public class AlsAndPsTest extends BaseActivity implements OnClickListener {
+public class AlsAndPsTest extends BaseActivity implements OnClickListener ,OnPerformListen{
     private TextView tv;
 
     private Button mRightBtn, mWrongBtn, mRestartBtn;
@@ -162,6 +164,10 @@ public class AlsAndPsTest extends BaseActivity implements OnClickListener {
             } else {
                 mParent.setBackgroundColor(Color.BLACK);
             }
+
+            if (mRightBtn.isEnabled() && !mIsClose && TestUtils.mIsAutoMode) {
+                HelPerformUtil.getInstance().performDelayed(AlsAndPsTest.this, HelPerformUtil.delayTime);
+            }
         }
 
         @Override
@@ -198,6 +204,10 @@ public class AlsAndPsTest extends BaseActivity implements OnClickListener {
             if (0 != i)
                 i = 1;
             mProximityNum.setText(Integer.toString(i));
+
+            if (mRightBtn.isEnabled() && !mIsClose && TestUtils.mIsAutoMode) {
+                HelPerformUtil.getInstance().performDelayed(AlsAndPsTest.this, HelPerformUtil.delayTime);
+            }
         }
 
         @Override
@@ -615,5 +625,11 @@ public class AlsAndPsTest extends BaseActivity implements OnClickListener {
 
     }
     /* Gionee huangjianqiang 20160125 add for CR01625818 end */
+    @Override
+    public void OnButtonPerform() {
+        HelPerformUtil.getInstance().unregisterPerformListen();
+        DswLog.i(TAG, "OnButtonPerform");
+        mRightBtn.performClick();
+    }
 }
 

@@ -93,7 +93,7 @@ public class PhoneLoopbackTest2 extends BaseActivity implements OnClickListener 
                 mWrongBtn.setOnClickListener(PhoneLoopbackTest2.this);
                 mRestartBtn.setOnClickListener(PhoneLoopbackTest2.this);
             }
-        }, TestUtils.BUTTON_ENABLED_DELAY_TIME);
+        }, TestUtils.BUTTON_ENABLED_DELAY_MORETIME);
         //Gionee zhangke 20160428 modify for CR01687958 end
     }
 

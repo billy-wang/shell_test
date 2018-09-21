@@ -1,0 +1,14 @@
+==================
+Build Notes
+==================
+clone_type:git
+app_name:CY_MMI
+app_version:8.1.1.ct
+tag:CY_MMI_OM8.0_V8.1.1.ct
+clone_url:ssh://gerritbuild@18.8.3.13:29418/app/CY_MMI -b master -m 
+env_url:ssh://gerritbuild@18.8.3.13:29418/146/build_apk_env -b branch_cyee_8.0.0-r4_rel
+
+==================
+Release Location
+==================
+ftp://softrel.chenyee.com/build_version/Applications/CY_MMI/CY_MMI_OM8.0_V8.1.1.ct.zip

@@ -100,7 +100,7 @@ public class ToneTest2 extends BaseActivity implements OnClickListener {
                 mWrongBtn.setOnClickListener(ToneTest2.this);
                 mRestartBtn.setOnClickListener(ToneTest2.this);
             }
-        }, TestUtils.BUTTON_ENABLED_DELAY_TIME);
+        }, TestUtils.BUTTON_ENABLED_DELAY_MORETIME);
         //Gionee zhangke 20160428 modify for CR01687958 end
     }
 

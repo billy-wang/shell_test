@@ -35,7 +35,7 @@ import android.content.pm.PackageManager;
 public class IrTest2 extends BaseActivity implements OnClickListener {
     Button mRightBtn, mWrongBtn, mRestartBtn;
     private static final String TAG = "IrTest2";
-    IrControl mIda;
+  //  IrControl mIda;
     Button send_data, receiver_data;
     TextView ir_code_text, carrier_freq;
     private boolean mHasConsumerIr;
@@ -77,7 +77,7 @@ public class IrTest2 extends BaseActivity implements OnClickListener {
         lp.flags |= WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON | WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED;
         getWindow().setAttributes(lp);
         setContentView(R.layout.consumerirtest);
-        mIda = new IrControl(this);
+      //  mIda = new IrControl(this);
         send_data = (Button) findViewById(R.id.send_data);//发射
         receiver_data = (Button) findViewById(R.id.receiver_data);//接收
         receiver_data.setVisibility(View.INVISIBLE);
@@ -144,22 +144,19 @@ public class IrTest2 extends BaseActivity implements OnClickListener {
                         mRecordFile.delete();
                     }
                     //Gionee <GN_BSP_MMI> <chengq> <20170414> modify for ID 112756 begin
-                    if (mThread == null) {
-                        mThread = new MThread();
-                            DswLog.d("TestIrTag", "new MThread");
-                    }
+   
+                    mThread = new MThread();
+                    DswLog.d("TestIrTag", "new MThread");
+
                     if (!mThread.isAlive()) {
                         mThread.start();
                         DswLog.d("TestIrTag", "mThread start");
                     }
 
-                    if (nThread == null ) {
+                    if (nThread == null || !flag1) {
                         nThread = new NThread();
-                        DswLog.d("TestIrTag", "new nThread");
-                    }
-                    if (!nThread.isAlive()) {
                         nThread.start();
-                        DswLog.d("TestIrTag", "nThread data");
+                        DswLog.d("TestIrTag", "new nThread");
                     }
                     //Gionee <GN_BSP_MMI> <chengq> <20170414> modify for ID 112756 end
                 } else if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
@@ -293,7 +290,7 @@ public class IrTest2 extends BaseActivity implements OnClickListener {
                     }
                 }
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(200);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

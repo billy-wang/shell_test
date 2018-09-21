@@ -31,8 +31,10 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 import java.io.FileReader;
+import cy.com.android.mmitest.utils.HelPerformUtil;
+import cy.com.android.mmitest.bean.OnPerformListen;
 
-public class BatteryTest extends BaseActivity implements OnClickListener {
+public class BatteryTest extends BaseActivity implements OnClickListener ,OnPerformListen{
     private static final int DEF_CHARGE_CURRENT_VALVE = 200;
     private boolean isOverDefChargeCurrentValve = false;
     private final int Temperature_Max = 46;
@@ -169,8 +171,12 @@ public class BatteryTest extends BaseActivity implements OnClickListener {
                 mIsPass = true;
                 if (mIsTimeOver) {
                     if (isOverDefChargeCurrentValve && mTemperatuere < Temperature_Max) {
-                        DswLog.d(TAG,"");
+                        DswLog.d(TAG,"charge test success");
                         mRightBtn.setEnabled(true);
+
+                        if (TestUtils.mIsAutoMode) {
+                            HelPerformUtil.getInstance().performDelayed(BatteryTest.this, HelPerformUtil.delayTime);
+                        }
                     }
                 }
                 //Gionee zhangke 20160428 modify for CR01687958 end
@@ -253,6 +259,10 @@ public class BatteryTest extends BaseActivity implements OnClickListener {
                 if (mIsPass) {
                     if (isOverDefChargeCurrentValve && mTemperatuere < Temperature_Max){
                         mRightBtn.setEnabled(true);
+
+                        if (TestUtils.mIsAutoMode) {
+                            HelPerformUtil.getInstance().performDelayed(BatteryTest.this, HelPerformUtil.delayTime);
+                        }
                     }else {
                         mRightBtn.setEnabled(false);
                     }
@@ -461,4 +471,10 @@ public class BatteryTest extends BaseActivity implements OnClickListener {
         }
     }
 
+    @Override
+    public void OnButtonPerform() {
+        HelPerformUtil.getInstance().unregisterPerformListen();
+        DswLog.i(TAG, "OnButtonPerform");
+        mRightBtn.performClick();
+    }
 }

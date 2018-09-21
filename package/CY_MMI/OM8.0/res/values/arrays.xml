@@ -7,6 +7,7 @@
         <item>@string/test_result</item>
         <item>@string/master_clear</item>
         <item>@string/auto_test_2</item>
+        <item>@string/test_result2</item>
         <!--Gionee zhangke 201603010 add for CR01650400 start--> 
         <item>@string/set_rpmb_key</item>
         <!--Gionee zhangke 201603010 add for CR01650400 end-->
@@ -316,6 +317,8 @@
         <item>@string/flash</item>
         <item>@string/flash2</item>
         <item>@string/FlashLight</item>
+        <item>@string/FrontFlashTest</item>
+        <item>@string/irlight</item>
         <item>@string/fingerprints</item>
         <item>@string/fingerprints2</item>
 	<!--Gionee <GN_BSP_MMI> <chengq> <20170105> add for ID 59512 begin-->
@@ -370,6 +373,8 @@
         <item>"FlashTest"</item>
         <item>"FlashTest2"</item>
         <item>"FlashLight"</item>
+        <item>"FrontFlashTest"</item>
+        <item>"IRLight"</item>
         <item>"FingerPrintsTest"</item>
         <item>"FingerPrintsTest2"</item>
 	<!--Gionee <GN_BSP_MMI> <chengq> <20170105> add for ID 59512 begin-->

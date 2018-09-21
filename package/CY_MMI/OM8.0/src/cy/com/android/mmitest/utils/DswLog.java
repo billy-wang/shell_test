@@ -78,7 +78,7 @@ public class DswLog {
     
     private static void log(String tag, String msg, char level) {
         if (LOG_SWITCH) {
-            msg = "MyMmiTest " + msg;
+            msg = "mymmitest " + msg;
             if ('i' == level) {
                 Log.i(tag, msg );
             } else if ('e' == level) {

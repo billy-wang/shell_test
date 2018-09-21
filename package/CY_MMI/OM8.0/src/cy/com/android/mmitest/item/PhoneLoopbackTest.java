@@ -70,7 +70,7 @@ public class PhoneLoopbackTest extends BaseActivity implements OnClickListener {
                 mWrongBtn.setOnClickListener(PhoneLoopbackTest.this);
                 mRestartBtn.setOnClickListener(PhoneLoopbackTest.this);
             }
-        }, TestUtils.BUTTON_ENABLED_DELAY_TIME);
+        }, TestUtils.BUTTON_ENABLED_DELAY_MORETIME);
         //Gionee zhangke 20160428 modify for CR01687958 end
 
         TextView recordTitle = (TextView) findViewById(R.id.test_title);

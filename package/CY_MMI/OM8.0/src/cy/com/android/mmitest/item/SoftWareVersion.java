@@ -47,6 +47,10 @@ public class SoftWareVersion extends BaseActivity implements OnClickListener {
     private boolean mCaliInfo = false;
     /* Gionee huangjianqiang 20160125 add for CR01628438 end*/
 
+    //Chenyee <liu_shuang> <20180813> add for CSW1802LT-25 begin
+    public static final String DRDI_SUPPORT = SystemProperties.get("ro.modem.drdi.support", "no");
+    //Chenyee <liu_shuang> <20180813> add for CSW1802LT-25 end
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,7 +69,7 @@ public class SoftWareVersion extends BaseActivity implements OnClickListener {
         /* Gionee huangjianqiang 20160125 modify for CR01628438 end*/
 
         // Gionee xiaolin 20120924 add for CR00693542 end
-        setContentView(R.layout.common_textview);
+        setContentView(R.layout.common_textview_softversion);
         mRightBtn = (Button) findViewById(R.id.right_btn);
         mRightBtn.setOnClickListener(this);
         mWrongBtn = (Button) findViewById(R.id.wrong_btn);
@@ -193,8 +197,17 @@ public class SoftWareVersion extends BaseActivity implements OnClickListener {
             if (FeatureOption.GN_RW_GN_MMI_GM3_SUPPORT) {
                 gm_value = "" + ProinfoUtil.getGm3Value();
             }
-            if (FeatureOption.GN_RW_GN_MMI_EFUSE_SUPPORT && TestUtils.getSbcFlag()) {
-                efuse = getResources().getString(R.string.gn_ft_bt_result_success);
+            if (FeatureOption.GN_RW_GN_MMI_EFUSE_SUPPORT) {
+                String status = TestUtils.getSbcFlag();
+                if (status.equals("0")) {
+
+                }else if (status.equals("1")) {
+                    efuse = getResources().getString(R.string.gn_ft_bt_result_success);
+                }else if (status.equals("2")) {
+                    efuse = getResources().getString(R.string.efuse_stauts_2);
+                }else if (status.equals("3")) {
+                    efuse = getResources().getString(R.string.efuse_stauts_3);
+                }
             }
             if (FeatureOption.GN_RW_GN_MMI_RPMB_SUPPORT && ProinfoUtil.isWriteRpmbTag()) {
                 rpmb_status = getResources().getString(R.string.gn_ft_bt_result_success);
@@ -322,7 +335,53 @@ public class SoftWareVersion extends BaseActivity implements OnClickListener {
             content += mMemoryinfo;
         }
 
-        if (ProinfoUtil.isCheckVersion("CSW1707")) {
+        if (ProinfoUtil.isCheckVersion("CSW1707") || ProinfoUtil.isCheckVersion("CSW1802")) {
+            //default true
+            //Chenyee <liu_shuang> <20180813> modify for CSW1802LT-25 begin
+            if ("yes".equals(DRDI_SUPPORT)) {
+                FeatureOption.GN_RW_GN_MMI_GSM_SUPPORT = true;
+                FeatureOption.GN_RW_GN_MMI_WCDMA_SUPPORT = true;
+                FeatureOption.GN_RW_GN_MMI_CDMA_SUPPORT = true;
+                FeatureOption.GN_RW_GN_MMI_TDSCDMA_SUPPORT = true;
+                FeatureOption.GN_RW_GN_MMI_LTETDD_SUPPORT = true;
+                FeatureOption.GN_RW_GN_MMI_LTEFDD_SUPPORT = true;
+
+                String curModem = ProinfoUtil.switchModem2();
+                if (curModem.equals("B")) {
+                    FeatureOption.GN_RW_GN_MMI_CDMA_SUPPORT = false;
+                    FeatureOption.GN_RW_GN_MMI_TDSCDMA_SUPPORT = false;
+                    FeatureOption.GN_RW_GN_MMI_LTETDD_SUPPORT = false;
+                    bandtype = getResources().getString(R.string.softversion_band_b);
+                }else if (curModem.equals("C")) {
+                    FeatureOption.GN_RW_GN_MMI_TDSCDMA_SUPPORT = false;
+                    bandtype = getResources().getString(R.string.softversion_band_c);
+                }else if (curModem.equals("A")) {
+                    FeatureOption.GN_RW_GN_MMI_TDSCDMA_SUPPORT = false;
+                    bandtype = getResources().getString(R.string.softversion_band_a);
+                } else if (curModem.equals("D")) {
+                    FeatureOption.GN_RW_GN_MMI_CDMA_SUPPORT = false;
+                    FeatureOption.GN_RW_GN_MMI_TDSCDMA_SUPPORT = false;
+                    bandtype = getResources().getString(R.string.softversion_band_d);
+                } else {
+                    DswLog.d(TAG,"wrong band "+curModem);
+                }
+                content +=  "\nBandType:" + bandtype;
+            }
+            //Chenyee <liu_shuang> <20180813> modify for CSW1802LT-25 end
+
+            if (ProinfoUtil.isCheckVersionSub("CSW1802DB")) {
+                FeatureOption.GN_RW_GN_MMI_GSM_SUPPORT = false;
+                FeatureOption.GN_RW_GN_MMI_WCDMA_SUPPORT = true;
+                FeatureOption.GN_RW_GN_MMI_CDMA_SUPPORT = false;
+                FeatureOption.GN_RW_GN_MMI_TDSCDMA_SUPPORT = false;
+                FeatureOption.GN_RW_GN_MMI_LTETDD_SUPPORT = false;
+                FeatureOption.GN_RW_GN_MMI_LTEFDD_SUPPORT = false;
+                bandtype = getResources().getString(R.string.softversion_band_db);
+                content +=  "\nBandType:" + bandtype;
+            }
+        }
+
+        if (ProinfoUtil.isCheckVersion("CSW1803")) {
             //default true
             FeatureOption.GN_RW_GN_MMI_GSM_SUPPORT = true;
             FeatureOption.GN_RW_GN_MMI_WCDMA_SUPPORT = true;
@@ -331,7 +390,7 @@ public class SoftWareVersion extends BaseActivity implements OnClickListener {
             FeatureOption.GN_RW_GN_MMI_LTETDD_SUPPORT = true;
             FeatureOption.GN_RW_GN_MMI_LTEFDD_SUPPORT = true;
 
-            String curModem = ProinfoUtil.switchModem2();
+            String curModem = ProinfoUtil.switchModem();
             if (curModem.equals("B")) {
                 FeatureOption.GN_RW_GN_MMI_CDMA_SUPPORT = false;
                 FeatureOption.GN_RW_GN_MMI_TDSCDMA_SUPPORT = false;
@@ -341,17 +400,33 @@ public class SoftWareVersion extends BaseActivity implements OnClickListener {
                 FeatureOption.GN_RW_GN_MMI_TDSCDMA_SUPPORT = false;
                 bandtype = getResources().getString(R.string.softversion_band_c);
             }else if (curModem.equals("A")) {
-                FeatureOption.GN_RW_GN_MMI_TDSCDMA_SUPPORT = false;
                 bandtype = getResources().getString(R.string.softversion_band_a);
             } else if (curModem.equals("D")) {
                 FeatureOption.GN_RW_GN_MMI_CDMA_SUPPORT = false;
                 FeatureOption.GN_RW_GN_MMI_TDSCDMA_SUPPORT = false;
                 bandtype = getResources().getString(R.string.softversion_band_d);
+            //Chenyee <CY_Sensor> <tanbotao> <20180704> modify for CSW1803A-633 begin
+            } else if (curModem.equals("LT")) {
+                FeatureOption.GN_RW_GN_MMI_TDSCDMA_SUPPORT = false;
+                FeatureOption.GN_RW_GN_MMI_LTETDD_SUPPORT = false;
+                bandtype = getResources().getString(R.string.softversion_band_lt);
+            //Chenyee <CY_Sensor> <tanbotao> <20180704> modify for CSW1803A-633 end
             } else {
                 DswLog.d(TAG,"wrong band "+curModem);
             }
+
+            if (ProinfoUtil.isCheckVersionSub("CSW1803DB")) {
+                FeatureOption.GN_RW_GN_MMI_GSM_SUPPORT = false;
+                FeatureOption.GN_RW_GN_MMI_WCDMA_SUPPORT = true;
+                FeatureOption.GN_RW_GN_MMI_CDMA_SUPPORT = false;
+                FeatureOption.GN_RW_GN_MMI_TDSCDMA_SUPPORT = false;
+                FeatureOption.GN_RW_GN_MMI_LTETDD_SUPPORT = false;
+                FeatureOption.GN_RW_GN_MMI_LTEFDD_SUPPORT = false;
+                bandtype = getResources().getString(R.string.softversion_band_db);
+            }
             content +=  "\nBandType:" + bandtype;
         }
+
         /*Gionee futao 20160330 modify for CR01663704*/
         if (FeatureOption.GN_RW_GN_MMI_GSM_SUPPORT) {
             content += "\nGSM BT: " + btResult + "\nGSM FT: " + ftResult;
@@ -406,10 +481,11 @@ public class SoftWareVersion extends BaseActivity implements OnClickListener {
                 content += "\n" + getResources().getString(R.string.mmi_version_name) + getAppInfo();
                 DswLog.i(TAG, "mmi version name = " + getAppInfo());
             } else {
-                String AmigoFrameworkVersion = getAmigoFrameworkVersion();
+                /*String AmigoFrameworkVersion = getAmigoFrameworkVersion();
                 if (!AmigoFrameworkVersion.equals("")) {
                     content += "\n" + "widget: " + AmigoFrameworkVersion;
                 }
+                content += "\n" + "widget: " + AmigoFrameworkVersion;*/
             }
         /*Gionee futao 20150217 modfy for CR01635407 end*/
             content += "\n" + getResources().getString(R.string.buildtime) + ": " + buildTime;
@@ -487,7 +563,7 @@ public class SoftWareVersion extends BaseActivity implements OnClickListener {
 
     /* Gionee huangjianqiang 20160125 add  end*/
      /*Gionee futao 20150217 modfy for CR01635407 begin*/
-    private String getAmigoFrameworkVersion() {
+   /* private String getAmigoFrameworkVersion() {
         String version = "";
         Class<?> verClass = null;
 
@@ -505,7 +581,7 @@ public class SoftWareVersion extends BaseActivity implements OnClickListener {
         }
 
         return version;
-    }
+    }*/
      /*Gionee futao 20150217 modfy for CR01635407 end*/
     //Gionee <BP_BSP_MMI> <chengq> <20170401> modify for ID 101802 begin
     @Override

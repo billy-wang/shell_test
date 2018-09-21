@@ -12,6 +12,7 @@ import cy.com.android.mmitest.TestUtils;
 import android.view.View.OnClickListener;
 import android.view.View;
 import android.view.KeyEvent;
+import cy.com.android.mmitest.utils.ProinfoUtil;
 
 
 public class ResetMtpEx extends BaseActivity implements OnClickListener{
@@ -20,6 +21,7 @@ public class ResetMtpEx extends BaseActivity implements OnClickListener{
     private static final String TAG = "ResetMtpEx";
     private Handler handler = new Handler();
     private AudioManager audioManager;
+    private int status = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +49,7 @@ public class ResetMtpEx extends BaseActivity implements OnClickListener{
                 mWrongBtn.setOnClickListener(ResetMtpEx.this);
                 mRestartBtn.setOnClickListener(ResetMtpEx.this);
             }
-        }, TestUtils.BUTTON_ENABLED_DELAY_TIME);
+        }, TestUtils.BUTTON_ENABLED_DELAY_MORETIME);
 
 
         audioManager = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
@@ -95,8 +97,12 @@ public class ResetMtpEx extends BaseActivity implements OnClickListener{
                 handler.postDelayed(new Runnable() {
                     public void run() {
 
+                        status = 1;
                         audioManager.setParameters("resetMtpEx=true");
-                        mRightBtn.setEnabled(true);
+                        DswLog.d(TAG, "\n resetMtpEx_billy status" + status);
+                        if("1".equals(ProinfoUtil.getNotStat("/sys/class/rt5509_cal/rt5509.0/calibrated"))) {
+                            mRightBtn.setEnabled(true);
+                        }
                     }
                 },3000);
             }

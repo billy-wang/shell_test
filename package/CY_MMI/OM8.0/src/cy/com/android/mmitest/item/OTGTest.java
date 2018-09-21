@@ -23,8 +23,10 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import cy.com.android.mmitest.utils.NodeNameUtil;
 import cy.com.android.mmitest.item.FeatureOption;
+import cy.com.android.mmitest.utils.HelPerformUtil;
+import cy.com.android.mmitest.bean.OnPerformListen;
 
-public class OTGTest extends BaseActivity implements OnClickListener {
+public class OTGTest extends BaseActivity implements OnClickListener ,OnPerformListen {
 
     private Button mRightBtn, mWrongBtn, mRestartBtn;
 
@@ -66,6 +68,11 @@ public class OTGTest extends BaseActivity implements OnClickListener {
                         DswLog.e(TAG, " otg test success ");
                         promt.setText(R.string.test_right_otg);
                         mRightBtn.setEnabled(true);
+
+                        if (TestUtils.mIsAutoMode) {
+                            HelPerformUtil.getInstance().performDelayed(OTGTest.this, HelPerformUtil.delayTime);
+                        }
+
                         return;
                     }
                     line = bufferReader.readLine();
@@ -249,4 +256,11 @@ public class OTGTest extends BaseActivity implements OnClickListener {
         DswLog.d(TAG, "after otgswitch nodeType="+TestUtils.getNodeState(this,NodeNameUtil.OTG_NODE_NAME));
     }
     //Gionee <GN_BSP_MMI> <chengq> <20170512> modify for ID 138674 end
+
+    @Override
+    public void OnButtonPerform() {
+        HelPerformUtil.getInstance().unregisterPerformListen();
+        DswLog.i(TAG, "OnButtonPerform");
+        mRightBtn.performClick();
+    }
 }

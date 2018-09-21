@@ -20,8 +20,10 @@ import android.telephony.TelephonyManager;
 import java.util.List;
 import cy.com.android.mmitest.utils.ProinfoUtil;
 import cy.com.android.mmitest.R;
+import cy.com.android.mmitest.utils.HelPerformUtil;
+import cy.com.android.mmitest.bean.OnPerformListen;
 
-public class SimCardAndTF extends BaseActivity implements OnClickListener{
+public class SimCardAndTF extends BaseActivity implements OnClickListener ,OnPerformListen{
 	private StorageManager storageManager;
 	private final static String TAG = "SimCardAndTF";
 	private boolean isSimPass = false;
@@ -200,6 +202,10 @@ public class SimCardAndTF extends BaseActivity implements OnClickListener{
 						DswLog.d(TAG, "test OK");
 						mWrongBtn.setEnabled(false);
 						mRightBtn.setEnabled(true);
+
+						if (TestUtils.mIsAutoMode) {
+							HelPerformUtil.getInstance().performDelayed(SimCardAndTF.this, HelPerformUtil.delayTime);
+						}
 					}else {
 						DswLog.d(TAG, "test Fail");
 						mWrongBtn.setEnabled(true);
@@ -212,4 +218,11 @@ public class SimCardAndTF extends BaseActivity implements OnClickListener{
 			uiHandler.sendMessageDelayed(uiHandler.obtainMessage(1), delaytime);
 		}
 	};
+
+	@Override
+	public void OnButtonPerform() {
+		HelPerformUtil.getInstance().unregisterPerformListen();
+		DswLog.i(TAG, "OnButtonPerform");
+		mRightBtn.performClick();
+	}
 }

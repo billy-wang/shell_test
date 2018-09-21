@@ -209,10 +209,11 @@ public class ColorTest extends BaseActivity implements OnClickListener {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if (MotionEvent.ACTION_DOWN == event.getAction()) {
-            DswLog.e("lich", "mCount == " + mCount);
+            DswLog.i("lich", "mCount == " + mCount);
             switch (mCount) {
                 case 0:
                     mColorView.setBackgroundColor(Color.GREEN);
+                    DswLog.i(TAG,"set Color.GREEN");
                     //Gionee <GN_BSP_MMI> <lifeilong> <20170321> modify for ID 85901 begin
                     greenOpen();
                     //uiHandler.sendEmptyMessageDelayed(2,50);
@@ -224,6 +225,7 @@ public class ColorTest extends BaseActivity implements OnClickListener {
                     break;
                 case 1:
                     mColorView.setBackgroundColor(Color.BLUE);
+                    DswLog.i(TAG,"set Color.BLUE");
                     //Gionee <GN_BSP_MMI> <lifeilong> <20170321> modify for ID 85901 begin
                     blueOpen();
                     //uiHandler.sendEmptyMessageDelayed(3,50);
@@ -236,6 +238,7 @@ public class ColorTest extends BaseActivity implements OnClickListener {
                 // Gionee xiaolin 20121222 modify for CR00753039  start
                 case 2:
                     mColorView.setBackgroundColor(Color.BLACK);
+                    DswLog.i(TAG,"set Color.BLACK");
                     //Gionee <GN_BSP_MMI> <lifeilong> <20170321> modify for ID 85901 begin
                     ledDown();
                     //Gionee zhangxiaowei 20130523 add for CR00818649 start
@@ -247,9 +250,20 @@ public class ColorTest extends BaseActivity implements OnClickListener {
                 case 3:
                     //Gionee xiaolin 20121106 add for CR00725238 start
                     mColorView.setBackgroundColor(Color.WHITE);
+                    DswLog.i(TAG,"set Color.WHITE");
                     mCount++;
                     break;
                 case 4:
+                    mColorView.setBackgroundColor(Color.parseColor("#404040"));
+                    DswLog.i(TAG,"set Color #404040");
+                    mCount++;
+                    break;
+                case 5:
+                    mColorView.setBackgroundColor(Color.parseColor("#7f7f7f"));
+                    DswLog.i(TAG,"set Color #7f7f7f");
+                    mCount++;
+                    break;
+                case 6:
                     //Gionee xiaolin 20121106 add for CR00725238 end
                     // Gionee xiaolin 20121222 modify for CR00753039  end
                     mCount++;

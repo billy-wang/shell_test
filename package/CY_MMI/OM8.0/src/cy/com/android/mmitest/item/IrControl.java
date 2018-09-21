@@ -28,9 +28,9 @@ public class IrControl {
             this.objir = ctx.getSystemService("remoteir");
             this.method_transmit = objir.getClass().getMethod("transmit", new Class[]{byte[].class, int.class});
             this.method_receive = objir.getClass().getMethod("receive", new Class[]{byte[].class, int.class});
-            this.method_receive_init =objir.getClass().getMethod("receive_init", null);
-            this.method_receive_is_ready =objir.getClass().getMethod("receive_is_ready", null);
-            this.method_stop = objir.getClass().getMethod("cancelTransmit", null);
+            this.method_receive_init =objir.getClass().getMethod("receive_init");
+            this.method_receive_is_ready =objir.getClass().getMethod("receive_is_ready");
+            this.method_stop = objir.getClass().getMethod("cancelTransmit");
         }catch (Exception e){}
 
 

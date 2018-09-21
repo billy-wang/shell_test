@@ -38,8 +38,34 @@ public class EmSensor {
                     "com.mediatek.engineermode.sensor.EmSensor");
             DswLog.d(TAG, "mClassName:" + mClass.getName());
         } catch (Exception e) {
-            e.printStackTrace();
+            DswLog.i(TAG, "can not use engineermode doCalibration then use mmimode");
+            try {
+                //Chenyee <CY_Sensor> <tanbotao> <20180704> modify for CSW1707A-1412 begin
+                Context pkgContext = mContext.createPackageContext(
+                        "com.mmi.mode", Context.CONTEXT_INCLUDE_CODE
+                                | Context.CONTEXT_IGNORE_SECURITY);
+                mClass = pkgContext.getClassLoader().loadClass(
+                        "com.mmi.mode.sensor.EmSensor");
+                DswLog.d(TAG, "mClassName:" + mClass.getName());
+                //Chenyee <CY_Sensor> <tanbotao> <20180704> modify for CSW1707A-1412 end
+            } catch (Exception error) {
+                DswLog.i(TAG, "can not use mmimode doCalibration");
+                error.printStackTrace();
+            }
         }
+    }
+
+
+    public int doGsensorCalibration() {
+        int ret = RET_ERROR;
+        try {
+            Method method = mClass.getDeclaredMethod("doGsensorCalibration", int.class);
+            ret = (int) method.invoke(mClass, TOLERANCE_20);
+        } catch (Exception e) {
+        } finally {
+            DswLog.d(TAG, "doGsensorCalibration: result = " + ret);
+        }
+        return ret;
     }
 
     /**

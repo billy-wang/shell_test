@@ -1,7 +1,7 @@
 package cy.com.android.mmitest.item;
 
 import cy.com.android.mmitest.TestResult;
-
+import cy.com.android.mmitest.utils.FlagNvramUtil;
 import cy.com.android.mmitest.TestUtils;
 
 import java.io.IOException;
@@ -78,9 +78,27 @@ public class NvService extends Service {
     @Override
     public void onStart(Intent intent, int startId) {
         super.onStart(intent, startId);
-        DswLog.e(TAG, "ServiceonStart");
+        final int action = intent.getIntExtra("setFactoryFlag", -1);
+        DswLog.e(TAG, "ServiceonStart aciton="+action);
+        switch (action) {
+            case FlagNvramUtil.WRITE_FACTORY_FLAG:
+                factoryWriteFlag();
+                break;
+            case FlagNvramUtil.CLEAR_FACTORY_FLAG:
+                factoryClearFlag();
+                break;
+            default:
+                break;
+        }
+    }
 
-        //Gionee zhangke 20151013 modify for CR01562456 start 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        DswLog.e(TAG, "ServiconDestroy");
+    }
+
+    private void factoryWriteFlag() {
         if (FeatureOption.BACKUP_TO_PRODUCTINFO) {
             if (updateSN()) {
                 Toast.makeText(getApplicationContext(), getString(R.string.res_exefactory_success),Toast.LENGTH_SHORT).show();
@@ -92,19 +110,16 @@ public class NvService extends Service {
                 mHandler.sendMessageDelayed(mHandler.obtainMessage(MSG_EXE_FACTORY_FAIL),2500);
             }
         } else {
-            //Gionee zhangke 20151026 add for CR01574155 start
-//            Toast.makeText(this, "test ", Toast.LENGTH_LONG).show();
             Toast.makeText(this, "Please turn on MTK_PRODUCT_INFO_SUPPORT", Toast.LENGTH_LONG).show();
             DswLog.e(TAG, "FeatureOption.BACKUP_TO_PRODUCTINFO == false");
-            //Gionee zhangke 20151026 add for CR01574155 end
         }
-        //Gionee zhangke 20151013 modify for CR01562456 end
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        DswLog.e(TAG, "ServiconDestroy");
+    private void factoryClearFlag() {
+        byte[] sn_buff = FlagNvramUtil.readINvramInfo(TestResult.MMI_FACTORY_RESET_TAG + 1);
+        sn_buff = FlagNvramUtil.getNewSN(TestResult.MMI_FACTORY_RESET_TAG, "0", sn_buff);
+        FlagNvramUtil.writeToNvramInfo(sn_buff,TestResult.MMI_FACTORY_RESET_TAG + 1);
+
     }
 
     private void sendIntentLocked() {
@@ -117,7 +132,7 @@ public class NvService extends Service {
     private boolean updateSN() {
         byte[] sn_buff = new byte[TestResult.SN_LENGTH];
         try {
-            System.arraycopy(TestResult.readINvramInfo(), 0, sn_buff, 0, TestResult.SN_LENGTH);
+            System.arraycopy(FlagNvramUtil.readINvramInfo(), 0, sn_buff, 0, TestResult.SN_LENGTH);
             String oldSn = new String(sn_buff);
             if (oldSn == null || "".equals(oldSn)) {
                 DswLog.i(TAG, "### updateSN oldSn =" + oldSn);
@@ -134,13 +149,13 @@ public class NvService extends Service {
             return false;
 
         }
-        sn_buff = TestResult.getNewSN(TestResult.MMI_FACTORY_RESET_TAG, "P", sn_buff);
-        TestResult.writeToNvramInfo(sn_buff);
+        sn_buff = FlagNvramUtil.getNewSN(TestResult.MMI_FACTORY_RESET_TAG, "P", sn_buff);
+        FlagNvramUtil.writeToNvramInfo(sn_buff);
         return isFactoryResetBoot();
     }
 
     private boolean isFactoryResetBoot() {
-        byte[] productInfoBuff = TestResult.readINvramInfo();
+        byte[] productInfoBuff = FlagNvramUtil.readINvramInfo();
         if (productInfoBuff != null && productInfoBuff.length > 48) {
             DswLog.i(TAG, "isFactoryResetBoot:productInfoBuff[48]=" + productInfoBuff[48]);
             return 'P' == productInfoBuff[48];

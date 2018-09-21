@@ -22,19 +22,11 @@ import android.widget.TextView;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
-//Gionee zhangke 20151212 add for CR01608407 start
-import android.hardware.Camera;
-import android.os.Handler;
-import android.os.Message;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import android.content.ComponentName;
-
-//Gionee zhangke 20151212 add for CR01608407 end
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
 
 public class FlashLight extends BaseActivity implements OnClickListener {
     Button mToneBt;
@@ -46,16 +38,10 @@ public class FlashLight extends BaseActivity implements OnClickListener {
     private boolean isFlash = false;
     private static final String FLASHLIGHT_PATH = "/sys/class/flashlightdrv/kd_camera_flashlight/torch";
 
-    //Gionee zhangke 20151212 add for CR01608407 start
-    private Camera mCamera;
-    Camera.Parameters mParameters = null;
     private boolean mIsFlashOpened = false;
-    //Gionee zhangke 20151212 add for CR01608407 end
-    //Gionee zhangke 20160428 modify for CR01687958 start
-    private boolean mIsTimeOver = false;
-    private boolean mIsPass = false;
-    //Gionee zhangke 20160428 modify for CR01687958 start
-//    private FlashLightBroadcastReceiver mFLBroadcastReceiver;
+    private CameraManager mCameraManager;
+    private String mCameraId;
+    private boolean mFlashlightEnabled = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -92,69 +78,102 @@ public class FlashLight extends BaseActivity implements OnClickListener {
             startActivity(intent);
 
         } catch (Exception e) {
-            // TODO: handle exception
-//            setContentView(R.layout.common_textview);
+
             DswLog.e(TAG, "Exception e-1");
             //Gionee <GN_BSP_MMI> <chengq> <20170411> modify for ID 109364 begin
             mToggleBtn.setVisibility(View.VISIBLE);
             //Gionee <GN_BSP_MMI> <chengq> <20170411> modify for ID 109364 end
-            turnOnFlashLight();
-//            writeGestureNodeValue("NODE_TYPE_FLASHLIGHT_CAMERA_TORCH", 40);
+            initdata(this);
             DswLog.e(TAG, "wrie NODE_TYPE_FLASHLIGHT_CAMERA_TORCH 401 ");
-//            setContentView(R.layout.flash_light);
-//            mRightBtn = (Button) findViewById(R.id.right_btn);
-//            mRightBtn.setEnabled(false);
-//            mRightBtn.setOnClickListener(this);
-//            mWrongBtn = (Button) findViewById(R.id.wrong_btn);
-//            mRestartBtn = (Button) findViewById(R.id.restart_btn);
-//            mWrongBtn.setOnClickListener(this);
-//            mRestartBtn.setOnClickListener(this);
-//            mTitleTv = (TextView) findViewById(R.id.flash_test_title);
-//            mTitleTv.setText(R.string.test_title);
+
             isFlash=true;
-            //Gionee <Oveasea_Bug> <tanbotao> <20161121> for CR01772500 end
             DswLog.e(TAG, "Exception e-2");
         }
     }
 
-    @Override
-    public void onResume() {
+    private void turnOnFlashLight() {
+        DswLog.i(TAG, "turnOnFlashLight");
+        setFlashLight(true);
+        mIsFlashOpened = true;
 
-        super.onResume();
+    }
+
+    private void turnOffFlashLight() {
+        DswLog.e(TAG, "turnOffFlashLight");
+        setFlashLight(false);
+        mIsFlashOpened = false;
+    }
+
+
+    private void initdata(Context context) {
+        mCameraManager = (CameraManager)getSystemService(Context.CAMERA_SERVICE);
+        tryInitCamera();
+    }
+
+    private void tryInitCamera() {
+        try {
+            mCameraId = getBackCameraId();
+        } catch (CameraAccessException e) {
+            DswLog.e(TAG, "Couldn't initialize. err="+e.getMessage());
+        }
+
+    }
+
+    private void setFlashLight(boolean enabled) {
+        DswLog.i(TAG, "setFlashLight: enable=" + enabled + ", current_state=" + mFlashlightEnabled);
+        if (mCameraId == null) {
+            tryInitCamera();
+            if (mCameraId == null) {
+                DswLog.e(TAG, "setFlashLight: camera unavailable or no camera facing back");
+            }
+        }
+        if (mFlashlightEnabled != enabled) {
+            mFlashlightEnabled = enabled;
+            try {
+                mCameraManager.setTorchMode(mCameraId, enabled);
+            } catch (Exception e) {
+                DswLog.e(TAG, "Couldn't set torch mode e=" + e.getMessage());
+                mFlashlightEnabled = false;
+            }
+        }
+    }
+
+
+    private String getBackCameraId() throws CameraAccessException {
+        String[] ids = mCameraManager.getCameraIdList();
+        DswLog.i(TAG, "getBackCameraId length="+ids.length);
+        for (String id : ids) {
+
+            CameraCharacteristics cc = mCameraManager.getCameraCharacteristics(id);
+            Boolean flashAvailable = cc.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
+            Integer lensFacing = cc.get(CameraCharacteristics.LENS_FACING);
+
+            DswLog.d(TAG, "getBackCameraId: flashAvailable = " +
+                    flashAvailable + ", lensFacing = " + lensFacing + "..." + CameraCharacteristics.LENS_FACING_BACK);
+
+            if (lensFacing != null && lensFacing == CameraCharacteristics.LENS_FACING_BACK) {
+                return id;
+            }
+        }
+        return null;
     }
 
     @Override
-    public void onStop() {
-        super.onStop();
+    public void onResume() {
+        super.onResume();
+        if (isFlash) {
+            turnOnFlashLight();
+        }
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        /*Gionee huangjianqiang 20160307 modify for CR01634928 begin*/
-        //Gionee zhangke 20151212 add for CR01608407 start
         if (isFlash) {
             turnOffFlashLight();
         }
-        //Gionee zhangke 20151212 add for CR01608407 end
-        /*Gionee huangjianqiang 20160307 modify for CR01634928 end*/
-
     }
 
-    public boolean writeGestureNodeValue(String nodeType, int value) {
-        Object pm = (Object) (getSystemService("chenyeeserver"));
-        try {
-            Class cls = Class.forName("android.os.chenyeeserver.ChenyeeServerManager");
-            Method method = cls.getMethod("SetNodeState", int.class, int.class);
-            Field f = cls.getField(nodeType);
-            method.invoke(pm, f.get(null), value);
-            DswLog.i(TAG, "writeGestureNodeValue " + nodeType + " " + value);
-            return true;
-        } catch (Exception e) {
-            DswLog.e(TAG, "Exception :" + e);
-        }
-        return false;
-    }
     /* Gionee 20160907 tanbotao add for begin */
     private BroadcastReceiver flashLightBroadcastReceiver =new BroadcastReceiver (){
         @Override
@@ -167,9 +186,7 @@ public class FlashLight extends BaseActivity implements OnClickListener {
 
                 mRightBtn.setEnabled(flashlight_clicked);
             }
-            /*Gionee tanbotao 20160924 add for CR01761272 begin*/
-            isFlash = true;
-            /*Gionee tanbotao 20160924 add for CR01761272 begin*/
+
         }
     };
 
@@ -231,50 +248,9 @@ public class FlashLight extends BaseActivity implements OnClickListener {
     //Gionee zhangke 20151212 add for CR01608407 start
     private static final int MESSAGE_REFRESH_BUTTON_STATUE = 0;
 
-    private void turnOnFlashLight() {
-        DswLog.i(TAG, "turnOnFlashLight");
-        mIsFlashOpened = writeGestureNodeValue("NODE_TYPE_FLASHLIGHT_CAMERA_TORCH", 40);
 
-        if (!mIsFlashOpened && null == mCamera) {
-            try {
-                DswLog.i(TAG, "open camera");
-                mCamera = Camera.open();
-                mParameters = mCamera.getParameters();
-                String currFlashMode = mParameters.getFlashMode();
-                mParameters.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
-                //Gionee zhangke 20160109 add for CR01619039 start
-                /*Gionee huangjianqiang 20160216 modify for CR01635509 begin*/
-//				mParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_INFINITY);
-                /*Gionee huangjianqiang 20160216 modify for CR01635509 end*/
-                //Gionee zhangke 20160109 add for CR01619039 end
-                mCamera.setParameters(mParameters);
-                mCamera.startPreview();
-                mIsFlashOpened = true;
-            } catch (Exception e) {
-                DswLog.e(TAG, "turnOnFlashLight Exception=" + e.getMessage());
-            }
-        }
 
-    }
 
-    private void turnOffFlashLight() {
-        DswLog.e(TAG, "turnOffFlashLight");
-        writeGestureNodeValue("NODE_TYPE_FLASHLIGHT_CAMERA_TORCH", 0);
-        mIsFlashOpened = false;
-        if (mCamera != null) {
-            DswLog.i(TAG, "close camera");
-            /*Gionee huangjianqiang 20160216 add for CR01635509 begin*/
-            mParameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
-            mCamera.setParameters(mParameters);
-            /*Gionee huangjianqiang 20160216 add for CR01635509 end*/
-
-            mCamera.setPreviewCallback(null);
-            mCamera.stopPreview();
-            mCamera.release();
-            mCamera = null;
-        }
-
-    }
 
     //Gionee zhangke 20151212 add for CR01608407 end
 

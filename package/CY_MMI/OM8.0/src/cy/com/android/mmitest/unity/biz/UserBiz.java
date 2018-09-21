@@ -15,7 +15,7 @@ import cy.com.android.mmitest.utils.DswLog;
 import android.os.SystemProperties;
 import android.provider.Settings;
 import java.util.Arrays;
-import cy.com.android.mmitest.TestResult;
+import cy.com.android.mmitest.utils.FlagNvramUtil;
 import cy.com.android.mmitest.NvRAMAgent;
 import android.os.ServiceManager;
 import android.os.IBinder;
@@ -112,48 +112,18 @@ public class UserBiz implements IUserBiz {
     private boolean updateSN() {
         EraseSD();
 
-        byte[] sn_buff = new byte[510];
-        try {
-            System.arraycopy(TestResult.readINvramInfo(), 0, sn_buff, 0, 510);
-            String oldSn = new String(sn_buff);
-            if (oldSn == null || "".equals(oldSn)) {
-                DswLog.i(TAG, "updateSN oldSn =" + oldSn);
-                return false;
-            }
-        } catch (Exception e) {
-            DswLog.i(TAG, "updateSN Exception =" + e.getMessage());
-            return false;
-        }
-        sn_buff = TestResult.getNewSN(504, "S", sn_buff);
-        sn_buff = TestResult.getNewSN(505, "C", sn_buff);
-        sn_buff = TestResult.getNewSN(506, ":", sn_buff);
-        sn_buff = TestResult.getNewSN(507, mUser.getIdCountry().substring(0,1), sn_buff);
-        sn_buff = TestResult.getNewSN(508, mUser.getIdCountry().substring(1,2), sn_buff);
+        byte[] sn_buff = FlagNvramUtil.readINvramInfo(510);
 
-        TestResult.writeToNvramInfo(sn_buff);
+        sn_buff = FlagNvramUtil.getNewSN(504, "S", sn_buff);
+        sn_buff = FlagNvramUtil.getNewSN(505, "C", sn_buff);
+        sn_buff = FlagNvramUtil.getNewSN(506, ":", sn_buff);
+        sn_buff = FlagNvramUtil.getNewSN(507, mUser.getIdCountry().substring(0,1), sn_buff);
+        sn_buff = FlagNvramUtil.getNewSN(508, mUser.getIdCountry().substring(1,2), sn_buff);
+
+        FlagNvramUtil.writeToNvramInfo(sn_buff,510);
 
         return true;
     }
-
-   /* private byte[] getProductInfo() {
-        IBinder binder = null;
-        byte[] productInfoBuff = null;
-        binder = ServiceManager.getService("NvRAMAgent");
-        if (null == binder) {
-            DswLog.e(TAG, "getService	NvRAMAgent binder is null");
-        }
-        if (null != binder) {
-            NvRAMAgent agent = NvRAMAgent.Stub.asInterface(binder);
-            try {
-                DswLog.i(TAG, "getProductInfo NvRAMAgent read");
-                productInfoBuff = agent.readFileByName(ProinfoUtil.getProinfoPath());
-
-            } catch (RemoteException ex) {
-                DswLog.e(TAG, ex.toString());
-            }
-        }
-        return productInfoBuff;
-    }*/
 
     static {
         if (true == SystemProperties.get("ro.gn.oversea.product").equals("yes")) {

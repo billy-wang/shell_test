@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.io.File;
 import java.io.FileReader;
 import java.io.BufferedReader;
+import cy.com.android.mmitest.utils.FlagNvramUtil;
 
 public class ProinfoUtil {
 
@@ -25,7 +26,7 @@ public class ProinfoUtil {
     public static boolean factoryTest_QC_BATTERY_SUPPORT() {
         DswLog.e(TAG, "factoryTest_QC_BATTERY_SUPPORT");
         curSnLength = 510;
-        byte[] productInfoBuff = getProductInfo(curSnLength);
+        byte[] productInfoBuff = FlagNvramUtil.readINvramInfo(curSnLength);
         if (productInfoBuff != null && productInfoBuff.length > 498) {
             DswLog.d(TAG, "isFactoryResetBoot:productInfoBuff[498]=" + productInfoBuff[498]);
             if ('P' == productInfoBuff[TestResult.MMI_FACTORY_TEST_TAG])
@@ -34,55 +35,6 @@ public class ProinfoUtil {
         return true;
     }
 
-    public static void writeProductInfo(byte[] sn_buff, int snLength) {
-        int wflag = 0;
-        try {
-            INvram mNvram = INvram.getService();
-
-            if (null == mNvram) {
-                DswLog.e(TAG, "ProinfoUtil getPadioProxy: mnvram == null");
-            }else{
-                DswLog.i(TAG, "ProinfoUtil mNvram begin write");
-                String buff = null;
-                buff = mNvram.readFileByName(getProinfoPath(),snLength);
-                ArrayList<Byte> dataArray = new ArrayList<Byte>(snLength);
-                for (int i = 0; i < snLength; i++) {
-                    dataArray.add(i, new Byte(sn_buff[i]));
-                }
-                wflag = mNvram.writeFileByNamevec(getProinfoPath(),snLength, dataArray);
-                String readInfo = mNvram.readFileByName(getProinfoPath(),snLength);
-                DswLog.i(TAG, "ProinfoUtil writeFileByNamevec flag="+wflag);
-            }
-            DswLog.e(TAG, "ProinfoUtil nvram writeToNvramInfo flag="+wflag);
-        } catch (Exception e) {
-            e.printStackTrace();
-            DswLog.e(TAG, "ProinfoUtil nvram write Error:"+ e.getMessage() + ":" + e.getCause());
-            return;
-        }
-    }
-
-    public static byte[] getProductInfo(int snLength) {
-
-        String readInfo = null;
-        byte[] productInfoBuff = null;
-        try {
-            INvram mNvram = INvram.getService();
-            if (null == mNvram) {
-                DswLog.e(TAG, "getPadioProxy: mnvram == null");
-            }else{
-                readInfo = mNvram.readFileByName(getProinfoPath(),snLength);
-                productInfoBuff = HexDump.hexStringToByteArray(readInfo.substring(0, readInfo.length() - 1));
-            }
-        } catch (RemoteException ex) {
-            DswLog.e(TAG, ex.toString());
-        }
-
-        for (int i = 0; i < snLength; i++) {
-            DswLog.i(TAG, "getProductInfo[" + i + "]=" + productInfoBuff[i]);
-        }
-
-        return productInfoBuff;
-    }
 
     /**
      * MMI支持EFUSE写入
@@ -124,6 +76,24 @@ public class ProinfoUtil {
         return "error";
     }
 
+    public static String getNotStat(String file) {
+        File mSbcFile = null;
+        String mSbcStatua = null;
+        try {
+            mSbcFile = new File(file);
+            if (mSbcFile.exists()) {
+                BufferedReader bf = new BufferedReader(new FileReader(mSbcFile));
+                mSbcStatua = bf.readLine();
+                DswLog.i(TAG, "billy_rt5509.0_calibrated #1 "+mSbcStatua);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            DswLog.i(TAG, "billy_rt5509.0_calibrated #2 "+mSbcStatua);
+        }
+        DswLog.i(TAG, "billy_rt5509.0_calibrated #3 "+mSbcStatua);
+        return mSbcStatua;
+    }
+
     public static String switchModem() {
         String str = SystemProperties.get("ro.boot.opt_md1_support");
         if (str.equals("9")) {
@@ -135,8 +105,14 @@ public class ProinfoUtil {
         }else if (str.equals("14")) {
             //B
             return "B";
+        }else if (str.equals("12")) {
+            return "A";
+        //Chenyee <CY_Sensor> <tanbotao> <20180704> modify for CSW1803A-633 begin
+        } else if (str.equals("15")) {
+            return "LT";
         }
-        return str;
+        //Chenyee <CY_Sensor> <tanbotao> <20180704> modify for CSW1803A-633 end
+        return "error";
     }
 
     public static boolean isCheckVersion(String pversion) {
@@ -151,11 +127,19 @@ public class ProinfoUtil {
         return false;
     }
 
+    public static boolean isCheckVersionSub(String pversion) {
+        String string = getGnZnVersionNum();
+        if (null != string && string.contains(pversion)) {
+            return true;
+        }
+        return false;
+    }
+
     /**
      * 获取版本号
      */
     public static String getGnZnVersionNum() {
-        return SystemProperties.get("ro.gn.gnznvernumber");
+        return SystemProperties.get("ro.cy.znvernumber");
     }
 
     /**
@@ -186,6 +170,9 @@ public class ProinfoUtil {
         CSW1703("CSW1703"),
         CSW1705("CSW1705"),
         SWW1616("SWW1616"),
+        CSW1707("CSW1707"),
+        CSW1802("CSW1802"),
+        CSW1803("CSW1803"),
         SW17W16("SW17W16");
         PNAME(String pName) {
         }
@@ -196,7 +183,7 @@ public class ProinfoUtil {
 
         byte[] sn_buff = new byte[curSnLength];
         try {
-            System.arraycopy(getProductInfo(curSnLength), 0, sn_buff, 0, curSnLength);
+            System.arraycopy(FlagNvramUtil.readINvramInfo(curSnLength), 0, sn_buff, 0, curSnLength);
             String oldSn = new String(sn_buff);
             if (oldSn == null || "".equals(oldSn)) {
                 DswLog.i(TAG, "writeRpmbNvRamreadINvramInfo is null =" + oldSn);
@@ -207,12 +194,8 @@ public class ProinfoUtil {
             return false;
         }
         //RKF:P  499~503
-        //sn_buff = TestResult.getNewSN(499, "R", sn_buff);
-        //sn_buff = TestResult.getNewSN(500, "K", sn_buff);
-        //sn_buff = TestResult.getNewSN(501, "F", sn_buff);
-        //sn_buff = TestResult.getNewSN(502, ":", sn_buff);
-        sn_buff = TestResult.getNewSN(503, "P", sn_buff);
-        writeProductInfo(sn_buff,curSnLength);
+        sn_buff = FlagNvramUtil.getNewSN(503, "P", sn_buff);
+        FlagNvramUtil.writeToNvramInfo(sn_buff,curSnLength);
 
         return isWriteRpmbTag();
     }
@@ -220,7 +203,7 @@ public class ProinfoUtil {
     public static boolean isWriteRpmbTag() {
         int snLength = 504;
         DswLog.e(TAG, "isWriteRpmbTag");
-        byte[] productInfoBuff = getProductInfo(snLength);
+        byte[] productInfoBuff = FlagNvramUtil.readINvramInfo(snLength);
         if (productInfoBuff != null && productInfoBuff.length > TestResult.MMI_RPMB_TAG) {
             DswLog.d(TAG, "isWriteRpmbTag:productInfoBuff[TestResult.MMI_RPMB_TAG]=" + productInfoBuff[TestResult.MMI_RPMB_TAG]);
             if ('P' == productInfoBuff[TestResult.MMI_RPMB_TAG])
@@ -297,9 +280,26 @@ public class ProinfoUtil {
         return gKey_status;
     }
 
+    public static boolean isSetAurisys() {
+        PNAME mPname = getNameInPNAME();
+        switch (mPname) {
+            case CSW1707:
+                DswLog.e(TAG, "isSetAurisys false");
+                return false;
+            default:
+                DswLog.e(TAG, "isSetAurisys true");
+                return true;
+        }
+    }
+
     public static boolean isTestDoubleSim() {
         PNAME mPname = getNameInPNAME();
         switch (mPname) {
+            case CSW1803:
+                if (isCheckVersionSub("CSW1803DB")) {
+                    DswLog.e(TAG, "Test Single SimCard");
+                    return false;
+                }
             case CSW1702:
                 DswLog.e(TAG, "Test Double SimCard");
                 return true;

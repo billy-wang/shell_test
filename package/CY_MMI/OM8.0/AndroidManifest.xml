@@ -2,8 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="cy.com.android.mmitest"
     android:sharedUserId="android.uid.phone"
-    android:versionCode="90101018"
-    android:versionName="9.9.1.ct">
+    android:versionCode="90901013"
+    android:versionName="9.9.180101018.co">
 
     <eat-comment />
     <protected-broadcast android:name="android.intent.action.NV_BACKUP_END" />
@@ -22,6 +22,7 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.FLASHLIGHT" />
     <uses-permission android:name="android.permission.NFC" />
+    <uses-permission android:name="android.permission.RADIO" />
 
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature
@@ -60,6 +61,10 @@
         android:resizeableActivity="false"
         android:persistent="false"
         android:theme="@android:style/Theme.Black">
+        <activity
+            android:name=".CyMMITest"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
         <activity
             android:name=".CyMMITest"
             android:configChanges="orientation|keyboardHidden|screenSize"
@@ -107,7 +112,7 @@
             android:excludeFromRecents="true"
             android:label="@string/touch_priv_pad"
             android:screenOrientation="portrait"
-            android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
+            android:theme="@style/Fullscreen">
             <intent-filter>
                 <action android:name="cy.com.android.mmitest.tp.fulltest" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -126,7 +131,7 @@
             android:excludeFromRecents="true"
             android:label="@string/screen_brightness"
             android:screenOrientation="portrait"
-            android:theme="@style/Fullscreen"></activity>
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen"></activity>
 
         <activity
             android:name=".item.VibrateTest"
@@ -200,6 +205,7 @@
             android:theme="@style/Fullscreen"></activity>
         <activity
             android:name=".item.FingerPrintsTest"
+            android:permission="android.permission.MANAGE_FINGERPRINT"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:excludeFromRecents="true"
             android:label="@string/fingerprints"
@@ -207,6 +213,7 @@
             android:theme="@style/Fullscreen"></activity>
         <activity
             android:name=".item.FingerPrintsTest2"
+            android:permission="android.permission.MANAGE_FINGERPRINT"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:excludeFromRecents="true"
             android:label="@string/fingerprints2"
@@ -491,10 +498,10 @@
             android:theme="@style/Fullscreen"></activity>
         <!-- Gionee zhangke 20160105 modify for CR01617603 end-->
         <activity
-            android:name=".TestT"
+            android:name=".TestResult2"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:excludeFromRecents="true"
-            android:label="@string/test_result"
+            android:label="@string/test_result2"
             android:screenOrientation="portrait"
             android:theme="@style/Fullscreen"></activity>
         <service
@@ -511,6 +518,10 @@
         <service
             android:name="cy.com.android.mmitest.AdjvService"
             android:enabled="true"></service>
+        <service
+            android:name=".service.GPSService"
+            android:enabled="true" >
+        </service>
 
         <!--Gionee zhangke 20151114 add for CR01591381 start-->
         <activity
@@ -629,13 +640,3 @@
             android:screenOrientation="portrait"
             android:theme="@style/Fullscreen" >
         </activity>
-        <activity
-            android:name=".item.DoubleSimCard"
-            android:configChanges="orientation|keyboardHidden|screenSize"
-            android:excludeFromRecents="true"
-            android:label="@string/sim_double"
-            android:screenOrientation="portrait"
-            android:theme="@style/Fullscreen" >
-        </activity>
-    </application>
-</manifest>

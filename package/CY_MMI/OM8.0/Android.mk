@@ -1,36 +1,51 @@
 #ifeq ("$(CY_APK_CY_MMI_SUPPORT)","yes")
-ifeq ($(findstring 8, $(PLATFORM_VERSION)), 8)
-$(warning "PLATFORM_VERSION=$(PLATFORM_VERSION)")
-ifeq ($(word 1,$(VCHECK_NUMS)),8)
-$(warning "VCHECK_NUMS=$(VCHECK_NUMS)")
-endif
+#ifeq ($(findstring 8, $(PLATFORM_VERSION)), 8)
+#$(warning "PLATFORM_VERSION=$(PLATFORM_VERSION)")
+#ifeq ($(word 1,$(VCHECK_NUMS)),8)
+#$(warning "VCHECK_NUMS=$(VCHECK_NUMS)")
+#endif
 
 LOCAL_PATH:= $(call my-dir)
+
 include $(CLEAR_VARS)
 
-GN_APK_PLATFORM_VERSION=8.0
-GN_APK_PLATFORM_VENDOR=mtk
-GN_APK_MTK_PLATFORM=6762
+ifeq ($(findstring 9, $(PLATFORM_VERSION)), 9)
+$(warning "PLATFORM_VERSION=$(PLATFORM_VERSION)")
+CY_APK_EX_MTK_FILES=yes
+LOCAL_PRIVATE_PLATFORM_APIS := true
+#LOCAL_SDK_VERSION := current
+$(warning "PLATFORM_VERSION=$(PLATFORM_VERSION) LOCAL_SDK_VERSION=$(LOCAL_SDK_VERSION) LOCAL_PRIVATE_PLATFORM_APIS=$(LOCAL_PRIVATE_PLATFORM_APIS)")
+endif
+
+#GN_APK_PLATFORM_VERSION=9.0
+#GN_APK_PLATFORM_VERSION=8.0
+#GN_APK_PLATFORM_VENDOR=mtk
+#GN_APK_MTK_PLATFORM=6762
 #GN_ZIP_NAME_PALTFORM=6589
 # 4.1.0-3,4.2.0 (4.1.0/4.1.1/4.1.2/4.1.3/4.2.0)
 # 1280x720,800x480
-GN_APK_RESOLUTION=hdpi,mdpi,nodpi,xhdpi,xxhdpi
-GN_APK_LANGUAGE = zh_CN,en_US
+#GN_APK_RESOLUTION=hdpi,mdpi,nodpi,xhdpi,xxhdpi
+#GN_APK_LANGUAGE = zh_CN,en_US
 
 LOCAL_PACKAGE_NAME := CY_MMI
 LOCAL_MODULE_TAGS := optional
 LOCAL_CERTIFICATE := platform
 
-LOCAL_SRC_FILES := $(call all-java-files-under, src)\
-	src/com/android/fmradio/IFmRadioService.aidl \
-	src/com/mediatek/fmradio/IFmRadioService.aidl \
-	src/com/mediatek/fmradio/IFmRadioServiceCallback.aidl \
-    src/cy/com/android/mmitest/service/INvRamService.aidl \
-    src/android/hardware/fingerprint/ICyFingerprintServiceReceiver.aidl
+LOCAL_SRC_FILES := $(call all-java-files-under, src)	\
+		src/com/android/fmradio/IFmRadioService.aidl \
+		src/com/mediatek/fmradio/IFmRadioService.aidl \
+		src/com/mediatek/fmradio/IFmRadioServiceCallback.aidl \
+		src/cy/com/android/mmitest/service/INvRamService.aidl \
+		src/android/hardware/fingerprint/ICyFingerprintServiceReceiver.aidl
 
 LOCAL_JAVA_LIBRARIES := telephony-common
 LOCAL_STATIC_JAVA_LIBRARIES := tp tpTest ZCalib
+ifeq ($(findstring 9, $(PLATFORM_VERSION)), 9)
+$(warning "PLATFORM_VERSION=$(PLATFORM_VERSION)")
+LOCAL_STATIC_JAVA_LIBRARIES += vendor.mediatek.hardware.nvram-V1.0-java
+else
 LOCAL_STATIC_JAVA_LIBRARIES += vendor.mediatek.hardware.nvram-V1.0-java-static
+endif
 
 #Gionee <GN_BSP_MMI> <chengq> <20170324> add for ID 91383 begin
 ifeq ($(GN_APK_AUTO_APK_TEST), yes)
@@ -74,4 +89,4 @@ ifeq ($(GN_APK_AUTO_APK_TEST), yes)
 include $(call all-makefiles-under,$(LOCAL_PATH))
 endif
 #Gionee <GN_BSP_MMI> <chengq> <20170324> add for ID 91383 begin
-endif
+#endif

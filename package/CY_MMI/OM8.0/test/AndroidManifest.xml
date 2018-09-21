@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="cy.com.android.mmitest.test"
-      android:versionCode="80100024"
-      android:versionName="8.1.0.az">
+      android:versionCode="90000005"
+      android:versionName="9.0.0.ah">
 
     <uses-sdk android:minSdkVersion="24" />
 
