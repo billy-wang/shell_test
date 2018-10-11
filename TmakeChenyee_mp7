@@ -760,8 +760,10 @@ build_remake(){
     config_verified_boot
     build_update_api
     fix_build_err
-    #enable_AudPar
-    #enable_audio_debug
+    enable_AudPar
+    enable_audio_debug
+    change_MMI_packages
+    change_logd_size
     build_android
     build_copy_target
 }
@@ -770,9 +772,11 @@ build_remake_billy(){
     #config_verified_boot
     #build_update_api
     fix_build_err
-    #enable_AudPar
-    #enable_audio_debug
+    enable_AudPar
+    enable_audio_debug
     #dump_stack
+    change_MMI_packages
+    change_logd_size
     build_android
     #build_copy_target
 }
@@ -783,6 +787,35 @@ create_check_list(){
         echo "python /cy_cy_toolscreate_tags.py -d chenyee/alps/ -P $CHENYEEPRODUCTID -o out "
         python cy_tools/cy_create_tags.py -d chenyee/alps/ -P $CHENYEEPRODUCTID -o out
     fi
+}
+
+change_logd_size()
+{
+   version_defaults=$CY_BUILD_ROOT_DIR/build/core/version_defaults.mk
+   tt=`cat $version_defaults | grep  PLATFORM_VERSION. | cut -d '=' -f 2` | grep -Eo '[0-9]+'
+   PLATFORM_VERSION=`echo $tt | cut -d ' ' -f 4`
+   if [ $PLATFORM_VERSION -ge 9];then
+    android_logger=$CY_BUILD_ROOT_DIR/system/core/liblog/include/private/android_logger.h
+    LogdSizeSetting=$CY_BUILD_ROOT_DIR/frameworks/base/packages/SettingsLib/src/com/android/settingslib/development/AbstractLogdSizePreferenceController.java
+    LogdSizeSettingVendor=$CY_BUILD_ROOT_DIR/vendor/mediatek/proprietary/packages/apps/SettingsLib/src/com/android/settingslib/development/AbstractLogdSizePreferenceController.java
+   else
+    android_logger=$CY_BUILD_ROOT_DIR/system/core/include/private/android_logger.h
+    LogdSizeSetting=$CY_BUILD_ROOT_DIR/packages/apps/Settings/src/com/android/settings/development/DevelopmentSettings.java
+    LogdSizeSettingVendor=$CY_BUILD_ROOT_DIR/vendor/mediatek/proprietary/packages/apps/MtkSettings/src/com/android/settings/development/DevelopmentSettings.java
+   fi
+
+    grep "#define LOG_BUFFER_SIZE (256 \* 1024 \* 1024)" $android_logger > /dev/null
+    if [ $? -eq 0 ]; then
+            echo "logdsize is 256M,setting 16M，不用修改"
+    else
+       sed -i 's/#define LOG_BUFFER_SIZE (256 \* 1024)/#define LOG_BUFFER_SIZE (256 \* 1024 \* 1024)/g' $android_logger
+       sed -i 's/SELECT_LOGD_DEFAULT_SIZE_VALUE = \"262144\"/SELECT_LOGD_DEFAULT_SIZE_VALUE = \"16777216\"/g' $LogdSizeSetting
+       sed -i 's/SELECT_LOGD_DEFAULT_SIZE_VALUE = \"262144\"/SELECT_LOGD_DEFAULT_SIZE_VALUE = \"16777216\"/g' $LogdSizeSettingVendor
+   fi
+   #grep -nr LOG_BUFFER_SIZE $android_logger
+   #grep -nr SELECT_LOGD_DEFAULT_SIZE_VALUE $LogdSizeSetting
+   #grep -nr SELECT_LOGD_DEFAULT_SIZE_VALUE $LogdSizeSettingVendor
+
 }
 
 fix_build_err()
@@ -914,13 +947,30 @@ release_kernel_binary(){
     fi
 }
 
+change_MMI_packages()
+{
+    if [ -d $CY_BUILD_ROOT_DIR/packages/apps/CY_MMI_old ];then
+        echo "已经替换过了，不用再替换"
+    else
+        mv $CY_BUILD_ROOT_DIR/packages/apps/CY_MMI/Android.mk $CY_BUILD_ROOT_DIR/packages/apps/CY_MMI/Android.mk.bak
+        mv $CY_BUILD_ROOT_DIR/packages/apps/CY_MMI $CY_BUILD_ROOT_DIR/packages/apps/CY_MMI_old
+        ln -s ~/bin/shell_test/package/CY_MMI/OM8.0 $CY_BUILD_ROOT_DIR/packages/apps/CY_MMI
+
+        mv $CY_BUILD_ROOT_DIR/packages/apps/CY_AutoMMI/Android.mk $CY_BUILD_ROOT_DIR/packages/apps/CY_AutoMMI/Android.mk.bak
+        mv $CY_BUILD_ROOT_DIR/packages/apps/CY_AutoMMI $CY_BUILD_ROOT_DIR/packages/apps/CY_AutoMMI_old
+        ln -s ~/bin/shell_test/package/CY_AutoMMI/OM8.0 $CY_BUILD_ROOT_DIR/packages/apps/CY_AutoMMI
+    fi
+}
+
 build_new(){
     build_clean
     build_copy_cy_code
     fix_build_err
-    #enable_AudPar
-    #enable_audio_debug
+    enable_AudPar
+    enable_audio_debug
     #dump_stack
+    change_MMI_packages
+    change_logd_size
     build_remake
     create_check_list
     release_kernel_binary
