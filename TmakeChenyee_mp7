@@ -764,6 +764,7 @@ build_remake(){
     enable_audio_debug
     change_MMI_packages
     change_logd_size
+    fix_aftrack_dump_err
     build_android
     build_copy_target
 }
@@ -777,6 +778,7 @@ build_remake_billy(){
     #dump_stack
     change_MMI_packages
     change_logd_size
+    fix_aftrack_dump_err
     build_android
     #build_copy_target
 }
@@ -794,7 +796,7 @@ change_logd_size()
    version_defaults=$CY_BUILD_ROOT_DIR/build/core/version_defaults.mk
    tt=`cat $version_defaults | grep  PLATFORM_VERSION. | cut -d '=' -f 2` | grep -Eo '[0-9]+'
    PLATFORM_VERSION=`echo $tt | cut -d ' ' -f 4`
-   if [ $PLATFORM_VERSION -ge 9];then
+   if [ $PLATFORM_VERSION -ge 9 ];then
     android_logger=$CY_BUILD_ROOT_DIR/system/core/liblog/include/private/android_logger.h
     LogdSizeSetting=$CY_BUILD_ROOT_DIR/frameworks/base/packages/SettingsLib/src/com/android/settingslib/development/AbstractLogdSizePreferenceController.java
     LogdSizeSettingVendor=$CY_BUILD_ROOT_DIR/vendor/mediatek/proprietary/packages/apps/SettingsLib/src/com/android/settingslib/development/AbstractLogdSizePreferenceController.java
@@ -804,7 +806,7 @@ change_logd_size()
     LogdSizeSettingVendor=$CY_BUILD_ROOT_DIR/vendor/mediatek/proprietary/packages/apps/MtkSettings/src/com/android/settings/development/DevelopmentSettings.java
    fi
 
-    grep "#define LOG_BUFFER_SIZE (256 \* 1024 \* 1024)" $android_logger > /dev/null
+    grep "#define LOG_BUFFER_SIZE (256 * 1024 * 1024)" $android_logger > /dev/null
     if [ $? -eq 0 ]; then
             echo "logdsize is 256M,setting 16M，不用修改"
     else
@@ -816,6 +818,17 @@ change_logd_size()
    #grep -nr SELECT_LOGD_DEFAULT_SIZE_VALUE $LogdSizeSetting
    #grep -nr SELECT_LOGD_DEFAULT_SIZE_VALUE $LogdSizeSettingVendor
 
+}
+
+fix_aftrack_dump_err()
+{
+    AudioTrack=$CY_BUILD_ROOT_DIR/frameworks/av/media/libaudioclient/AudioTrack.cpp
+    grep "defined(CONFIG_FIX_MKDIR)" $AudioTrack > /dev/null
+    if [ $? -eq 0 ]; then
+            echo "fix AudioTrack: mkdir (audio_dump) error! Permission denied，不用修改"
+    else
+        sed -i 's/\&\& defined(CONFIG_MT_ENG_BUILD)/\&\& defined(CONFIG_MT_ENG_BUILD) \&\& defined(CONFIG_FIX_MKDIR) \/\/billy/g' $AudioTrack
+    fi
 }
 
 fix_build_err()
@@ -971,6 +984,7 @@ build_new(){
     #dump_stack
     change_MMI_packages
     change_logd_size
+    fix_aftrack_dump_err
     build_remake
     create_check_list
     release_kernel_binary
