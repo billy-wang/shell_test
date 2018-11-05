@@ -1,5 +1,5 @@
 #ifeq ("$(CY_APK_CY_MMI_SUPPORT)","yes")
-ifeq ($(findstring 8, $(PLATFORM_VERSION)), 8)
+#ifeq ($(findstring 8, $(PLATFORM_VERSION)), 8)
 $(warning "PLATFORM_VERSION=$(PLATFORM_VERSION)")
 ifeq ($(word 1,$(VCHECK_NUMS)),8)
 $(warning "VCHECK_NUMS=$(VCHECK_NUMS)")
@@ -74,4 +74,4 @@ ifeq ($(GN_APK_AUTO_APK_TEST), yes)
 include $(call all-makefiles-under,$(LOCAL_PATH))
 endif
 #Gionee <GN_BSP_MMI> <chengq> <20170324> add for ID 91383 begin
-endif
+#endif
