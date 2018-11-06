@@ -1,6 +1,22 @@
 #ifeq ("$(CY_APK_CY_MMI_SUPPORT)","yes")
 LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
+
+LOCAL_PRIVATE_PLATFORM_APIS=true
+
+CY_APK_EX_MTK_FILES=yes
+# 4.0 or 4.1
+GN_APK_PLATFORM_VERSION=7.0
+# mtk or qcom
+GN_APK_PLATFORM_VENDOR=mtk
+# 6589 or 6577
+GN_APK_MTK_PLATFORM=6735
+# 1280x720,800x480
+GN_APK_RESOLUTION=hdpi,mdpi,nodpi,xhdpi,xxhdpi
+
+GN_APK_LANGUAGE = zh_CN,en_US
+
+
 LOCAL_PACKAGE_NAME := CY_MMI
 LOCAL_MODULE_TAGS := optional
 LOCAL_CERTIFICATE := platform
