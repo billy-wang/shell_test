@@ -1,0 +1,434 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="test_project_item">
+        <item>@string/auto_test</item>
+        <item>@string/single_test</item>
+        <item>@string/test_result</item>
+        <item>@string/master_clear</item>
+        <item>@string/auto_test_2</item>
+        <item>@string/test_result2</item>
+        <!--Gionee zhangke 201603010 add for CR01650400 start--> 
+        <item>@string/set_rpmb_key</item>
+        <!--Gionee zhangke 201603010 add for CR01650400 end-->
+        <item>@string/chenyee_gtl_type</item>
+    </string-array>
+    <string-array name="single_test_items">
+        <item>@string/sw_version</item>
+        <item>@string/screen_brightness</item>
+        <item>@string/color</item>
+        <item>@string/keys</item>
+        <!--Gionee <GN_BSP_MMI> <chengq> <20170310> modify for ID 81175 begin-->
+        <item>@string/receiver</item>
+        <item>@string/reset_mtp_ex</item>
+        <item>@string/tone</item>
+        <item>@string/receiver2</item>
+        <item>@string/tone2</item>
+        <!--Gionee <GN_BSP_MMI> <chengq> <20170310> modify for ID 81175 end-->
+        <item>@string/vibrate</item>
+        <item>@string/phone_loopback</item>
+        <item>@string/phone_loopback2</item>
+        <item>@string/earphone_loopback</item>
+        <item>@string/hifi</item>
+        <item>@string/fm</item>
+        <item>@string/touch_priv_pad</item>
+        <item>@string/touch_pad</item>
+        <item>@string/back_flashlight_cal_test</item>
+        <item>@string/back_camera</item>
+        <item>@string/back_camera2</item>
+        <item>@string/front_camera</item>
+        <item>@string/front_camera2</item>
+        <item>@string/face_enroll</item>
+        <item>@string/face_verify</item>
+        <item>@string/light_proximity</item>
+        <item>@string/acceleration</item>
+        <item>@string/magnetic_field</item>
+        <item>@string/gyroscope</item>
+        <item>@string/bluetooth</item>
+        <item>@string/wifi</item>
+        <item>@string/wifi5g</item>
+        <item>@string/nfc</item>
+        <item>@string/nfc2</item>
+        <item>@string/irtest</item>
+        <!--Gionee <GN_BSP_MMI> <chengq> <20170215> modify for ID 68092 begin-->
+        <item>@string/irtest2</item>
+        <!--Gionee <GN_BSP_MMI> <chengq> <20170215> modify for ID 68092 end-->
+        <item>@string/sim_sdcard</item>
+        <item>@string/sim_double</item>
+        <item>@string/otg</item>
+        <item>@string/gps</item>
+        <item>@string/flash</item>
+        <item>@string/flash2</item>
+        <item>@string/FlashLight</item>
+        <item>@string/FrontFlashTest</item>
+        <item>@string/irlight</item>
+        <item>@string/fingerprints</item>
+        <item>@string/fingerprints2</item>
+	<!--Gionee <GN_BSP_MMI> <chengq> <20170105> add for ID 59512 begin-->
+	<item>@string/fingerprints3</item>
+	<!--Gionee <GN_BSP_MMI> <chengq> <20170105> add for ID 59512 end-->
+        <item>@string/temperature</item>
+        <item>@string/force_touch</item>
+        <item>@string/laser_cal</item>
+        <!--<item>@string/touch_fail_info</item>-->
+        <item>@string/battery_wireless</item>
+        <item>@string/battery</item>
+	<!--Gionee <GN_BSP_MMI> <chengq> <20170106> modify for ID 60451 begin-->
+        <item>@string/largebattery</item>
+	<!--Gionee <GN_BSP_MMI> <chengq> <20170106> modify for ID 60451 end-->
+    </string-array>
+    <string-array name="single_test_keys">
+        <item>"SoftWareVersion"</item>
+        <item>"ScreenBrightnessTest"</item>
+        <item>"ColorTest"</item>
+        <item>"KeysTest"</item>
+        <!--Gionee <GN_BSP_MMI> <chengq> <20170310> modify for ID 81175 begin-->
+        <item>"ReceiverTest"</item>
+        <item>"ResetMtpEx"</item>
+        <item>"ToneTest"</item>
+        <item>"ReceiverTest2"</item>
+        <item>"ToneTest2"</item>
+        <!--Gionee <GN_BSP_MMI> <chengq> <20170310> modify for ID 81175 end-->
+        <item>"VibrateTest"</item>
+        <item>"PhoneLoopbackTest"</item>
+        <item>"PhoneLoopbackTest2"</item>
+        <item>"EarphoneLoopbackTest"</item>
+        <item>"HiFiTest"</item>
+        <item>"FMTest"</item>
+        <item>"TouchPadPrivTest"</item>
+        <item>"TouchPadTest"</item>
+        <item>"BackFlashlightCalTest"</item>
+        <item>"BackCameraTest"</item>
+        <item>"BackCameraTest2"</item>
+        <item>"FrontCameraTest"</item>
+        <item>"FrontCameraTest2"</item>
+        <item>"FaceEnroll"</item>
+        <item>"FaceVerify"</item>
+        <item>"AlsAndPsTest"</item>
+        <item>"AccelerationTest"</item>
+        <item>"MagneticFieldTest"</item>
+        <item>"GyroscopeTest"</item>
+        <item>"BluetoothTest"</item>
+        <item>"WIFITest"</item>
+        <item>"WIFITest5G"</item>
+        <item>"NFCTest"</item>
+        <item>"NFCTest2"</item>
+        <item>"IrTest"</item>
+        <!--Gionee <GN_BSP_MMI> <chengq> <20170215> modify for ID 68092 begin-->
+        <item>"IrTest2"</item>
+        <!--Gionee <GN_BSP_MMI> <chengq> <20170215> modify for ID 68092 end-->
+        <item>"SimCardAndTF"</item>
+        <item>"DoubleSimCard"</item>
+        <item>"OTGTest"</item>
+        <item>"GPSTest"</item>
+        <item>"FlashTest"</item>
+        <item>"FlashTest2"</item>
+        <item>"FlashLight"</item>
+        <item>"FrontFlashTest"</item>
+        <item>"IRLight"</item>
+        <item>"FingerPrintsTest"</item>
+        <item>"FingerPrintsTest2"</item>
+	<!--Gionee <GN_BSP_MMI> <chengq> <20170105> add for ID 59512 begin-->
+        <item>"FingerPrintsTest3"</item>
+	<!--Gionee <GN_BSP_MMI> <chengq> <20170105> add for ID 59512 end-->
+        <item>"TemperatureTest"</item>
+        <item>"ForceTouchTest"</item>
+        <item>"LaserPreTest"</item>
+        <!--<item>"TouchPadFailInfoTest"</item>-->
+        <item>"BatteryWireless"</item>
+        <item>"BatteryTest"</item>
+	<!--Gionee <GN_BSP_MMI> <chengq> <20170106> modify for ID 60451 begin-->
+        <item>"LargeBatteryTest"</item>
+	<!--Gionee <GN_BSP_MMI> <chengq> <20170106> modify for ID 60451 end-->
+    </string-array>
+       <string-array name="auto_test_items">
+        <item>@string/sw_version</item>
+        <item>@string/screen_brightness</item>
+        <item>@string/color</item>
+        <item>@string/keys</item>
+        <!--Gionee <GN_BSP_MMI> <chengq> <20170310> modify for ID 81175 begin-->
+        <item>@string/receiver</item>
+        <item>@string/reset_mtp_ex</item>
+        <item>@string/tone</item>
+        <item>@string/receiver2</item>
+        <item>@string/tone2</item>
+        <!--Gionee <GN_BSP_MMI> <chengq> <20170310> modify for ID 81175 end-->
+        <item>@string/vibrate</item>
+        <item>@string/phone_loopback</item>
+        <item>@string/phone_loopback2</item>
+        <item>@string/earphone_loopback</item>
+        <item>@string/hifi</item>
+        <item>@string/fm</item>
+        <item>@string/touch_priv_pad</item>
+        <item>@string/touch_pad</item>
+        <item>@string/back_flashlight_cal_test</item>
+        <item>@string/back_camera</item>
+        <item>@string/back_camera2</item>
+        <item>@string/front_camera</item>
+        <item>@string/front_camera2</item>
+        <item>@string/face_enroll</item>
+        <item>@string/face_verify</item>
+        <item>@string/light_proximity</item>
+        <item>@string/acceleration</item>
+        <item>@string/magnetic_field</item>
+        <item>@string/gyroscope</item>
+        <item>@string/bluetooth</item>
+        <item>@string/wifi</item>
+        <item>@string/wifi5g</item>
+        <item>@string/nfc</item>
+        <item>@string/nfc2</item>
+        <item>@string/irtest</item>
+        <!--Gionee <GN_BSP_MMI> <chengq> <20170215> modify for ID 68092 begin-->
+        <item>@string/irtest2</item>
+        <!--Gionee <GN_BSP_MMI> <chengq> <20170215> modify for ID 68092 begendin-->
+        <item>@string/sim_sdcard</item>
+        <item>@string/sim_double</item>
+        <item>@string/otg</item>
+        <item>@string/gps</item>
+        <item>@string/flash</item>
+        <item>@string/flash2</item>
+        <item>@string/FlashLight</item>
+        <item>@string/FrontFlashTest</item>
+        <item>@string/irlight</item>
+        <item>@string/fingerprints</item>
+        <item>@string/fingerprints2</item>
+	<!--Gionee <GN_BSP_MMI> <chengq> <20170105> add for ID 59512 begin-->
+	<item>@string/fingerprints3</item>
+	<!--Gionee <GN_BSP_MMI> <chengq> <20170105> add for ID 59512 end-->
+        <item>@string/temperature</item>
+        <!--
+        <item>@string/force_touch</item>
+        <item>@string/laser_cal</item>
+        -->
+        <item>@string/battery_wireless</item>
+        <item>@string/battery</item>
+	<!--Gionee <GN_BSP_MMI> <chengq> <20170106> modify for ID 60451 begin-->
+        <item>@string/largebattery</item>
+	<!--Gionee <GN_BSP_MMI> <chengq> <20170106> modify for ID 60451 end-->
+        <item>@string/SetColor</item>        	
+
+    </string-array>
+    <string-array name="auto_test_keys">
+        <item>"SoftWareVersion"</item>
+        <item>"ScreenBrightnessTest"</item>
+        <item>"ColorTest"</item>
+        <item>"KeysTest"</item>
+        <!--Gionee <GN_BSP_MMI> <chengq> <20170310> modify for ID 81175 begin-->
+        <item>"ReceiverTest"</item>
+        <item>"ResetMtpEx"</item>
+        <item>"ToneTest"</item>
+        <item>"ReceiverTest2"</item>
+        <item>"ToneTest2"</item>
+        <!--Gionee <GN_BSP_MMI> <chengq> <20170310> modify for ID 81175 end-->
+        <item>"VibrateTest"</item>
+        <item>"PhoneLoopbackTest"</item>
+        <item>"PhoneLoopbackTest2"</item>
+        <item>"EarphoneLoopbackTest"</item>
+        <item>"HiFiTest"</item>
+        <item>"FMTest"</item>
+        <item>"TouchPadPrivTest"</item>
+        <item>"TouchPadTest"</item>
+        <item>"BackFlashlightCalTest"</item>
+        <item>"BackCameraTest"</item>
+        <item>"BackCameraTest2"</item>
+        <item>"FrontCameraTest"</item>
+        <item>"FrontCameraTest2"</item>
+        <item>"FaceEnroll"</item>
+        <item>"FaceVerify"</item>
+        <item>"AlsAndPsTest"</item>
+        <item>"AccelerationTest"</item>
+        <item>"MagneticFieldTest"</item>
+        <item>"GyroscopeTest"</item>
+        <item>"BluetoothTest"</item>
+        <item>"WIFITest"</item>
+        <item>"WIFITest5G"</item>
+        <item>"NFCTest"</item>
+        <item>"NFCTest2"</item>
+        <item>"IrTest"</item>
+        <!--Gionee <GN_BSP_MMI> <chengq> <20170215> modify for ID 68092 begin-->
+        <item>"IrTest2"</item>
+        <!--Gionee <GN_BSP_MMI> <chengq> <20170215> modify for ID 68092 end-->
+        <item>"SimCardAndTF"</item>
+        <item>"DoubleSimCard"</item>
+        <item>"OTGTest"</item>
+        <item>"GPSTest"</item>
+        <item>"FlashTest"</item>
+        <item>"FlashTest2"</item>
+        <item>"FlashLight"</item>
+        <item>"FrontFlashTest"</item>
+        <item>"IRLight"</item>
+        <item>"FingerPrintsTest"</item>
+        <item>"FingerPrintsTest2"</item>
+	<!--Gionee <GN_BSP_MMI> <chengq> <20170105> add for ID 59512 begin-->
+	<item>"FingerPrintsTest3"</item>
+	<!--Gionee <GN_BSP_MMI> <chengq> <20170105> add for ID 59512 end-->
+        <item>"TemperatureTest"</item>
+        <!--
+        <item>"ForceTouchTest"</item>
+        <item>"LaserPreTest"</item>
+        -->
+        <item>"BatteryWireless"</item>
+        <item>"BatteryTest"</item>
+	<!--Gionee <GN_BSP_MMI> <chengq> <20170106> modify for ID 60451 begin-->
+        <item>"LargeBatteryTest"</item>
+	<!--Gionee <GN_BSP_MMI> <chengq> <20170106> modify for ID 60451 end-->
+        <item>"SetColor"</item>	
+    </string-array>
+        <string-array name="auto_test_items_2">
+        <item>@string/screen_brightness</item>
+        <item>@string/color</item>
+        <item>@string/keys</item>
+        <!--Gionee <GN_BSP_MMI> <chengq> <20170310> modify for ID 81175 begin-->
+        <item>@string/receiver</item>
+        <item>@string/reset_mtp_ex</item>
+        <item>@string/tone</item>
+        <item>@string/receiver2</item>
+        <item>@string/tone2</item>
+        <!--Gionee <GN_BSP_MMI> <chengq> <20170310> modify for ID 81175 end-->
+        <item>@string/vibrate</item>
+        <item>@string/phone_loopback</item>
+        <item>@string/phone_loopback2</item>
+        <item>@string/earphone_loopback</item>
+        <item>@string/hifi</item>
+        <item>@string/fm</item>
+        <item>@string/touch_priv_pad</item>
+        <item>@string/touch_pad</item>
+        <item>@string/back_camera</item>
+        <item>@string/back_camera2</item>
+        <item>@string/front_camera</item>
+        <item>@string/front_camera2</item>
+        <item>@string/face_enroll</item>
+        <item>@string/face_verify</item>
+        <item>@string/light_proximity</item>
+        <item>@string/acceleration</item>
+        <item>@string/magnetic_field</item>
+        <item>@string/gyroscope</item>
+        <item>@string/bluetooth</item>
+        <item>@string/wifi</item>
+        <item>@string/wifi5g</item>
+        <item>@string/nfc</item>
+        <item>@string/nfc2</item>
+        <item>@string/irtest</item>
+        <!--Gionee <GN_BSP_MMI> <chengq> <20170215> modify for ID 68092 begin-->
+        <item>@string/irtest2</item>
+        <!--Gionee <GN_BSP_MMI> <chengq> <20170215> modify for ID 68092 end-->
+        <item>@string/otg</item>
+        <item>@string/gps</item>
+        <item>@string/flash</item>
+        <item>@string/flash2</item>
+        <item>@string/FlashLight</item>
+        <item>@string/FrontFlashTest</item>
+        <item>@string/irlight</item>
+        <item>@string/fingerprints</item>
+        <item>@string/fingerprints2</item>
+	<!--Gionee <GN_BSP_MMI> <chengq> <20170105> add for ID 59512 begin-->
+	<item>@string/fingerprints3</item>
+	<!--Gionee <GN_BSP_MMI> <chengq> <20170105> add for ID 59512 end-->
+        <item>@string/force_touch</item>
+        <item>@string/battery</item>
+	<!--Gionee <GN_BSP_MMI> <chengq> <20170106> modify for ID 60451 begin-->
+        <item>@string/largebattery</item>
+	<!--Gionee <GN_BSP_MMI> <chengq> <20170106> modify for ID 60451 end-->
+    </string-array>
+    <string-array name="auto_test_keys_2">
+        <item>"ScreenBrightnessTest"</item>
+        <item>"ColorTest"</item>
+        <item>"KeysTest"</item>
+        <!--Gionee <GN_BSP_MMI> <chengq> <20170310> modify for ID 81175 begin-->
+        <item>"ReceiverTest"</item>
+        <item>"ResetMtpEx"</item>
+        <item>"ToneTest"</item>
+        <item>"ReceiverTest2"</item>
+        <item>"ToneTest2"</item>
+        <!--Gionee <GN_BSP_MMI> <chengq> <20170310> modify for ID 81175 end-->
+        <item>"VibrateTest"</item>
+        <item>"PhoneLoopbackTest"</item>
+        <item>"PhoneLoopbackTest2"</item>
+        <item>"EarphoneLoopbackTest"</item>
+        <item>"HiFiTest"</item>
+        <item>"FMTest"</item>
+        <item>"TouchPadPrivTest"</item>
+        <item>"TouchPadTest"</item>
+        <item>"BackCameraTest"</item>
+        <item>"BackCameraTest2"</item>
+        <item>"FrontCameraTest"</item>
+        <item>"FrontCameraTest2"</item>
+        <item>"FaceEnroll"</item>
+        <item>"FaceVerify"</item>
+        <item>"AlsAndPsTest"</item>
+        <item>"AccelerationTest"</item>
+        <item>"MagneticFieldTest"</item>
+        <item>"GyroscopeTest"</item>
+        <item>"BluetoothTest"</item>
+        <item>"WIFITest"</item>
+        <item>"WIFITest5G"</item>
+        <item>"NFCTest"</item>
+        <item>"NFCTest2"</item>
+        <item>"IrTest"</item>
+        <!--Gionee <GN_BSP_MMI> <chengq> <20170215> modify for ID 68092 begin-->
+        <item>"IrTest2"</item>
+        <!--Gionee <GN_BSP_MMI> <chengq> <20170215> modify for ID 68092 end-->
+        <item>"OTGTest"</item>
+        <item>"GPSTest"</item>
+        <item>"FlashTest"</item>
+        <item>"FlashTest2"</item>
+        <item>"FlashLight"</item>
+        <item>"FrontFlashTest"</item>
+        <item>"IRLight"</item>
+        <item>"FingerPrintsTest"</item>
+        <item>"FingerPrintsTest2"</item>
+	<!--Gionee <GN_BSP_MMI> <chengq> <20170105> add for ID 59512 begin-->
+	<item>"FingerPrintsTest3"</item>
+	<!--Gionee <GN_BSP_MMI> <chengq> <20170105> add for ID 59512 end-->
+        <item>"ForceTouchTest"</item>
+        <item>"BatteryTest"</item>
+	<!--Gionee <GN_BSP_MMI> <chengq> <20170106> modify for ID 60451 begin-->
+        <item>"LargeBatteryTest"</item>
+	<!--Gionee <GN_BSP_MMI> <chengq> <20170106> modify for ID 60451 end-->
+    </string-array>
+    <string-array name="key_test_items">
+        <item>@string/power_key</item>
+        <item>@string/volume_up_key</item>
+        <item>@string/volume_down_key</item>
+        <item>@string/back_key</item>
+        <item>@string/home_key</item>
+        <item>@string/app_key</item>
+        <item>@string/menu_key</item>
+        <item>@string/hall_o_key</item>
+        <item>@string/hall_c_key</item>
+        <item>@string/camera_key</item>
+        <item>@string/focus_key</item>
+        <item>@string/search_key</item>
+        
+    </string-array>
+    <string-array name="key_test_keys">
+        <item>"26"</item>
+        <item>"24"</item>
+        <item>"25"</item>
+        <item>"4"</item>
+        <item>"3"</item>
+        <item>"187"</item>
+        <item>"82"</item>
+        <item>"301"</item>
+        <item>"302"</item>
+        <item>"27"</item>
+        <item>"80"</item>
+        <item>"84"</item>
+    </string-array>
+    <string-array name="list_country">
+        <item>"GI"</item>
+        <item>"GN"</item>
+        <item>"GM"</item>
+        <item>"GP"</item>
+        <item>"GS"</item>
+        <item>"GL"</item>
+        <item>"GD"</item>
+        <item>"GH"</item>
+        <item>"GA"</item>
+        <item>"GE"</item>
+        <item>"GK"</item>
+        <item>"GC"</item>
+        <item>"GU"</item>
+    </string-array>
+    
+</resources>

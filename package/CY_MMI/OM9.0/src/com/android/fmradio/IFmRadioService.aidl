@@ -1,0 +1,60 @@
+package com.android.fmradio;
+
+interface IFmRadioService {
+    boolean openDevice();
+    boolean closeDevice();
+    boolean isDeviceOpen();
+    boolean powerUp(float frequency);
+    boolean powerDown();
+    boolean isPowerUp();
+    boolean tune(float frequency);
+    float seek(float frequency, boolean isUp);
+    int[] startScan();
+    boolean stopScan();
+    //Gionee <bug> <lichao> <2014-12-07> delete some method for 5.0 CR01421356
+    //int setRDS(boolean on);
+    //int readRDS();
+    String getPS();
+    String getLRText();
+    int activeAF();
+    //int activeTA();
+    //int deactiveTA();
+    int setMute(boolean mute);
+    //int isRDSSupported();
+    void useEarphone(boolean use);
+    boolean isEarphoneUsed();
+    void initService(int iCurrentStation);
+    //boolean isServiceInit();
+    void enablePSRT(boolean enable);
+    void enableAF(boolean enable);
+    void enableTA(boolean enable);
+    boolean isPSRTEnabled();
+    boolean isAFEnabled();
+    boolean isTAEnabled();
+    int getFrequency();
+    void setFrequency(int station);
+    void resumeFmAudio();
+    //int readRssi();
+    //int readCapArray();
+
+    //boolean getStereoMono();
+    //boolean setStereoMono(boolean isMono);
+    //int switchAntenna(int antenna);
+    //int readRdsBler();
+    void startRecording();
+    void stopRecording();
+    void saveRecording(String newName);
+    void startPlayback();
+    void stopPlayback();
+    int getRecorderState();
+    long getRecordTime();
+    void setRecordingMode(boolean isRecording);
+    boolean getRecordingMode();
+    int getPlaybackPosition();
+    String getRecordingName();
+    //boolean isFMOverBTActive();
+    boolean getResumeAfterCall();
+    boolean isSIMCardIdle();
+    //int[] getHardwareVersion();
+    void setStopPressed(boolean isStopPressed);
+}
