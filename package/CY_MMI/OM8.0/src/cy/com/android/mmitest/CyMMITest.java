@@ -273,8 +273,9 @@ public class CyMMITest extends BaseActivity implements OnItemClickListener {
         //am.setParameters("SET_AURISYS_ON=0");
         //}
 
-        setMtkLogSize();
-        startMtkLog();
+        /* disable by Billy.Wang */
+        //setMtkLogSize();
+        //startMtkLog();
 
         mContext = this;
         //Gionee zhangke 20151130 add for CR01599820 start
@@ -919,7 +920,8 @@ public class CyMMITest extends BaseActivity implements OnItemClickListener {
 
         protected void onPreExecute() {
             showDialog(CLEAR_DATA_DLG);
-            stopMtkLog();
+            /* Disable by Billy.Wang */
+            //stopMtkLog();
             // A safe time to wait MTKLOG stopping
             try {
                 Thread.sleep(1500);
@@ -1047,9 +1049,11 @@ public class CyMMITest extends BaseActivity implements OnItemClickListener {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                DswLog.i(TAG, "releaseMmi: stopMtklog start");
-                stopMtkLog();
-                DswLog.i(TAG, "releaseMmi: stopMtklog end");
+                /* Disable by Billy.Wang */
+                //DswLog.i(TAG, "releaseMmi: stopMtklog start");
+                //stopMtkLog();
+                //DswLog.i(TAG, "releaseMmi: stopMtklog end");
+                 DswLog.d(TAG, "****************which Thread run billy ????***************\n\n\n");
             }
         }).start();
 
