@@ -247,13 +247,43 @@ export_variable_from(){
             [ -n "$(expr match "$line" '.*\(+=\).*')" ] && continue
             local key=$(echo ${line%=*})
             local value=$(echo ${line#*=})
+            ##Chenyee <CY_REQ> <futao> <20181019> modify for CSW1805A-748 begin
+            if [[ "$key" == "MTK_PRODUCT_LOCALES" ]];then
+                CY_MTK_PRODUCT_LOCALES="$value"
+                CY_MTK_PRODUCT_LOCALES_TMP="$value"
+                rebuild_product_locale
+                MTK_PRODUCT_LOCALES=$CY_MTK_PRODUCT_LOCALES_TMP
+                echo CY_MTK_PRODUCT_LOCALES=$CY_MTK_PRODUCT_LOCALES MTK_PRODUCT_LOCALES=$MTK_PRODUCT_LOCALES
+                export MTK_PRODUCT_LOCALES CY_MTK_PRODUCT_LOCALES
+                echo "MTK_PRODUCT_LOCALES=$MTK_PRODUCT_LOCALES" >> $CY_FEATURE_CONFIG_FILE_TMP
+                value=`echo $MTK_PRODUCT_LOCALES`
+            else
             export "$key"="$value"
             echo "$key=$value" >> $CY_FEATURE_CONFIG_FILE_TMP
+            fi
+            ##Chenyee <CY_REQ> <futao> <20181019> modify for CSW1805A-748 end
         done < $file
     else
         echo "$file not exist"
     fi
 }
+
+##Chenyee <CY_REQ> <futao> <20181019> modify for CSW1805A-748 begin
+function rebuild_product_locale(){
+    EX_LOCALES=" gl_ES ga_IE af_ZA"
+    laststr=${CY_MTK_PRODUCT_LOCALES_TMP}${EX_LOCALES}
+    num="`echo ${laststr} | awk -F ";" '{print NF}'`"
+    for((i=1;i<=${num};i++));
+    do
+        tmpstr="`echo ${laststr} | awk -F ";" '{print $NF}'`"
+        custom="`echo $tmpstr | awk -F ":" '{print $1}'`"
+        laun="`echo $tmpstr | awk -F ":" '{print $2}'`"
+        laststr=${laststr%;*}
+        CY_MTK_PRODUCT_LOCALES_TMP=${CY_MTK_PRODUCT_LOCALES_TMP//"$custom:"/}
+    done
+    CY_MTK_PRODUCT_LOCALES_TMP=${CY_MTK_PRODUCT_LOCALES_TMP//;/ }
+}
+##Chenyee <CY_REQ> <futao> <20181019> modify for CSW1805A-748 end
 
 create_cy_cflags(){
     local file="$1"
@@ -296,7 +326,9 @@ prebuild(){
 
     #cy_project=$CHENYEEPRODUCTID
     CHENYEEPROJECTID=${CHENYEEPRODUCTID:0:7}
-    export CHENYEEPRODUCTID CHENYEEPROJECTID
+    CY_PROJECT_CUSTOMER_ID=${CHENYEEPRODUCTID:0:9}
+    CY_CUSTOMER_ID=${CHENYEEPRODUCTID:7:2}
+    export CHENYEEPRODUCTID CHENYEEPROJECTID CY_PROJECT_CUSTOMER_ID CY_CUSTOMER_ID
 
     #Chenyee <taofapan> <20171110> add for replace img begin
     CY_CUSTOM_IMG_RELEASED=release/${CHENYEEPROJECTID}_${TARGET_BUILD_VARIANT}_img_released
@@ -405,12 +437,6 @@ get_chenyee_code(){
     bash cy_tools/cy_prebuild.sh $vendor $version
     replace_sign_key
 
-    #Chenyee sunll 2015-01-21 modify MTK_BUILD_VERNO=${CY_ZNVERNUMBER} begin
-    CY_TARGET_PRODUCT_DIR=$(cat <(env) | grep "^\s*CY_FULL_TARGET_PRODUCT\s*=" | sed 's/.*\s*=\s*full_//g')
-    CY_PRODUCT_FILE=device/mediateksample/${CY_TARGET_PRODUCT_DIR}/ProjectConfig.mk    
-    sed -i "s/^\s*MTK_BUILD_VERNO\s*=\s*.*/MTK_BUILD_VERNO=${CY_ZNVERNUMBER}/"  ${CY_PRODUCT_FILE}
-    echo 'MTK_BUILD_VERNO='$(cat ${CY_PRODUCT_FILE} | grep "^\s*MTK_BUILD_VERNO" | sed 's/.*\s*=\s*//g')
-    #Chenyee sunll 2015-01-21 modify MTK_BUILD_VERNO=${CY_ZNVERNUMBER} end
     #chenyee auto config product mk (ProjectConfig.mk)
     bash cy_tools/cy_auto_config_product_mk.sh
 }
@@ -605,11 +631,11 @@ copy_results_to_release(){
 
     create_product_for_flash_tool
 
-    local ota_zip=$(find ${TARGET_PRODUCT_OUT_ROOT}/ -maxdepth 1 -type f -name ${TARGET_PRODUCT}-ota-*.zip | sort -r | head -n 1  2>/dev/null)
+    local ota_zip=$(find ${TARGET_PRODUCT_OUT_ROOT}/ -maxdepth 1 -type f -name ${CY_FULL_TARGET_PRODUCT}-ota-*.zip | sort -r | head -n 1  2>/dev/null)
     if [ -f "$ota_zip" ];then
         echo "Copy ota tmp zip"
         local ota_tmp_zip=$(find ${TARGET_PRODUCT_OUT_ROOT}/obj/PACKAGING/target_files_intermediates/ \
-            -maxdepth 1 -type f -name ${TARGET_PRODUCT}-target_files-*.zip | sort -r | head -n 1 2>/dev/null)
+            -maxdepth 1 -type f -name ${CY_FULL_TARGET_PRODUCT}-target_files-*.zip | sort -r | head -n 1 2>/dev/null)
         rm -rf $CY_RELEASE_OTA_DIR_ROOT
         mkdir -p $CY_RELEASE_OTA_TMP_DIR
         mkdir -p $CY_RELEASE_OTA_DIR
@@ -756,6 +782,7 @@ build_remake(){
     change_MMI_packages
     change_logd_size
     fix_aftrack_dump_err
+    enable_kernel_log
     build_android
     build_copy_target
 }
@@ -771,6 +798,7 @@ build_remake_billy(){
     change_MMI_packages
     change_logd_size
     fix_aftrack_dump_err
+    enable_kernel_log
     build_android
     #build_copy_target
 }
@@ -786,9 +814,9 @@ create_check_list(){
 change_logd_size()
 {
    version_defaults=$CY_BUILD_ROOT_DIR/build/core/version_defaults.mk
-   tt=`cat $version_defaults | grep  PLATFORM_VERSION. | cut -d '=' -f 2` | grep -Eo '[0-9]+'
+   tt=`cat $version_defaults | grep  PLATFORM_VERSION. | cut -d '=' -f 2 | grep -Eo '[0-9]+'`
    PLATFORM_VERSION=`echo $tt | cut -d ' ' -f 4`
-   if [ $PLATFORM_VERSION -ge 9 ];then
+   if [[ $PLATFORM_VERSION -ge 9 ]];then
     android_logger=$CY_BUILD_ROOT_DIR/system/core/liblog/include/private/android_logger.h
     LogdSizeSetting=$CY_BUILD_ROOT_DIR/frameworks/base/packages/SettingsLib/src/com/android/settingslib/development/AbstractLogdSizePreferenceController.java
     LogdSizeSettingVendor=$CY_BUILD_ROOT_DIR/vendor/mediatek/proprietary/packages/apps/SettingsLib/src/com/android/settingslib/development/AbstractLogdSizePreferenceController.java
@@ -818,8 +846,23 @@ fix_aftrack_dump_err()
     grep "defined(CONFIG_FIX_MKDIR)" $AudioTrack > /dev/null
     if [ $? -eq 0 ]; then
             echo "fix AudioTrack: mkdir (audio_dump) error! Permission denied，不用修改"
+            echo "转到AudioUtilmtk: AudioDumpThread创建"
     else
-        sed -i 's/\&\& defined(CONFIG_MT_ENG_BUILD)/\&\& defined(CONFIG_MT_ENG_BUILD) \&\& defined(CONFIG_FIX_MKDIR) \/\/billy/g' $AudioTrack
+        sed -i 's/defined(CONFIG_MT_ENG_BUILD)/defined(CONFIG_MT_ENG_BUILD) \&\& defined(CONFIG_FIX_MKDIR) \/\/billy/g' $AudioTrack
+    fi
+}
+
+enable_kernel_log()
+{
+    logging=$CY_BUILD_ROOT_DIR/vendor/mediatek/proprietary/external/mobile_log_d/logging.c
+    device=$CY_BUILD_ROOT_DIR/device/mediatek/common/device.mk
+    #grep "defined(CONFIG_FIX_MKDIR)" $logging > /dev/null
+    grep "ro.logd.kernel=true" $device > /dev/null
+    if [ $? -eq 0 ]; then
+        echo "已经使能logd kernel log,不用修改"
+    else
+        sed -i 's/if (\!strcmp(is_lowram/return KERNEL_LOGD; \/\/billy add\n\n\t&/' $logging
+        sed -i 's/ro.logd.kernel=false/ro.logd.kernel=true/g' $device
     fi
 }
 
@@ -900,6 +943,9 @@ scandir()
             cd ..
         else
             sed -i 's/\/\/#define LOG_NDEBUG 0/#define LOG_NDEBUG 0 \/\/billy/g' $dirlist
+            sed -i 's/\/\/#define VERY_VERBOSE_LOGGING/#define VERY_VERBOSE_LOGGING \/\/billy/g' $dirlist
+            sed -i 's/\/\/ #define VERY_VERBOSE_LOGGING/#define VERY_VERBOSE_LOGGING \/\/billy/g' $dirlist
+            sed -i 's/\/\/#define VERY_VERY_VERBOSE_LOGGING/#define VERY_VERY_VERBOSE_LOGGING \/\/billy/g' $dirlist
         fi
     done
 }
@@ -925,6 +971,7 @@ enable_audio_debug()
     MonoPipe=$Media/libnbaio/MonoPipe.cpp
     Pipe=$Media/libnbaio/Pipe.cpp
     PipeReader=$Media/libnbaio/PipeReader.cpp
+    AudioPolicyManager=$AudioPolicy/managerdefault/AudioPolicyManager.cpp
 
     AudioMixer=$Media/libaudioprocessing/AudioMixer.cpp
     SpeechType=$CY_BUILD_ROOT_DIR/vendor/mediatek/proprietary/hardware/audio/common/include/SpeechType.h
@@ -932,7 +979,7 @@ enable_audio_debug()
     # android P
     MtkOmxAudioEncBase=$CY_BUILD_ROOT_DIR/vendor/mediatek/proprietary/hardware/libomx/audio/MtkOmxAudioEncBase/MtkOmxAudioEncBase.cpp
     MtkOmxAudioDecBase=$CY_BUILD_ROOT_DIR/vendor/mediatek/proprietary/hardware/libomx/audio/MtkOmxAudioDecBase/MtkOmxAudioDecBase.cpp
-
+    
     grep "#define LOG_NDEBUG 0 //billy" $AudioMixer > /dev/null
     if [ $? -eq 0 ]; then
         echo "已经修改过，不用修改"
@@ -957,6 +1004,7 @@ enable_audio_debug()
         sed -i 's/#if 0 \/\/ for/#if 1 \/\/ billy for/g' $SpeechType
         sed -i '/#define MTK_LOG_ENABLE 1/a\#define LOG_NDEBUG 0 //billy' $MtkOmxAudioEncBase
         sed -i '/#define MTK_LOG_ENABLE 1/a\#define LOG_NDEBUG 0 //billy' $MtkOmxAudioDecBase
+        sed -i '/#define MTK_VERBOSE_LOG_VALUE (4)/#define MTK_VERBOSE_LOG_VALUE (2) \/\/billy/g' $AudioPolicyManager
 
         cd $cur_dir
     fi
@@ -970,7 +1018,8 @@ change_MMI_packages()
     else
         mv $CY_BUILD_ROOT_DIR/packages/apps/CY_MMI/Android.mk $CY_BUILD_ROOT_DIR/packages/apps/CY_MMI/Android.mk.bak
         mv $CY_BUILD_ROOT_DIR/packages/apps/CY_MMI $CY_BUILD_ROOT_DIR/packages/apps/CY_MMI_old
-        ln -s ~/bin/shell_test/package/CY_MMI/OM8.0 $CY_BUILD_ROOT_DIR/packages/apps/CY_MMI
+        #ln -s ~/bin/shell_test/package/CY_MMI/OM8.0 $CY_BUILD_ROOT_DIR/packages/apps/CY_MMI
+        cp -ar ~/bin/shell_test/package/CY_MMI/OM9.0 $CY_BUILD_ROOT_DIR/packages/apps/CY_MMI
 
         mv $CY_BUILD_ROOT_DIR/packages/apps/CY_AutoMMI/Android.mk $CY_BUILD_ROOT_DIR/packages/apps/CY_AutoMMI/Android.mk.bak
         mv $CY_BUILD_ROOT_DIR/packages/apps/CY_AutoMMI $CY_BUILD_ROOT_DIR/packages/apps/CY_AutoMMI_old
@@ -988,6 +1037,7 @@ build_new(){
     change_MMI_packages
     change_logd_size
     fix_aftrack_dump_err
+    enable_kernel_log
     build_remake
     create_check_list
 }
@@ -1184,6 +1234,11 @@ SPEEDUP_STATE="$SPEEDUP_PATH/state"
 BUILD_TOOLS="$CY_BUILD_ROOT_DIR/build.sh --setup_ccache=true"
 LOGPATH="BUILDING_LOG"
 
+version_defaults=$CY_BUILD_ROOT_DIR/build/core/version_defaults.mk
+tt=`cat $version_defaults | grep  PLATFORM_VERSION. | cut -d '=' -f 2 | grep -Eo '[0-9]+'`
+PLATFORM_VERSION=`echo $tt | cut -d ' ' -f 4`
+
+echo "Android version $PLATFORM_VERSION"
 export CY_BUILD_ROOT_DIR
 
 main "$@"

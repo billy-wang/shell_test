@@ -754,6 +754,7 @@ build_remake(){
     change_MMI_packages
     change_logd_size
     fix_aftrack_dump_err
+    enable_kernel_log
     build_android
     build_copy_target
 }
@@ -768,6 +769,7 @@ build_remake_billy(){
     change_MMI_packages
     change_logd_size
     fix_aftrack_dump_err
+    enable_kernel_log
     build_android
     #build_copy_target
 }
@@ -790,9 +792,9 @@ release_kernel_binary(){
 change_logd_size()
 {
    version_defaults=$CY_BUILD_ROOT_DIR/build/core/version_defaults.mk
-   tt=`cat $version_defaults | grep  PLATFORM_VERSION. | cut -d '=' -f 2` | grep -Eo '[0-9]+'
+   tt=`cat $version_defaults | grep  PLATFORM_VERSION. | cut -d '=' -f 2 | grep -Eo '[0-9]+'`
    PLATFORM_VERSION=`echo $tt | cut -d ' ' -f 4`
-   if [ $PLATFORM_VERSION -ge 9 ];then
+   if [[ $PLATFORM_VERSION -ge 9 ]];then
     android_logger=$CY_BUILD_ROOT_DIR/system/core/liblog/include/private/android_logger.h
     LogdSizeSetting=$CY_BUILD_ROOT_DIR/frameworks/base/packages/SettingsLib/src/com/android/settingslib/development/AbstractLogdSizePreferenceController.java
     LogdSizeSettingVendor=$CY_BUILD_ROOT_DIR/vendor/mediatek/proprietary/packages/apps/SettingsLib/src/com/android/settingslib/development/AbstractLogdSizePreferenceController.java
@@ -802,7 +804,7 @@ change_logd_size()
     LogdSizeSettingVendor=$CY_BUILD_ROOT_DIR/vendor/mediatek/proprietary/packages/apps/MtkSettings/src/com/android/settings/development/DevelopmentSettings.java
    fi
 
-    grep "#define LOG_BUFFER_SIZE (256 * 1024 * 1024)" $android_logger > /dev/null
+    grep "define LOG_BUFFER_SIZE (256 * 1024 * 1024)" $android_logger > /dev/null
     if [ $? -eq 0 ]; then
             echo "logdsize is 256M,setting 16M，不用修改"
     else
@@ -822,8 +824,23 @@ fix_aftrack_dump_err()
     grep "defined(CONFIG_FIX_MKDIR)" $AudioTrack > /dev/null
     if [ $? -eq 0 ]; then
             echo "fix AudioTrack: mkdir (audio_dump) error! Permission denied，不用修改"
+            echo "转到AudioUtilmtk: AudioDumpThread创建"
     else
-        sed -i 's/\&\& defined(CONFIG_MT_ENG_BUILD)/\&\& defined(CONFIG_MT_ENG_BUILD) \&\& defined(CONFIG_FIX_MKDIR) \/\/billy/g' $AudioTrack
+        sed -i 's/defined(CONFIG_MT_ENG_BUILD)/defined(CONFIG_MT_ENG_BUILD) \&\& defined(CONFIG_FIX_MKDIR) \/\/billy/g' $AudioTrack
+    fi
+}
+
+enable_kernel_log()
+{
+    logging=$CY_BUILD_ROOT_DIR/vendor/mediatek/proprietary/external/mobile_log_d/logging.c
+    device=$CY_BUILD_ROOT_DIR/device/mediatek/common/device.mk
+    #grep "defined(CONFIG_FIX_MKDIR)" $logging > /dev/null
+    grep "ro.logd.kernel=true" $device > /dev/null
+    if [ $? -eq 0 ]; then
+        echo "已经使能logd kernel log,不用修改"
+    else
+        sed -i 's/if (\!strcmp(is_lowram/return KERNEL_LOGD; \/\/billy add\n\n\t&/' $logging
+        sed -i 's/ro.logd.kernel=false/ro.logd.kernel=true/g' $device
     fi
 }
 
@@ -911,6 +928,9 @@ scandir()
             cd ..
         else
             sed -i 's/\/\/#define LOG_NDEBUG 0/#define LOG_NDEBUG 0 \/\/billy/g' $dirlist
+            sed -i 's/\/\/#define VERY_VERBOSE_LOGGING/#define VERY_VERBOSE_LOGGING \/\/billy/g' $dirlist
+            sed -i 's/\/\/ #define VERY_VERBOSE_LOGGING/#define VERY_VERBOSE_LOGGING \/\/billy/g' $dirlist
+            sed -i 's/\/\/#define VERY_VERY_VERBOSE_LOGGING/#define VERY_VERY_VERBOSE_LOGGING \/\/billy/g' $dirlist
         fi
     done
 }
@@ -1011,6 +1031,7 @@ build_new(){
     change_MMI_packages
     change_logd_size
     fix_aftrack_dump_err
+    enable_kernel_log
     build_remake
     create_check_list
     release_kernel_binary
@@ -1202,4 +1223,12 @@ export GN_BUILD_ROOT_DIR
 TARGET_BUILD_VARIANT="eng"
 BUILD_TOOLS="$CY_BUILD_ROOT_DIR/build.sh --setup_ccache=true"
 LOGPATH="BUILDING_LOG"
+
+version_defaults=$CY_BUILD_ROOT_DIR/build/core/version_defaults.mk
+tt=`cat $version_defaults | grep  PLATFORM_VERSION. | cut -d '=' -f 2 | grep -Eo '[0-9]+'`
+PLATFORM_VERSION=`echo $tt | cut -d ' ' -f 4`
+
+echo "Android version $PLATFORM_VERSION"
+export CY_BUILD_ROOT_DIR
+
 main "$@"

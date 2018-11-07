@@ -146,7 +146,7 @@ reset_code()
 grep_audio_log()
 {
     local newfile kernelfile mainfile sysfile i
-    local audio_kernel_tag='audio|Aud|AUD|Lineout_|writer|keycode|stream|speech_|mtk_pcm_|accdet|Headset|mtk_voice|pmic_thread|modem_|PMIC_INT|pmic_auxadc|mt_get_auxadc_value|mic_vinp_mv'
+    local audio_kernel_tag='Voice_|setDlMtkifSrc|TurnOffDacPower|audio|Aud|AUD|Lineout_|writer|keycode|stream|speech_|mtk_pcm_|accdet|Headset|mtk_voice|pmic_thread|modem_|PMIC_INT|pmic_auxadc|mt_get_auxadc_value|mic_vinp_mv'
     local audio_main_tag="audio|Audio|SpeechDriver|onScreenTurned|music_app|MediaPlayer|PhoneWindow|WindowManager|FmService|FMLIB|FMText|AudioHeadSetMessager|MMITest|Media|Bluetooth|bt_|BtGatt|MtkOmx|OMX|GainTableParamParser|NVRAM|SRS_|audiofocus|aurisys|InCall|setForceUse|Dialer|Ringtone|Extractor|NuPlayer|GenericSource|Event|pause|ACodec|MPEG4Writer"
     local audio_sys_tag="EarphoneLoopbackTest|WiredAccessoryManager|Telecom"
     local audio_volume_tag="setParameters|adjustSuggestedStreamVolume|setStreamVolumeIndex|setVolume|AudioFocus|writeEvent|volumeIndex|applyDeviceVolumemStreamType|AudioALSAVolumeController|volumeDevice|setVoiceVolume|keyCode|mAudioMode|setMicMute|setDataSource|createTrack_l|AudioMTKGainController|SpeechDriverNormal|AudioTrack: set()"
@@ -225,7 +225,7 @@ fi
 down_mtk_code()
 {
 	#PROJECT=CSW1705
-
+    sleep 2h
 	PROJECT=$2
 	#if [ ! -n "$PROJECT" ];then
 	#if [ ! $PROJECT ];then
@@ -245,7 +245,7 @@ down_mtk_code()
 		code_origin=cy_o0.mp1
         code_dev=
         package_dev=_o_master
-	elif [[ "$PROJECT" == "CSW1705_P" ]] || [[ "$PROJECT" == "CSW1805" ]] || [[ "$PROJECT" == "CSW1809" ]];then
+	elif [[ "$PROJECT" == "CSW1705_P" ]] || [[ "$PROJECT" == "CSW1805" ]] || [[ "$PROJECT" == "CSW1809" ]] || [[ "$PROJECT" == "CSW1703" ]];then
 		code_origin=cy_p0.mp1
         code_dev=
         package_dev=
@@ -258,7 +258,7 @@ down_mtk_code()
 	echo $code_origin
 	echo "down load $PROJECT android"
 
-	if [[ "$PROJECT" == "CSW1705_P" ]] || [[ "$PROJECT" == "CSW1805" ]]  || [[ "$PROJECT" == "CSW1809" ]];then
+	if [[ "$PROJECT" == "CSW1705_P" ]] || [[ "$PROJECT" == "CSW1805" ]]  || [[ "$PROJECT" == "CSW1809" ]]  || [[ "$PROJECT" == "CSW1703" ]];then
 	    mkdir -p /home/billy/work/${PROJECT}/alps
 	    cd /home/billy/work/${PROJECT}/alps
 	    echo "repo init -u ssh://wangbb@18.8.3.13:29418/P/manifest -b ${code_origin} -m ${code_origin}${code_dev}.xml --no-repo-verify"
@@ -274,7 +274,8 @@ down_mtk_code()
 	#repo start master --all
 	repo start ${code_origin} --all
 
-	cd /home/billy/work/${PROJECT}/alps/${code_origin}
+	#cd /home/billy/work/${PROJECT}/alps/${code_origin}
+	cd /home/billy/work/${PROJECT}/alps
 	repo forall -c "scp -p -P 29418 wangbb@18.8.3.13:hooks/commit-msg .git/hooks/"
 
 if false;then
@@ -288,14 +289,14 @@ if false;then
     fi
 fi
 
-#if false;then
-if true;then
+if false;then
+#if true;then
 	echo "down packages"
 	mkdir -p /home/billy/work/${PROJECT}/chenyee_rom_apk
 	cd /home/billy/work/${PROJECT}/chenyee_rom_apk
 
-	if [[ "$PROJECT" == "CSW1705_P" ]] || [[ "$PROJECT" == "CSW1805" ]] || [[ "$PROJECT" == "CSW1809" ]];then
-	    repo init -u ssh://wangbb@18.8.3.13:29418/P/manifest -b chenyee_rom_apk -m CSW1705_master.xml --no-repo-verify
+	if [[ "$PROJECT" == "CSW1705_P" ]] || [[ "$PROJECT" == "CSW1805" ]] || [[ "$PROJECT" == "CSW1809" ]] || [[ "$PROJECT" == "CSW1703" ]];then
+	    repo init -u ssh://wangbb@18.8.3.13:29418/P/manifest -b chenyee_rom_apk -m ${PROJECT}_master.xml --no-repo-verify
     else
 	    repo init -u ssh://wangbb@18.8.3.13:29418/151/manifest -b chenyee_rom_apk -m ${PROJECT}_oversea${package_dev}.xml --no-repo-verify
     fi
@@ -306,7 +307,9 @@ fi
 
 	echo "build "
 	#cd /home/billy/work/${PROJECT}/alps/${code_origin}
-    #cd /home/billy/work/CSW1805/alps/android_mtk_p0_mp1
+    cd /home/billy/work/${PROJECT}/alps/android_mtk_p0_mp1
+    billy_main -build CSW1703_platform -n
+    billy_main -build CSW1703_platform -r
     #billy_main -build CSW1805_platform -n
 	#./TmakeChenyee -v userdebug CSW1705TL_1301 -n
 	#./TmakeChenyee -v userdebug CSW1803A_1291 -n
@@ -1132,7 +1135,8 @@ adblogcat_all()
 	echo "logcat -all"
     adb logcat -c 
     #adb logcat -b kernel -b main -b system -b radio -v events -v time > ~/tmp/all.log
-    adb logcat -b kernel -b main -b system -v events -v time > ~/tmp/all.log
+    #adb logcat -b kernel -b main -b system -v events -v time > ~/tmp/all.log
+    adb logcat -b main -b system -v events > ~/tmp/all.log
 }
 
 zip_bootanimation()
@@ -1274,10 +1278,13 @@ scandir()
                 case "$NDEBUG_onoff" in
                     -enable)
                         sed -i 's/\/\/#define LOG_NDEBUG 0/#define LOG_NDEBUG 0 \/\/billy/g' $dirlist
+                        sed -i 's/\/\/#define VERY_VERBOSE_LOGGING/#define VERY_VERBOSE_LOGGING \/\/billy/g' $dirlist
+                        sed -i 's/\/\/ #define VERY_VERBOSE_LOGGING/#define VERY_VERBOSE_LOGGING \/\/billy/g' $dirlist
                         break
                         ;;
                     -disable)
                         sed -i 's/#define LOG_NDEBUG 0 \/\/billy/\/\/#define LOG_NDEBUG 0/g' $dirlist
+                        sed -i 's/#define VERY_VERBOSE_LOGGING \/\/billy/\/\/#define VERY_VERBOSE_LOGGING/g' $dirlist
                         break
                         ;;
                     *)
