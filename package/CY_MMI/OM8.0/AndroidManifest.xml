@@ -2,8 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="cy.com.android.mmitest"
     android:sharedUserId="android.uid.phone"
-    android:versionCode="90901013"
-    android:versionName="9.9.180101018.co">
+    android:versionCode="90000005"
+    android:versionName="9.0.0.ah">
 
     <eat-comment />
     <protected-broadcast android:name="android.intent.action.NV_BACKUP_END" />
@@ -52,6 +52,10 @@
     <!--Gionee zhangke 20160311 add for CR01650400 start-->
     <uses-permission android:name="android.permission.REBOOT" />
     <!--Gionee zhangke 20160311 add for CR01650400 end-->
+    <uses-permission android:name="android.permission.USE_FINGERPRINT" />
+    <uses-permission android:name="android.permission.MANAGE_FINGERPRINT" />
+    <uses-permission android:name="android.permission.RESET_FINGERPRINT_LOCKOUT" />
+
 
     <uses-permission android:name="android.permission.MANAGE_NOTIFICATIONS"/>
     <application
@@ -61,10 +65,6 @@
         android:resizeableActivity="false"
         android:persistent="false"
         android:theme="@android:style/Theme.Black">
-        <activity
-            android:name=".CyMMITest"
-            android:configChanges="orientation|keyboardHidden|screenSize"
-            android:excludeFromRecents="true"
         <activity
             android:name=".CyMMITest"
             android:configChanges="orientation|keyboardHidden|screenSize"
@@ -640,3 +640,13 @@
             android:screenOrientation="portrait"
             android:theme="@style/Fullscreen" >
         </activity>
+        <activity
+            android:name=".item.DoubleSimCard"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:excludeFromRecents="true"
+            android:label="@string/sim_double"
+            android:screenOrientation="portrait"
+            android:theme="@style/Fullscreen" >
+        </activity>
+    </application>
+</manifest>

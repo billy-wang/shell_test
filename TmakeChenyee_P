@@ -742,7 +742,7 @@ build_copy_cy_code(){
     fi
 
     get_chenyee_code "mtk" "7.0"
-    download_modem 
+    #download_modem
     set_kernel_config
     #chenyee yangcuntao 2015-05-11 add
     . cy_tools/cy_oversea_locales.sh
