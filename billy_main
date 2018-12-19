@@ -51,6 +51,7 @@ usage()
 		-build -l  		                :	编译android 项目列表
 		-build -h  		                :	编译android 帮助
 		-build -v user CSW1707A_1201 -n :	全新编译android
+		-build_modem		:   编译modem
 		== LOG_NDEBUG change ==
         -LOG_NDEBUG -enable             :   使能media av DEBUG
         -LOG_NDEBUG -disable            :   关闭media av DEBUG
@@ -1112,6 +1113,10 @@ build_mtk_android()
             ;;
         -h)
             $TmakeChenyee -h
+            exit 0
+            ;;
+	-modem)
+	    source ~/bin/shell_test/build_modem
             exit 0
             ;;
         *)
