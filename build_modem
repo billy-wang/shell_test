@@ -40,25 +40,51 @@ rm -rf $MODEM_TOP/mcu/build/
 rm -rf $MODEM_TOP/mcu/build_internal/
 
 echo "*** remove Original custom modem ***"
-rm -rf $MODEM_TOP/mcu/pcore/custom/modem/cl1_rf/MT6739_C2K_MT6177M
-rm -rf $MODEM_TOP/mcu/pcore/custom/modem/el1_rf/MT6739_LTE_MT6177M
-rm -rf $MODEM_TOP/mcu/pcore/custom/modem/l1_rf/MT6739_2G_MT6177M_SP
-rm -rf $MODEM_TOP/mcu/pcore/custom/modem/mml1_rf/MT6739_MMRF_MT6177M
-rm -rf $MODEM_TOP/mcu/pcore/custom/modem/tl1_rf/MT6739_UMTS_TDD_MT6177M
-rm -rf $MODEM_TOP/mcu/pcore/custom/modem/ul1_rf/MT6739_UMTS_FDD_MT6177M
+if [ $c2k_type = yes ];then
+	rm -rf $MODEM_TOP/mcu/pcore/custom/modem/cl1_rf/MT6739_C2K_MT6177M_TB
+	rm -rf $MODEM_TOP/mcu/pcore/custom/modem/el1_rf/MT6739_LTE_MT6177M_TB
+	rm -rf $MODEM_TOP/mcu/pcore/custom/modem/l1_rf/MT6739_2G_MT6177M_SP_TB
+	rm -rf $MODEM_TOP/mcu/pcore/custom/modem/mml1_rf/MT6739_MMRF_MT6177M_TB
+	rm -rf $MODEM_TOP/mcu/pcore/custom/modem/tl1_rf/MT6739_UMTS_TDD_MT6177M_TB
+   	rm -rf $MODEM_TOP/mcu/pcore/custom/modem/ul1_rf/MT6739_UMTS_FDD_MT6177M_TB
+else
+    rm -rf $MODEM_TOP/mcu/pcore/custom/modem/cl1_rf/MT6739_C2K_MT6177M
+    rm -rf $MODEM_TOP/mcu/pcore/custom/modem/el1_rf/MT6739_LTE_MT6177M
+    rm -rf $MODEM_TOP/mcu/pcore/custom/modem/l1_rf/MT6739_2G_MT6177M_SP
+	rm -rf $MODEM_TOP/mcu/pcore/custom/modem/mml1_rf/MT6739_MMRF_MT6177M
+	rm -rf $MODEM_TOP/mcu/pcore/custom/modem/tl1_rf/MT6739_UMTS_TDD_MT6177M
+	rm -rf $MODEM_TOP/mcu/pcore/custom/modem/ul1_rf/MT6739_UMTS_FDD_MT6177M
+fi
 
 echo "*** remove Own custom modem ***"
-cp -rf "$MODEM_TOP/mcu/teksun_modem/${modem_code_name}/cl1_rf/MT6739_C2K_MT6177M_TB/"  "$MODEM_TOP/mcu/pcore/custom/modem/cl1_rf/MT6739_C2K_MT6177M_TB/"
-cp -rf "$MODEM_TOP/mcu/teksun_modem/${modem_code_name}/el1_rf/MT6739_LTE_MT6177M/"  "$MODEM_TOP/mcu/pcore/custom/modem/el1_rf/MT6739_LTE_MT6177M/"
-cp -rf "$MODEM_TOP/mcu/teksun_modem/${modem_code_name}/l1_rf/MT6739_2G_MT6177M_SP/"  "$MODEM_TOP/mcu/pcore/custom/modem/l1_rf/MT6739_2G_MT6177M_SP/"
-cp -rf "$MODEM_TOP/mcu/teksun_modem/${modem_code_name}/mml1_rf/MT6739_MMRF_MT6177M/"  "$MODEM_TOP/mcu/pcore/custom/modem/mml1_rf/MT6739_MMRF_MT6177M/"
-cp -rf "$MODEM_TOP/mcu/teksun_modem/${modem_code_name}/tl1_rf/MT6739_UMTS_TDD_MT6177M/"  "$MODEM_TOP/mcu/pcore/custom/modem/tl1_rf/MT6739_UMTS_TDD_MT6177M/"
-cp -rf "$MODEM_TOP/mcu/teksun_modem/${modem_code_name}/ul1_rf/MT6739_UMTS_FDD_MT6177M/"  "$MODEM_TOP/mcu/pcore/custom/modem/ul1_rf/MT6739_UMTS_FDD_MT6177M/"
-
+if [ $c2k_type = yes ];then
+	cp -rf "$MODEM_TOP/mcu/teksun_modem/${modem_code_name}/cl1_rf/MT6739_C2K_MT6177M_TB/"  "$MODEM_TOP/mcu/pcore/custom/modem/cl1_rf/MT6739_C2K_MT6177M_TB/"
+	cp -rf "$MODEM_TOP/mcu/teksun_modem/${modem_code_name}/el1_rf/MT6739_LTE_MT6177M_TB/"  "$MODEM_TOP/mcu/pcore/custom/modem/el1_rf/MT6739_LTE_MT6177M_TB/"
+	cp -rf "$MODEM_TOP/mcu/teksun_modem/${modem_code_name}/l1_rf/MT6739_2G_MT6177M_SP_TB/"  "$MODEM_TOP/mcu/pcore/custom/modem/l1_rf/MT6739_2G_MT6177M_SP_TB/"
+	cp -rf "$MODEM_TOP/mcu/teksun_modem/${modem_code_name}/mml1_rf/MT6739_MMRF_MT6177M_TB/"  "$MODEM_TOP/mcu/pcore/custom/modem/mml1_rf/MT6739_MMRF_MT6177M_TB/"
+	cp -rf "$MODEM_TOP/mcu/teksun_modem/${modem_code_name}/tl1_rf/MT6739_UMTS_TDD_MT6177M_TB/"  "$MODEM_TOP/mcu/pcore/custom/modem/tl1_rf/MT6739_UMTS_TDD_MT6177M_TB/"
+	cp -rf "$MODEM_TOP/mcu/teksun_modem/${modem_code_name}/ul1_rf/MT6739_UMTS_FDD_MT6177M_TB/"  "$MODEM_TOP/mcu/pcore/custom/modem/ul1_rf/MT6739_UMTS_FDD_MT6177M_TB/"
+else
+	cp -rf "$MODEM_TOP/mcu/teksun_modem/${modem_code_name}/cl1_rf/MT6739_C2K_MT6177M_TB/"  "$MODEM_TOP/mcu/pcore/custom/modem/cl1_rf/MT6739_C2K_MT6177M_TB/"
+	cp -rf "$MODEM_TOP/mcu/teksun_modem/${modem_code_name}/el1_rf/MT6739_LTE_MT6177M/"  "$MODEM_TOP/mcu/pcore/custom/modem/el1_rf/MT6739_LTE_MT6177M/"
+	cp -rf "$MODEM_TOP/mcu/teksun_modem/${modem_code_name}/l1_rf/MT6739_2G_MT6177M_SP/"  "$MODEM_TOP/mcu/pcore/custom/modem/l1_rf/MT6739_2G_MT6177M_SP/"
+	cp -rf "$MODEM_TOP/mcu/teksun_modem/${modem_code_name}/mml1_rf/MT6739_MMRF_MT6177M/"  "$MODEM_TOP/mcu/pcore/custom/modem/mml1_rf/MT6739_MMRF_MT6177M/"
+	cp -rf "$MODEM_TOP/mcu/teksun_modem/${modem_code_name}/tl1_rf/MT6739_UMTS_TDD_MT6177M/"  "$MODEM_TOP/mcu/pcore/custom/modem/tl1_rf/MT6739_UMTS_TDD_MT6177M/"
+	cp -rf "$MODEM_TOP/mcu/teksun_modem/${modem_code_name}/ul1_rf/MT6739_UMTS_FDD_MT6177M/"  "$MODEM_TOP/mcu/pcore/custom/modem/ul1_rf/MT6739_UMTS_FDD_MT6177M/"
+fi
 
 if [ $sim_hotplug = yes ];then
-   echo "*** enable sim hotplus ***"
-   sed -i '/DUAL_SIM_HOT_SWAP_CO_DECK*=*/c\DUAL_SIM_HOT_SWAP_CO_DECK = TRUE'     $MODEM_TOP/mcu/make/projects/"${mkfile_lwctg}.mak"
+		grep -nr SIM_HOT_SWAP $MODEM_TOP/mcu/make/projects
+	if [ $c2k_type = yes ];then
+   		echo "*** enable sim hotplus TK_MD_BASIC(LWCTG_TB_8765).mak***"
+   		sed -i '/DUAL_SIM_HOT_SWAP_CO_DECK/c\DUAL_SIM_HOT_SWAP_CO_DECK = TRUE'     $MODEM_TOP/mcu/make/projects/TK_MD_BASIC\(LWCTG_TB_8765\).mak
+   		sed -i '/SIM_HOT_SWAP =/c\SIM_HOT_SWAP = SIM_SLOT_2'     $MODEM_TOP/mcu/make/projects/TK_MD_BASIC\(LWCTG_TB_8765\).mak
+	else
+   		echo "*** enable sim hotplus TK_MD_BASIC(LWTG_8765).mak***"
+		sed -i '/DUAL_SIM_HOT_SWAP_CO_DECK/c\DUAL_SIM_HOT_SWAP_CO_DECK = TRUE'     $MODEM_TOP/mcu/make/projects/TK_MD_BASIC\(LWTG_8765\).mak
+   		sed -i '/SIM_HOT_SWAP =/c\SIM_HOT_SWAP = SIM_SLOT_2'     $MODEM_TOP/mcu/make/projects/TK_MD_BASIC\(LWTG_8765\).mak
+	fi
+		grep -nr SIM_HOT_SWAP $MODEM_TOP/mcu/make/projects
 fi
 
 if [ $sim_swap = yes ];then

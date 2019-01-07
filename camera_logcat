@@ -1,0 +1,5 @@
+#!/bin/bash 
+
+#adb logcat | grep -E "MtkCam|HalSensorList|ImgSensorDrv|AdvCamControl_impl|MtkCallbackClient_impl|CCAPControl"
+
+adb logcat -b kernel | grep -E "imgsensor|SP2609|IMX135|OV2655|GC2155"
