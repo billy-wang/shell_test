@@ -1,0 +1,98 @@
+#!/bin/bash -e 
+
+if [ -n "$1" ]; then
+	INSTANCE_ID=$(printf "%02d" $1)
+	INSTANCE_DIR=run-${INSTANCE_ID}
+	mkdir -p ${INSTANCE_DIR}
+	#shift
+else
+	echo "Must specify instance id"
+	exit 1
+fi
+
+ANDROID_IMAGE_PATH=./
+
+QEMU_ARCH=$(arch)
+
+#QEMU_DISPLAY="-nographic"
+#QEMU_DISPLAY="-display gtk"
+QEMU_DISPLAY="-device virtio-gpu-pci,virgl -display gtk,gl=on"
+#QEMU_DISPLAY="-device virtio-gpu-pci,virgl=on -display egl-headless -spice port=59${INSTANCE_ID},disable-ticketing"
+#QEMU_DISPLAY="-device virtio-gpu-pci,virgl=on -display egl-headless -vnc :${INSTANCE_ID}"
+
+#QEMU_OPTS="-machine virt,gic-version=host -cpu cortex-a53 -m 2048M -smp 1 -enable-kvm"
+QEMU_OPTS="-machine virt -cpu cortex-a57 -m 2048M -smp 1 "
+#QEMU_OPTS="-machine virt -cpu cortex-a53 -machine type=virt -m 2048M -smp 1 -enable-kvm"
+
+#KERNEL_CMDLINE='qemu=1 no_timer_check androidboot.hardware=ranchu keep_bootcon earlyprintk=ttyAMA0 android.qemud=1 console=ttyAMA0,38400 android.checkjni=1 qemu.gles=1 qemu.opengles.version=131072 cma=262M@0-4G skip_initramfs rootwait ro init=/init root=/dev/vda1 '
+
+KERNEL_CMDLINE='console=ttyAMA0,38400 vt.global_cursor_default=0 androidboot.selinux=permissive debug drm.debug=0 virtio_gpu.xres_def=450 virtio_gpu.yres_def=800 qemu=0 loglevel=8'
+
+
+
+#KERNEL=./Image
+#KERNEL=/home/billy/work/uit/linux-5.0/out_aarch64/arch/arm64/boot/Image
+
+#KERNEL=/home/billy/work/uit/goldfish/out_aarch64_318/arch/arm64/boot/Image
+
+KERNEL=/home/billy/work/uit/goldfish/out_aarch64_414/arch/arm64/boot/Image
+
+#KERNEL=/home/billy/work/uit/android9/out/target/product/generic_arm64/kernel-ranchu
+
+RAMDISK=/home/billy/work/uit/android9/out/target/product/generic_arm64/ramdisk.img
+
+SYSTEM=/home/billy/work/uit/android9/out/target/product/generic_arm64/system-qemu.img
+VENDOR=/home/billy/work/uit/android9/out/target/product/generic_arm64/vendor-qemu.img
+
+
+#QEMU_SERIAL="-serial file:/home/android/image/android.log"
+#QEMU_SERIAL="-serial telnet::33${INSTANCE_ID},server,nowait"
+QEMU_SERIAL="-serial stdio"
+
+QEMU_MONITOR="-monitor telnet::66${INSTANCE_ID},server,nowait"
+
+
+if [ ! -f ${INSTANCE_DIR}/cache.raw ]; then
+	touch ${INSTANCE_DIR}/cache.raw; mkfs.ext4 -L cache -F ${INSTANCE_DIR}/cache.raw 2048M
+fi
+
+if [ ! -f ${INSTANCE_DIR}/userdata.raw ]; then
+	touch ${INSTANCE_DIR}/userdata.raw; mkfs.ext4 -L data -F ${INSTANCE_DIR}/userdata.raw 8192M
+fi
+
+
+
+
+    #-dns-server 127.0.0.53 \
+    #-lcd-density 240 \
+    #-android-hw /home/billy/work/uit/aosp/out_arm64/target/product/generic_arm64/hardware-qemu.ini
+    #-device goldfish_pstore,addr=0xff018000,size=0x10000,file=/home/billy/work/uit/aosp/out_arm64/target/product/generic_arm64/build.avd/data/misc/pstore/pstore.bin \
+
+    #-append 'qemu=1 no_timer_check androidboot.hardware=ranchu keep_bootcon earlyprintk=ttyAMA0 android.qemud=1 console=0 android.checkjni=1 qemu.gles=1 qemu.opengles.version=131072 cma=262M@0-4G skip_initramfs rootwait ro init=/init root=/dev/vda1 loop.max_part=7 ramoops.mem_address=0xff018000 ramoops.mem_size=0x10000 memmap=0x10000$0xff018000 qemu.dalvik.vm.heapsize=192m' \
+    #-show-cursor -L /home/billy/work/uit/aosp/prebuilts/android-emulator/linux-x86_64/lib/pc-bios \
+    #qemu-system-aarch64 \
+
+    
+/home/billy/work/uit/qemu-4.0.0-rc0/aarch64-softmmu/qemu-system-aarch64 \
+    -cpu cortex-a57 \
+    -machine virt \
+    -m 2048 \
+    -nodefaults \
+    -kernel $KERNEL \
+    -initrd $RAMDISK \
+    -drive index=0,if=none,file=$VENDOR,id=vendor,format=raw,readonly=on \
+    -device virtio-blk-device,drive=vendor \
+    -drive index=1,if=none,file=${INSTANCE_DIR}/userdata.raw,id=userdata,format=raw \
+    -device virtio-blk-device,drive=userdata \
+    -drive index=2,if=none,file=${INSTANCE_DIR}/cache.raw,id=cache,format=raw \
+    -device virtio-blk-device,drive=cache \
+    -drive index=3,if=none,file=$SYSTEM,id=system,format=raw,readonly=on \
+    -device virtio-blk-device,drive=system \
+    -netdev user,id=mynet \
+    -device virtio-net-device,netdev=mynet \
+    -device virtio-rng-device \
+	-append 'androidboot.hardware=ranchu console=ttyAMA0,38400 skip_initramfs rootdelay=1 rootwait ro init=/init root=/dev/vda1 vendor=/dev/vdd1 loglevel=8' \
+    ${QEMU_SERIAL} \
+	${QEMU_DISPLAY} \
+    &
+
