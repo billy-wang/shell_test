@@ -1,9 +1,0 @@
-<resources>
-
-    <!-- Default screen margins, per the Android Design guidelines. -->
-    <dimen name="activity_horizontal_margin">2dp</dimen>
-    <dimen name="activity_vertical_margin">2dp</dimen>
-
-    <integer name="hideep_z_value">42600</integer>
-    <integer name="hideep_spec">25</integer>
-</resources>

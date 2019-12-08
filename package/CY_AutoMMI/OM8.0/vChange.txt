@@ -1,5 +1,0 @@
-GN_AutoMMI_OM7.0_V4.1.2.bc  129027 autommi扬声器可调节音量 13/69813/2
-GN_AutoMMI_OM7.0_V4.1.2.bd  131996 AutoMMI 按键测试打开天窗开关 05/69905/4
-GN_AutoMMI_OM7.0_V4.1.2.be  125584 ODM版本显示gionee 字样 40/69940/1
-GN_AutoMMI_OM7.0_V4.1.2.bf  133857 ADB MMI--单项测试--前后摄像头--拍照后手机端显示/data/misc/gionee
-GN_AutoMMI_OM7.0_V4.1.2.bg  117948 （随机）ADB MMI测试->听筒测试，声音从扬声器出来
