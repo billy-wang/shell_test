@@ -13,6 +13,8 @@ import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.os.Bundle;
 import android.os.Vibrator;
+import android.os.PowerManager;
+import android.os.Handler;
 import cy.com.android.mmitest.utils.DswLog;
 import android.view.KeyEvent;
 import android.view.View;
@@ -81,6 +83,9 @@ public class KeysTest extends BaseActivity implements View.OnClickListener ,OnPe
     // Gionee liss 20111215 add for CR00478802 start
     public InputMethodManager mInputMethondManager;
     // Gionee liss 20111215 add for CR00478802 end
+    public PowerManager mPowerManager;
+	private PowerManager.WakeLock mWakeLock;
+	private Handler mTimeHandler = new Handler();
     //Gionee zhangke 20160309 add for CR01649229 start
     private static final String KEY_PATH = "/sys/devices/platform/tp_wake_switch/factory_keydiff_check";
     private static final String KEY_APP_DIFF = "1";
@@ -90,9 +95,12 @@ public class KeysTest extends BaseActivity implements View.OnClickListener ,OnPe
     private boolean mIsHomeKeySuccess = false;
     private boolean mIsBackKeySuccess = false;
     private boolean mIsAppKeySuccess = false;
+	private boolean mIsPowerKeySuccess = false;
+	private boolean isScreenOn = false;
     private static final String HOME_KEYCODE = "3";
     private static final String BACK_KEYCODE = "4";
     private static final String APP_KEYCODE = "187";
+	private static final String POWER_KEYCODE = "26";
     private boolean skylight = false;
 
     //Gionee zhangke 20160309 add for CR01649229 end
@@ -468,7 +476,29 @@ public class KeysTest extends BaseActivity implements View.OnClickListener ,OnPe
 //                    Toast.makeText(KeysTest.this, getString(R.string.app_key) + getString(R.string.key_diff_error), Toast.LENGTH_SHORT).show();
 //                }
 //            }
-        }
+        }else if (key.equals(POWER_KEYCODE)) {
+			mIsPowerKeySuccess = true;
+			mPowerManager = (PowerManager)getSystemService(Context.POWER_SERVICE);
+			mWakeLock = mPowerManager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.SCREEN_BRIGHT_WAKE_LOCK, TAG);
+			//mWakeLock = mPowerManager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.SCREEN_DIM_WAKE_LOCK, TAG);
+			isScreenOn = mPowerManager.isScreenOn();
+			DswLog.i(TAG, "-----try ScreenOn----" + isScreenOn);
+			if (isScreenOn){
+				//Toast.makeText(KeysTest.this, "ScreenOn", Toast.LENGTH_SHORT).show();
+				mTimeHandler.postDelayed(new Runnable(){
+				  @Override
+				  public void run(){
+					DswLog.i(TAG, "-----handler.post----" + System.currentTimeMillis());
+					mWakeLock.release();
+				  }
+				}, 3*1000);//延时3秒灭屏
+			}else{
+				DswLog.i(TAG, "-----try ScreenOn----");
+				//Toast.makeText(KeysTest.this, "ScreenOff", Toast.LENGTH_SHORT).show();
+				//mWakeLock.setReferenceCounted(false);
+				mWakeLock.acquire();
+			}
+		}
     }
     //Gionee zhangke 20160309 add for CR01649229 end
     /*Gionee huangjianqiang 20160323 modify for CR01658304 end*/
